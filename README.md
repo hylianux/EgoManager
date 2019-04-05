@@ -1,4 +1,4 @@
-# EgoManager
+# Ego Manager
 Yet another Doom launcher
 
 # Build Instructions
