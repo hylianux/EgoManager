@@ -1,0 +1,43 @@
+{
+    "name": "egomanager",
+    "productName": "Ego Manager",
+    "version": "1.0.0",
+    "main": "app.js",
+    "scripts": {
+        "start": "npm run build && electron ./dist/resources/app/ --dev",
+        "build:prettyjs": "prettier-eslint --config .prettierrc.js --write resources/app/**/*.js",
+        "clean": "node clean.js",
+        "build": "npm run clean && node build.js && npm run build:prettyjs && npm --prefix ./dist/resources/app/ install ./dist/resources/app/ --production",
+        "build:export": "npm run build && electron-packager ./dist/resources/app/ --out=bin --overwrite=true && node export.js"
+    },
+    "//": [
+        "comment 1",
+        "comment 2"
+    ],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "bootstrap": "^4.3.1",
+        "custom-electron-titlebar": "^3.0.8",
+        "knockout": "^3.5.0",
+        "lodash": "^4.17.11",
+        "lokijs": "^1.5.6",
+        "minimist": "^1.2.0",
+        "normalize.css": "^8.0.1"
+    },
+    "devDependencies": {
+        "electron": "^4.1.1",
+        "electron-packager": "^13.1.1",
+        "eslint": "^5.15.3",
+        "eslint-config-standard": "^12.0.0",
+        "eslint-plugin-import": "^2.16.0",
+        "eslint-plugin-node": "^8.0.1",
+        "eslint-plugin-promise": "^4.0.1",
+        "eslint-plugin-standard": "^4.0.0",
+        "prettier": "^1.16.4",
+        "prettier-eslint": "^8.8.2",
+        "prettier-eslint-cli": "^4.7.1",
+        "shelljs": "^0.8.3"
+    },
+    "description": "a sane doom launcher."
+}

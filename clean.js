@@ -1,0 +1,18 @@
+const shell = require('shelljs');
+const exportDir = './dist/resources/app/';
+shell.echo(shell.pwd());
+shell.echo('removing export directory');
+shell.rm('-r', './dist/');
+shell.echo('removing bin directory');
+shell.rm('-r', './bin');
+shell.echo('making build directory');
+shell.mkdir('-p', exportDir);
+shell.mkdir('-p', '/dist/Doom');
+shell.echo('copying html files into build directory');
+shell.cp('-r', './src/*.html', exportDir);
+shell.echo('copying js files into build directory');
+shell.cp('-r', './src/*.js', exportDir);
+shell.echo('copying css files into build directory');
+shell.cp('-r', './src/*.css', exportDir);
+shell.echo('copying package.json files into build directory');
+shell.cp('./package*.json', exportDir);
