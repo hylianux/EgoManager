@@ -1,0 +1,10 @@
+const shell = require('shelljs');
+const exportDir = './dist/resources/app/';
+shell.echo(shell.pwd());
+shell.echo('making build directory');
+shell.mkdir('-p', exportDir, './dist/idTech/sourceports/GZDoom', './dist/idTech/iwads', './dist/idTech/pwads');
+shell.touch('./dist/idTech/sourceports/GZDoom/gzdoom.exe', './dist/idTech/iwads/doom.wad', './dist/idTech/pwads/mod.wad', './dist/idTech/pwads/otherMod.ipk3');
+shell.echo('copying src files into build directory');
+shell.cp('-r', './src/*', exportDir);
+shell.echo('copying package.json files into build directory');
+shell.cp('./package*.json', exportDir);
