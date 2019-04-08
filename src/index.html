@@ -4,27 +4,65 @@
         <meta charset="UTF-8" />
         <title>Ego Manager</title>
         <link rel="stylesheet" href="node_modules/normalize.css/normalize.css" />
+        <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.css" />
         <link rel="stylesheet" href="app.css" />
 
         <script src="view.js"></script>
     </head>
     <body>
-        <div class="container">
-            <div class="navbarContainer">
-                <ul class="navbar" data-bind="foreach: views">
+        <div class="mycontainer">
+            <div class="mynavbarContainer">
+                <ul class="mynavbar" data-bind="foreach: views">
                     <li
                         data-bind="text: $data, css: { selected: $data == $root.chosenViewId() }, click: $root.goToView"
                     ></li>
                 </ul>
             </div>
-            <div class="innerContainer" data-bind="visible: chosenViewId() == views[0]">
+            <div class="myInnerContainer" data-bind="visible: chosenViewId() == views[0]">
                 <h1>Welcome to the Configuration Builder.</h1>
             </div>
-            <div class="innerContainer" data-bind="visible: chosenViewId() == views[1]">
+            <div class="myInnerContainer container" data-bind="visible: chosenViewId() == views[1]">
                 <h1>Welcome to the File Database.</h1>
-                
+                <button data-bind="click: reloadFiles()">Reload Files</button>
+                <div class="row">
+                    <div class="col-md-3">
+                        <h3>Iwads</h3>
+                        <ul data-bind="foreach: iwads">
+                            <li
+                                data-bind="text: displayName, css: { error: error(), warning: ((!error())&&(warning()))}"
+                            ></li>
+                        </ul>
+                    </div>
+                    <div class="col-md-3">
+                        <h3>Pwads</h3>
+                        <input data-bind="textInput: pwadSearch, event: { keyup: findPwad()}" /><br>
+                        <ul data-bind="foreach: pwads">
+                            <li
+                                data-bind="text: displayName, css: { error: error(), warning: ((!error())&&(warning()))}"
+                            ></li>
+                        </ul>
+                    </div>
+                    <div class="col-md-3">
+                        <h3>Sourceports</h3>
+                        
+                        <ul data-bind="foreach: sourceports">
+                            <li
+                                data-bind="text: displayName, css: { error: error(), warning: ((!error())&&(warning()))}"
+                            ></li>
+                        </ul>
+                    </div>
+                    <div class="col-md-3">
+                        <h3>Sourceport Configs</h3>
+                        <ul data-bind="foreach: sourceportConfigs">
+                            <li
+                                data-bind="text: displayName, css: { error: error(), warning: ((!error())&&(warning()))}"
+                            ></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="row"></div>
             </div>
-            <div class="innerContainer" data-bind="visible: chosenViewId() == 'info'">
+            <div class="myInnerContainer" data-bind="visible: chosenViewId() == 'info'">
                 <h1>Hello World!</h1>
                 We are using node <span data-bind="text: nodeVersion"></span>
                 <br />
@@ -46,7 +84,7 @@
                 <br />
                 Pwads: <span data-bind="text: pwadDirectory"></span>
             </div>
-            <div class="innerContainer" data-bind="visible: chosenViewId() == views[3]">
+            <div class="myInnerContainer" data-bind="visible: chosenViewId() == views[3]">
                 <h1>Name Manipulation Example</h1>
                 <p>First name: <strong data-bind="text: firstName">todo</strong></p>
                 <p>Last name: <strong data-bind="text: lastName">todo</strong></p>
@@ -55,7 +93,7 @@
                 <p>Full name: <strong data-bind="text: fullName"></strong></p>
                 <button data-bind="click: capitalizeLastName">Go caps</button>
             </div>
-            <div class="innerContainer" data-bind="visible: chosenViewId() == views[4]">
+            <div class="myInnerContainer" data-bind="visible: chosenViewId() == views[4]">
                 <h1>Seat reservation example</h1>
                 <h2>Your seat reservations (<span data-bind="text: seats().length"></span>)</h2>
 
@@ -88,7 +126,7 @@
                 </h3>
             </div>
             <div
-                class="innerContainer"
+                class="myInnerContainer"
                 data-bind="visible: chosenViewId() == views[views.length-1] || chosenViewId() == views[views.length-2]"
             >
                 <table class="tabular" data-bind="with: chosenViewData">
