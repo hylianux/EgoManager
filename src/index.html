@@ -3,87 +3,153 @@
     <head>
         <meta charset="UTF-8" />
         <title>Ego Manager</title>
-        <link rel="stylesheet" href="node_modules/normalize.css/normalize.css" />
-        <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.css" />
+        <link rel="stylesheet" href="node_modules/font-awesome/css/font-awesome.css" />
         <link rel="stylesheet" href="app.css" />
-
+        <script>
+            window.$ = window.jQuery = require('jquery');
+            window.Bootstrap = require('bootstrap');
+        </script>
+        <link rel="stylesheet" href="bootstrap.css" />
         <script src="view.js"></script>
     </head>
     <body>
-        <div class="mycontainer">
-            <div class="mynavbarContainer">
-                <ul class="mynavbar" data-bind="foreach: views">
-                    <li
-                        data-bind="text: $data, css: { selected: $data == $root.chosenViewId() }, click: $root.goToView"
-                    ></li>
-                </ul>
-            </div>
-            <div class="myInnerContainer" data-bind="visible: chosenViewId() == views[0]">
-                <h1>Welcome to the Configuration Builder.</h1>
-            </div>
-            <div class="myInnerContainer container" data-bind="visible: chosenViewId() == views[1]">
-                <h1>Welcome to the File Database.</h1>
-                <button data-bind="click: reloadFiles()">Reload Files</button>
-                <div class="row">
-                    <div class="col-md-3">
-                        <h3>Iwads</h3>
-                        <ul data-bind="foreach: iwads">
-                            <li
-                                data-bind="text: displayName, css: { error: error(), warning: ((!error())&&(warning()))}"
-                            ></li>
-                        </ul>
-                    </div>
-                    <div class="col-md-3">
-                        <h3>Pwads</h3>
-                        <input data-bind="textInput: pwadSearch, event: { keyup: findPwad()}" /><br>
-                        <ul data-bind="foreach: pwads">
-                            <li
-                                data-bind="text: displayName, css: { error: error(), warning: ((!error())&&(warning()))}"
-                            ></li>
-                        </ul>
-                    </div>
-                    <div class="col-md-3">
-                        <h3>Sourceports</h3>
-                        
-                        <ul data-bind="foreach: sourceports">
-                            <li
-                                data-bind="text: displayName, css: { error: error(), warning: ((!error())&&(warning()))}"
-                            ></li>
-                        </ul>
-                    </div>
-                    <div class="col-md-3">
-                        <h3>Sourceport Configs</h3>
-                        <ul data-bind="foreach: sourceportConfigs">
-                            <li
-                                data-bind="text: displayName, css: { error: error(), warning: ((!error())&&(warning()))}"
-                            ></li>
-                        </ul>
+        <div class="container-fluid">
+            <ul class="nav nav-tabs justify-content-center">
+                <li class="nav-item">
+                    <a class="nav-link active" data-toggle="tab" href="#configBuilder">Configuration Builder</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-toggle="tab" href="#fileDB" data-bind="click: reloadFiles()"
+                        >File Database &nbsp;&nbsp;<i
+                            data-toggle="tooltip"
+                            title="Click to reload files"
+                            class="fa fa-refresh"
+                        ></i
+                    ></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-toggle="tab" href="#info">Info</a>
+                </li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane container active" id="configBuilder">
+                    <h1>Welcome to the Configuration Builder.</h1>
+                </div>
+                <div class="tab-pane container-fluid fade" id="fileDB">
+                    <div class="row">
+                        <div class="col border border-secondary">
+                            <ul class="nav nav-tabs">
+                                <li class="nav-item">
+                                    <a class="nav-link active" data-toggle="tab" href="#Iwads"
+                                        ><span
+                                            data-toggle="tooltip"
+                                            title="Iwads are the actual game's binaries, usually stored in a .wad file, but sometimes stored in a .pk3 file. This is where you'd put your Doom, Doom 2, Heretic, Hexen, etc. games"
+                                            >Iwads</span
+                                        ></a
+                                    >
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" data-toggle="tab" href="#Pwads"
+                                        ><span
+                                            data-toggle="tooltip"
+                                            title="Pwads, or 'Patch Wads' are mods.  These could be levels, music, gameplay... these are loaded alongside an iwad.  File extensions include .wad, .deh, .bex, and .pk3"
+                                            >Pwads</span
+                                        ></a
+                                    >
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" data-toggle="tab" href="#Sourceports"
+                                        ><span
+                                            data-toggle="tooltip"
+                                            title="The engine that runs an iwad (along with, optionally, pwads)."
+                                            >Sourceports</span
+                                        ></a
+                                    >
+                                </li>
+                            </ul>
+                            <div class="tab-content">
+                                <div class="tab-pane container-fluid active" id="Iwads">
+                                    <div class="form-group">
+                                        <input
+                                            type="text"
+                                            class="form-control"
+                                            placeholder="Search..."
+                                            data-bind="textInput: iwadSearch, event: { keyup: findIwad()}"
+                                        />
+                                    </div>
+                                    <ul data-bind="foreach: iwads">
+                                        <li
+                                            data-bind="text: displayName, css: { error: error(), warning: ((!error())&&(warning()))}"
+                                        ></li>
+                                    </ul>
+                                </div>
+                                <div class="tab-pane container-fluid fade" id="Pwads">
+                                    <div class="form-group">
+                                        <input
+                                            type="text"
+                                            class="form-control"
+                                            placeholder="Search..."
+                                            data-bind="textInput: pwadSearch, event: { keyup: findPwad()}"
+                                        />
+                                    </div>
+                                    <ul data-bind="foreach: pwads">
+                                        <li
+                                            data-bind="text: displayName, css: { error: error(), warning: ((!error())&&(warning()))}"
+                                        ></li>
+                                    </ul>
+                                </div>
+                                <div class="tab-pane container-fluid fade" id="Sourceports">
+                                    <div class="form-group">
+                                        <input
+                                            type="text"
+                                            class="form-control"
+                                            placeholder="Search..."
+                                            data-bind="textInput: sourceportSearch, event: { keyup: findSourceport()}"
+                                        />
+                                    </div>
+                                    <ul data-bind="foreach: sourceports">
+                                        <li
+                                            data-bind="text: displayName, css: { error: error(), warning: ((!error())&&(warning()))}"
+                                        ></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-8 border border-secondary">
+                            <h3>here is where we edit files</h3>
+                        </div>
                     </div>
                 </div>
-                <div class="row"></div>
-            </div>
-            <div class="myInnerContainer" data-bind="visible: chosenViewId() == 'info'">
-                <h1>Hello World!</h1>
-                We are using node <span data-bind="text: nodeVersion"></span>
-                <br />
-                Chrome <span data-bind="text: chromeVersion"></span>
-                <br />
-                and Electron <span data-bind="text: electronVersion"></span>. <br /><br />
-                You'll find the idTech folder in <span data-bind="text: idTechFolder"></span>
-                <br />
-                <button data-bind="click: ()=>{ files([]); walk(idTechFolder)}">Click to read in folders</button><br />
-                Here's all the files:<br />
-                <div data-bind="foreach:files">
-                    <div data-bind="text: $data"></div>
+                <div class="tab-pane container fade" id="info">
+                    <h1>Hello World!</h1>
+                    We are using node <span data-bind="text: nodeVersion"></span>
+                    <br />
+                    Chrome <span data-bind="text: chromeVersion"></span>
+                    <br />
+                    and Electron <span data-bind="text: electronVersion"></span>. <br /><br />
+                    You'll find the idTech folder in <span data-bind="text: idTechFolder"></span>
+                    <br />
+                    <a
+                        href="#"
+                        class="btn btn-secondary"
+                        style=""
+                        data-bind="click: ()=>{ files([]); walk(idTechFolder)}"
+                        >Click to read in folders</a
+                    ><br />
+                    Here's all the files:<br />
+                    <div data-bind="foreach:files">
+                        <div data-bind="text: $data"></div>
+                    </div>
+                    <br />
+                    And just to reiterate, their directories are:<br />
+                    Sourceports: <span data-bind="text: sourceportDirectory"></span>
+                    <br />
+                    Iwads: <span data-bind="text: iwadDirectory"></span>
+                    <br />
+                    Pwads: <span data-bind="text: pwadDirectory"></span>
                 </div>
-                <br />
-                And just to reiterate, their directories are:<br />
-                Sourceports: <span data-bind="text: sourceportDirectory"></span>
-                <br />
-                Iwads: <span data-bind="text: iwadDirectory"></span>
-                <br />
-                Pwads: <span data-bind="text: pwadDirectory"></span>
             </div>
+            <!--
             <div class="myInnerContainer" data-bind="visible: chosenViewId() == views[3]">
                 <h1>Name Manipulation Example</h1>
                 <p>First name: <strong data-bind="text: firstName">todo</strong></p>
@@ -148,6 +214,7 @@
                     </tbody>
                 </table>
             </div>
+            -->
         </div>
     </body>
 </html>

@@ -1,14 +1,12 @@
 const { app, BrowserWindow } = require('electron');
-// { app, WebPreferences, BrowserWindow, OpenDevToolsOptions } from 'electron';
 const url = require('url');
 const path = require('path');
-// import url from 'url';
-// import path from 'path';
+
 let args = require('minimist')(process.argv);
 
 let win = null;
 
-function createWindow () {
+function createWindow() {
     win = new BrowserWindow({
         width: 1280,
         height: 1024,
@@ -34,6 +32,7 @@ function createWindow () {
     });
 }
 app.on('ready', createWindow);
+
 app.on('browser-window-created', (e, window) => {
     window.setMenu(null);
 });
