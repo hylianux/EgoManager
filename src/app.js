@@ -5,7 +5,6 @@ const path = require('path');
 let args = require('minimist')(process.argv);
 
 let win = null;
-
 function createWindow() {
     win = new BrowserWindow({
         width: 1280,

@@ -19,7 +19,7 @@
                     <a class="nav-link active" data-toggle="tab" href="#configBuilder">Configuration Builder</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" data-toggle="tab" href="#fileDB" data-bind="click: reloadFiles()"
+                    <a class="nav-link" data-toggle="tab" href="#fileDB" data-bind="click: loadCollections(true)"
                         >File Database &nbsp;&nbsp;<i
                             data-toggle="tooltip"
                             title="Click to reload files"
@@ -40,7 +40,7 @@
                         <div class="col border border-secondary">
                             <ul class="nav nav-tabs">
                                 <li class="nav-item">
-                                    <a class="nav-link active" data-toggle="tab" href="#Iwads"
+                                    <a class="nav-link active" data-toggle="tab" data-bind="click: clearFileEdit()" href="#Iwads"
                                         >Iwads<sup
                                             data-toggle="tooltip"
                                             title="Iwads are the actual game's binaries, usually stored in a .wad file, but sometimes stored in a .pk3 file. This is where you'd put your Doom, Doom 2, Heretic, Hexen, etc. games"
@@ -49,7 +49,7 @@
                                     >
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link" data-toggle="tab" href="#Pwads"
+                                    <a class="nav-link" data-toggle="tab" data-bind="click: clearFileEdit()" href="#Pwads"
                                         >Pwads<sup
                                             data-toggle="tooltip"
                                             title="Pwads, or 'Patch Wads' are mods.  These could be levels, music, gameplay... these are loaded alongside an iwad.  File extensions include .wad, .deh, .bex, and .pk3"
@@ -58,7 +58,7 @@
                                     >
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link" data-toggle="tab" href="#Sourceports"
+                                    <a class="nav-link" data-toggle="tab" data-bind="click: clearFileEdit()" href="#Sourceports"
                                         >Sourceports<sup
                                             data-toggle="tooltip"
                                             title="The engine that runs an iwad (along with, optionally, pwads)."
@@ -77,11 +77,15 @@
                                             data-bind="textInput: iwadSearch, event: { keyup: findIwad()}"
                                         />
                                     </div>
-                                    <ul data-bind="foreach: iwads">
-                                        <li
-                                            data-bind="text: displayName, css: { error: error(), warning: ((!error())&&(warning()))}"
-                                        ></li>
-                                    </ul>
+                                    <div class="list-group" data-bind="foreach: files.iwads">
+                                        <a
+                                            class="list-group-item list-group-item-action"
+                                            data-placement="right"
+                                            data-html="true"
+                                            data-bind="tooltip: tooltip(), text: displayName, class: displayClass, click: $parent.editFile.bind($data, type, $index)"
+                                        ></a>
+                                    </div>
+                                    <div data-bind="hidden: files.iwads().length>0">No Iwads to display.  Change search criteria, or if you just copied files into the idTech folder, click the File Database tab to reload.</div>
                                 </div>
                                 <div class="tab-pane container-fluid fade" id="Pwads">
                                     <div class="form-group">
@@ -92,11 +96,15 @@
                                             data-bind="textInput: pwadSearch, event: { keyup: findPwad()}"
                                         />
                                     </div>
-                                    <ul data-bind="foreach: pwads">
-                                        <li
-                                            data-bind="text: displayName, css: { error: error(), warning: ((!error())&&(warning()))}"
-                                        ></li>
-                                    </ul>
+                                    <div class="list-group" data-bind="foreach: files.pwads">
+                                        <a
+                                            class="list-group-item list-group-item-action"
+                                            data-placement="right"
+                                            data-html="true"
+                                            data-bind="tooltip: tooltip(), text: displayName, class: displayClass, click: $parent.editFile.bind($data, type, $index)"
+                                        ></a>
+                                    </div>
+                                    <div data-bind="hidden: files.pwads().length>0">No Pwads to display.  Change search criteria, or if you just copied files into the idTech folder, click the File Database tab to reload.</div>
                                 </div>
                                 <div class="tab-pane container-fluid fade" id="Sourceports">
                                     <div class="form-group">
@@ -107,16 +115,136 @@
                                             data-bind="textInput: sourceportSearch, event: { keyup: findSourceport()}"
                                         />
                                     </div>
-                                    <ul data-bind="foreach: sourceports">
-                                        <li
-                                            data-bind="text: displayName, css: { error: error(), warning: ((!error())&&(warning()))}"
-                                        ></li>
-                                    </ul>
+                                    <div class="list-group" data-bind="foreach: files.sourceports">
+                                        <a
+                                            class="list-group-item list-group-item-action"
+                                            data-placement="right"
+                                            data-html="true"
+                                            data-bind="tooltip: tooltip(), text: displayName, class: displayClass, click: $parent.editFile.bind($data, type, $index)"
+                                        ></a>
+                                    </div>
+                                    <div data-bind="hidden: files.sourceports().length>0">No Sourceports to display.  Change search criteria, or if you just copied files into the idTech folder, click the File Database tab to reload.</div>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-8 border border-secondary">
-                            <h3>here is where we edit files</h3>
+                            <form data-bind="with: chosenFile">
+                                <h5>
+                                    File Type: <span data-bind="text: type"></span>&nbsp;&mdash;&nbsp;Filename: <span
+                                        data-bind="text: filename"
+                                    ></span>
+                                </h5>
+                                <div class="form-group">
+                                    <label
+                                        class="col control-label"
+                                        data-placement="left"
+                                        data-bind="uniqueFor: name, tooltip: `A human readable name for your file.`"
+                                        >Title</label
+                                    >
+                                    <div data-bind="hidden: nameValid()" class="col alert alert-warning">
+                                        <strong>Warning:</strong> You should provide a human-readable name for this
+                                        file.
+                                    </div>
+                                    <input
+                                        type="text"
+                                        class="form-control"
+                                        placeHolder="Human-readable name"
+                                        data-bind="textInput: name, uniqueId: name, event: {blur: $parent.updateFile}"
+                                    />
+                                </div>
+                                <div class="form-group">
+                                    <label
+                                        class="col control-label"
+                                        data-placement="left"
+                                        data-bind="uniqueFor: authorInput, tooltip: `Comma-separated list of authors.`"
+                                        >Authors</label
+                                    >
+                                    <div data-bind="hidden: authorsValid()" class="col alert alert-danger">
+                                        <strong>Required: </strong>If you wish to use this file, you'll need to give
+                                        credit to the person(s) who made it.
+                                    </div>
+                                    <input
+                                        type="text"
+                                        class="form-control"
+                                        placeholder="Author1,Author2,Author3,..."
+                                        data-bind="textInput: authorInput, uniqueId: authorInput, event: {blur: $parent.updateFile}"
+                                    />
+                                </div>
+                                <div class="form-group">
+                                    <label
+                                        class="col control-label"
+                                        data-placement="left"
+                                        data-bind="uniqueFor: metaInput, tooltip: `Comma-separated list of meta tags (kinda like hash tags, they're ways to find this file).`"
+                                        >Meta Tags</label
+                                    >
+                                    <div data-bind="hidden: metaTagsValid()" class="col alert alert-warning">
+                                        <strong>Warning:</strong> It's extremely helpful to have some tags to use so you
+                                        can find this file more easily, both here and in the Configuration Builder.
+                                    </div>
+                                    <input
+                                        type="text"
+                                        class="form-control"
+                                        placeholder="Music,Levels,Textures,Gameplay,etc..."
+                                        data-bind="textInput: metaInput, uniqueId: metaInput, event: {blur: $parent.updateFile}"
+                                    />
+                                </div>
+                                <div class="form-group">
+                                    <label
+                                        class="col control-label"
+                                        data-placement="left"
+                                        data-bind="uniqueFor: source, tooltip: `Where did you find this file?`"
+                                        >Source</label
+                                    >
+                                    <div data-bind="hidden: sourceValid()" class="col alert alert-danger">
+                                        <strong>Required: </strong>You'll need to post a link as to where you got this
+                                        file, or where this file can be found.
+                                    </div>
+
+                                    <input
+                                        type="text"
+                                        class="form-control"
+                                        placeholder="http://somesite.com/someplace"
+                                        data-bind="textInput: source, uniqueId: source, event: {blur: $parent.updateFile}"
+                                    />
+                                </div>
+                                <div class="form-group">
+                                    <label
+                                        class="col control-label"
+                                        data-placement="left"
+                                        data-bind="uniqueFor: quickDescription, tooltip: `Just a quick description of the file, not very long.  Just something that pops up real quick so you know more about it.`"
+                                        >Quick Description</label
+                                    >
+                                    <div data-bind="hidden: quickDescriptionValid()" class="col alert alert-warning">
+                                        <strong>Warning:</strong> You really should provide a nice quick description.
+                                        When you hover over the file, it'll pop up helping you remember what it does.
+                                    </div>
+
+                                    <input
+                                        type="text"
+                                        class="form-control col"
+                                        placeholder="This file adds levels, music, sounds, textures, gameplay, etc. changes."
+                                        data-bind="textInput: quickDescription, uniqueId: quickDescription, event: {blur: $parent.updateFile}"
+                                    />
+                                </div>
+                                <div class="form-group">
+                                    <label
+                                        class="col control-label"
+                                        data-placement="left"
+                                        data-bind="uniqueFor: longDescription, tooltip: `Here's where you can basically go nuts in long detail about the file.  Most files have a .txt packaged with them... this is a great place to paste that content (if your file comes with a .txt file of the same name, it'll get autoloaded into this field for you)`"
+                                        >Long Description</label
+                                    >
+                                    <textarea
+                                        class="form-control"
+                                        rows="20"
+                                        placeholder="====== Blahblahblah=====
+This is very long
+oh my yes, this is going to be long.
+
+Hello?  You still here?  yeah, long stuff in here..."
+                                        data-bind="textInput: longDescription, uniqueId: longDescription, event: {blur: $parent.updateFile}"
+                                    ></textarea>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -133,11 +261,11 @@
                         href="#"
                         class="btn btn-secondary"
                         style=""
-                        data-bind="click: ()=>{ files([]); walk(idTechFolder)}"
+                        data-bind="click: ()=>{ Allfiles([]); walk(idTechFolder)}"
                         >Click to read in folders</a
                     ><br />
                     Here's all the files:<br />
-                    <div data-bind="foreach:files">
+                    <div data-bind="foreach:Allfiles">
                         <div data-bind="text: $data"></div>
                     </div>
                     <br />
@@ -149,72 +277,6 @@
                     Pwads: <span data-bind="text: pwadDirectory"></span>
                 </div>
             </div>
-            <!--
-            <div class="myInnerContainer" data-bind="visible: chosenViewId() == views[3]">
-                <h1>Name Manipulation Example</h1>
-                <p>First name: <strong data-bind="text: firstName">todo</strong></p>
-                <p>Last name: <strong data-bind="text: lastName">todo</strong></p>
-                <p>First name: <input data-bind="value: firstName" /></p>
-                <p>Last name: <input data-bind="value: lastName" /></p>
-                <p>Full name: <strong data-bind="text: fullName"></strong></p>
-                <button data-bind="click: capitalizeLastName">Go caps</button>
-            </div>
-            <div class="myInnerContainer" data-bind="visible: chosenViewId() == views[4]">
-                <h1>Seat reservation example</h1>
-                <h2>Your seat reservations (<span data-bind="text: seats().length"></span>)</h2>
-
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Passenger name</th>
-                            <th>Meal</th>
-                            <th>Surcharge</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-
-                    <tbody data-bind="foreach: seats">
-                        <tr>
-                            <td><input data-bind="value: name" /></td>
-                            <td>
-                                <select
-                                    data-bind="options: $root.availableMeals, value: meal, optionsText: 'mealName'"
-                                ></select>
-                            </td>
-                            <td data-bind="text: formattedPrice"></td>
-                            <td><a href="#" data-bind="click: $root.removeSeat">Remove</a></td>
-                        </tr>
-                    </tbody>
-                </table>
-                <button data-bind="click: addSeat, enable: seats().length < 5">Reserve another seat</button>
-                <h3 data-bind="visible: totalSurcharge() > 0">
-                    Total surcharge: $<span data-bind="text: totalSurcharge().toFixed(2)"></span>
-                </h3>
-            </div>
-            <div
-                class="myInnerContainer"
-                data-bind="visible: chosenViewId() == views[views.length-1] || chosenViewId() == views[views.length-2]"
-            >
-                <table class="tabular" data-bind="with: chosenViewData">
-                    <thead>
-                        <tr>
-                            <th>From</th>
-                            <th>To</th>
-                            <th>Subject</th>
-                            <th>Date</th>
-                        </tr>
-                    </thead>
-                    <tbody data-bind="foreach: mails">
-                        <tr>
-                            <td data-bind="text: from"></td>
-                            <td data-bind="text: to"></td>
-                            <td data-bind="text: subject"></td>
-                            <td data-bind="text: date"></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            -->
         </div>
     </body>
 </html>
