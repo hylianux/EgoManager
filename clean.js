@@ -5,6 +5,8 @@ shell.echo('removing export directory');
 shell.rm('-r', './dist/');
 shell.echo('removing bin directory');
 shell.rm('-r', './bin');
+shell.echo('removing old .7z archive if available');
+shell.rm('./EgoManager.7z');
 shell.echo('making build directory');
 shell.mkdir('-p', exportDir);
 shell.mkdir('-p', '/dist/Doom');

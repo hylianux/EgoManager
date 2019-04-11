@@ -8,7 +8,8 @@
         "build:prettyjs": "prettier-eslint --config .prettierrc.js --write resources/app/**/*.js",
         "clean": "node clean.js",
         "build": "npm run clean && node build.js && npm run build:prettyjs && npm --prefix ./dist/resources/app/ install ./dist/resources/app/ --production",
-        "build:export": "npm run build && electron-packager ./dist/resources/app/ --out=bin --overwrite=true && node export.js"
+        "build-exe": "npm run build && electron-packager ./dist/resources/app/ --out=bin --overwrite=true && node export.js",
+        "build-package": "npm run build-exe && node package.js"
     },
     "//": [
         "comment 1",
@@ -30,6 +31,7 @@
         "popper.js": "^1.15.0"
     },
     "devDependencies": {
+        "7zip-bin": "^4.1.0",
         "electron": "^4.1.1",
         "electron-packager": "^13.1.1",
         "eslint": "^5.15.3",
@@ -38,6 +40,7 @@
         "eslint-plugin-node": "^8.0.1",
         "eslint-plugin-promise": "^4.0.1",
         "eslint-plugin-standard": "^4.0.0",
+        "node-7z": "^1.1.0",
         "prettier": "^1.16.4",
         "prettier-eslint": "^8.8.2",
         "prettier-eslint-cli": "^4.7.1",
