@@ -918,12 +918,10 @@ ready(() => {
         init: (element, valueAccessor) => {
             var value = valueAccessor();
             $(element).attr('title', value);
-            $(element).attr('data-original-title', value);
             $(element).tooltip();
         },
         update: (element, valueAccessor) => {
             var value = valueAccessor();
-            $(element).attr('title', value);
             $(element).attr('data-original-title', value);
             $(element).tooltip();
         }
