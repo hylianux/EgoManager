@@ -2,3 +2,4 @@ node_modules
 dist
 bin
 *.7z
+README.html
