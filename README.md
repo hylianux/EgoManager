@@ -15,11 +15,6 @@ After cloning or downloading the repository, simply run:
 
 ## Still to do
 
-### File Database
-
-1. Confirm sourceport is a known sourceport (is it of type GZDoom, Zandronum, or Chocolate Doom?)
-2. Hide extra files. (Been seeing extra exe's in there... would be nice to add a flag that simply hides them in their respective .json file)
-
 ### Configuration Builder
 
 1. If sourceport is of known type (GZDoom, Zandronum, Chocolate Doom), add extra UI for determining options specific to that sourceport.

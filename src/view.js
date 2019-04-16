@@ -5,7 +5,6 @@ const fs = require('fs');
 const titlebar = require('custom-electron-titlebar');
 const Loki = require('lokijs');
 const _ = require('lodash');
-const async = require('async');
 const pwadTypes = ['wad', 'pk3', 'deh', 'bex'];
 const iwadTypes = ['wad', 'pk3'];
 // Importing this adds a right-click menu with 'Inspect Element' option
@@ -83,8 +82,19 @@ function upsert(collection, idField, record) {
     }
 }
 
-function File(filename, authors, metaTags, source, name, quickDescription, longDescription, type) {
-    var self = this;
+function File(
+    filename,
+    authors,
+    metaTags,
+    source,
+    name,
+    quickDescription,
+    longDescription,
+    type,
+    hidden,
+    sourceportType
+) {
+    let self = this;
     self.filename = ko.observable(filename);
     self.filenameValid = ko.computed(() => {
         return self.filename() && self.filename().length > 0;
@@ -92,14 +102,14 @@ function File(filename, authors, metaTags, source, name, quickDescription, longD
     self.authors = ko.observableArray(authors);
     self.authorsValid = ko.computed(() => {
         let valid = false;
-        if (self.authors()){
+        if (self.authors()) {
             valid = true;
         }
-        if (valid){
-            valid = self.authors().length>0
-        } 
-        if (valid){
-            valid = self.authors()[0].trim()!='';
+        if (valid) {
+            valid = self.authors().length > 0;
+        }
+        if (valid) {
+            valid = self.authors()[0].trim() != '';
         }
         return valid;
     });
@@ -119,14 +129,14 @@ function File(filename, authors, metaTags, source, name, quickDescription, longD
     self.metaTags = ko.observableArray(metaTags);
     self.metaTagsValid = ko.computed(() => {
         let valid = false;
-        if (self.metaTags()){
+        if (self.metaTags()) {
             valid = true;
         }
-        if (valid){
-            valid = self.metaTags().length>0
-        } 
-        if (valid){
-            valid = self.metaTags()[0].trim()!='';
+        if (valid) {
+            valid = self.metaTags().length > 0;
+        }
+        if (valid) {
+            valid = self.metaTags()[0].trim() != '';
         }
         return valid;
     });
@@ -164,6 +174,17 @@ function File(filename, authors, metaTags, source, name, quickDescription, longD
             (self.type() === 'iwad' || self.type() === 'sourceport' || self.type() === 'pwad')
         );
     });
+    self.hidden = ko.observable(false);
+    if (hidden === true) {
+        self.hidden(true);
+    }
+    self.sourceportType = ko.observable(sourceportType);
+
+    self.hideFile = () => {
+        let isHidden = self.hidden();
+        self.hidden(!isHidden);
+    };
+
     self.error = ko.computed(() => {
         return !self.filenameValid() || !self.authorsValid() || !self.sourceValid() || !self.typeValid();
     });
@@ -181,15 +202,30 @@ function File(filename, authors, metaTags, source, name, quickDescription, longD
         } else {
             displayname = self.name();
         }
+        if (self.hidden()) {
+            displayname = '(hidden) ' + displayname;
+        }
         return displayname;
     });
     self.displayClass = ko.computed(() => {
+        let displayClass = '';
         if (self.error()) {
-            return 'list-group-item-danger';
+            displayClass = 'list-group-item-danger';
         } else if (self.warning()) {
-            return 'list-group-item-warning';
+            displayClass = 'list-group-item-warning';
         } else {
-            return '';
+            displayClass = '';
+        }
+        if (self.hidden()) {
+            displayClass += ' font-italic';
+        }
+        return displayClass;
+    });
+    self.hideFileClass = ko.computed(() => {
+        if (self.hidden() === true) {
+            return 'fa fa-eye';
+        } else {
+            return 'fa fa-eye-slash';
         }
     });
     self.tooltip = ko.computed(() => {
@@ -243,13 +279,43 @@ function AppViewModel() {
     self.pwadDirectory = self.idTechFolder + path.sep + 'pwads';
     self.sourceportDirectory = self.idTechFolder + path.sep + 'sourceports';
 
+    self.sourceportTypes = ko.observableArray(["ZDoom", "Zandronum", "Chocolate", "Other"]);
+
+    self.showHiddenFiles = ko.observable(false);
+
     self.Allfiles = ko.observableArray();
     self.files = {
-        pwads: ko.observableArray(),
         iwads: ko.observableArray(),
+        pwads: ko.observableArray(),
         sourceports: ko.observableArray()
     };
-
+    self.iwadsAllHidden = ko.computed(() => {
+        let counter = 0;
+        _.forEach(self.files.iwads(), iwad => {
+            if (iwad.hidden() === true) {
+                counter++;
+            }
+        });
+        return counter === self.files.iwads.length;
+    });
+    self.pwadsAllHidden = ko.computed(() => {
+        let counter = 0;
+        _.forEach(self.files.pwads(), pwad => {
+            if (pwad.hidden() === true) {
+                counter++;
+            }
+        });
+        return counter === self.files.pwads.length;
+    });
+    self.sourceportsAllHidden = ko.computed(() => {
+        let counter = 0;
+        _.forEach(self.files.sourceports(), sourceport => {
+            if (sourceport.hidden() === true) {
+                counter++;
+            }
+        });
+        return counter === self.files.sourceports.length;
+    });
     self.chosenFileType = ko.observable('');
     self.chosenFileIndex = ko.observable('');
     self.chosenFile = ko.computed(() => {
@@ -293,7 +359,9 @@ function AppViewModel() {
             source: file.source(),
             name: file.name(),
             quickDescription: file.quickDescription(),
-            longDescription: file.longDescription()
+            longDescription: file.longDescription(),
+            hidden: file.hidden(),
+            sourceportType: file.sourceportType()
         };
         let directory = '';
         switch (file.type()) {
@@ -337,7 +405,8 @@ function AppViewModel() {
                 iwad.name,
                 iwad.quickDescription,
                 iwad.longDescription,
-                'iwad'
+                'iwad',
+                iwad.hidden
             );
             newIwads.push(newIwad);
         });
@@ -357,7 +426,8 @@ function AppViewModel() {
                 pwad.name,
                 pwad.quickDescription,
                 pwad.longDescription,
-                'pwad'
+                'pwad',
+                pwad.hidden
             );
             newPwads.push(newPwad);
         });
@@ -376,7 +446,9 @@ function AppViewModel() {
                 sourceport.name,
                 sourceport.quickDescription,
                 sourceport.longDescription,
-                'sourceport'
+                'sourceport',
+                sourceport.hidden,
+                sourceport.sourceportType
             );
             newSourceports.push(newSourceport);
         });
@@ -402,7 +474,7 @@ function AppViewModel() {
                             }
                             if (f.isDirectory()) {
                                 if (dev) {
-                                    console.log('buildIwad:: ' + file + 'is directory: ' + fullPath);
+                                    console.log('buildIwad:: ' + file + ' and is directory: ' + fullPath);
                                 }
                                 walk(fullPath);
                             } else {
@@ -415,6 +487,7 @@ function AppViewModel() {
                                     };
                                     if (dev) {
                                         console.log('buildIwad:: adding ' + fullPath);
+                                        console.log('reloadFiles: ' + reloadFiles);
                                     }
                                     upsert(iwadCollection, 'filename', iwad);
                                     if (reloadFiles) {
@@ -428,6 +501,7 @@ function AppViewModel() {
                                             let iwad = JSON.parse(data);
                                             if (dev) {
                                                 console.log('buildIwad:: adding ' + fullPath);
+                                                console.log('reloadFiles: ' + reloadFiles);
                                             }
                                             upsert(iwadCollection, 'filename', iwad);
                                             if (reloadFiles) {
@@ -448,6 +522,7 @@ function AppViewModel() {
                                                     console.log(
                                                         'buildIwad:: adding ' + longDescription + ' to ' + fullPath
                                                     );
+                                                    console.log('reloadFiles: ' + reloadFiles);
                                                 }
                                                 iwadCollection.update(iwad);
                                                 if (reloadFiles) {
@@ -489,7 +564,7 @@ function AppViewModel() {
                             }
                             if (f.isDirectory()) {
                                 if (dev) {
-                                    console.log('buildPwad:: ' + file + 'is directory: ' + fullPath);
+                                    console.log('buildPwad:: ' + file + ' and is directory: ' + fullPath);
                                 }
                                 walk(fullPath);
                             } else {
@@ -502,6 +577,7 @@ function AppViewModel() {
                                     };
                                     if (dev) {
                                         console.log('buildPwad:: adding ' + fullPath);
+                                        console.log('reloadFiles: ' + reloadFiles);
                                     }
                                     upsert(pwadCollection, 'filename', pwad);
                                     if (reloadFiles) {
@@ -515,6 +591,7 @@ function AppViewModel() {
                                             let pwad = JSON.parse(data);
                                             if (dev) {
                                                 console.log('buildPwad:: adding ' + fullPath);
+                                                console.log('reloadFiles: ' + reloadFiles);
                                             }
                                             upsert(pwadCollection, 'filename', pwad);
                                             if (reloadFiles) {
@@ -535,6 +612,7 @@ function AppViewModel() {
                                                     console.log(
                                                         'buildPwad:: adding ' + longDescription + ' to ' + fullPath
                                                     );
+                                                    console.log('reloadFiles: ' + reloadFiles);
                                                 }
                                                 pwadCollection.update(pwad);
                                                 if (reloadFiles) {
@@ -576,7 +654,7 @@ function AppViewModel() {
                             }
                             if (f.isDirectory()) {
                                 if (dev) {
-                                    console.log('buildSourceport:: ' + file + 'is directory: ' + fullPath);
+                                    console.log('buildSourceport:: ' + file + ' and is directory: ' + fullPath);
                                 }
                                 walk(fullPath);
                             } else {
@@ -589,6 +667,7 @@ function AppViewModel() {
                                     };
                                     if (dev) {
                                         console.log('buildSourceport:: adding ' + fullPath);
+                                        console.log('reloadFiles: ' + reloadFiles);
                                     }
                                     upsert(sourceportCollection, 'filename', sourceport);
                                     if (reloadFiles) {
@@ -602,6 +681,7 @@ function AppViewModel() {
                                             let sourceport = JSON.parse(data);
                                             if (dev) {
                                                 console.log('buildSourceport:: adding ' + fullPath);
+                                                console.log('reloadFiles: ' + reloadFiles);
                                             }
                                             upsert(sourceportCollection, 'filename', sourceport);
                                             if (reloadFiles) {
@@ -686,7 +766,8 @@ function AppViewModel() {
                     iwad.name,
                     iwad.quickDescription,
                     iwad.longDescription,
-                    'iwad'
+                    'iwad',
+                    iwad.hidden
                 );
                 newIwads.push(newIwad);
             });
@@ -754,7 +835,8 @@ function AppViewModel() {
                     pwad.name,
                     pwad.quickDescription,
                     pwad.longDescription,
-                    'pwad'
+                    'pwad',
+                    pwad.hidden
                 );
                 newPwads.push(newPwad);
             });
@@ -822,7 +904,9 @@ function AppViewModel() {
                     sourceport.name,
                     sourceport.quickDescription,
                     sourceport.longDescription,
-                    'sourceport'
+                    'sourceport',
+                    sourceport.hidden,
+                    sourceport.sourceportType
                 );
                 newSourceports.push(newSourceport);
             });
@@ -840,7 +924,7 @@ function AppViewModel() {
                 return;
             }
             files.forEach(file => {
-                var fullPath = path.join(directoryName, file);
+                let fullPath = path.join(directoryName, file);
                 fs.stat(fullPath, (e, f) => {
                     if (e) {
                         console.log('Error: ', e);
@@ -862,7 +946,7 @@ function AppViewModel() {
     self.init = () => {
         //self.goToView(self.views[0]);
         console.log('loading files');
-        self.loadCollections();
+        self.loadCollections(true);
     };
     self.init();
 }
@@ -897,7 +981,7 @@ ready(() => {
     // Activates knockout.js
     ko.bindingHandlers.uniqueId = {
         init: (element, valueAccessor) => {
-            var value = valueAccessor();
+            let value = valueAccessor();
             value.id = value.id || ko.bindingHandlers.uniqueId.prefix + ++ko.bindingHandlers.uniqueId.counter;
 
             element.id = value.id;
@@ -908,7 +992,7 @@ ready(() => {
 
     ko.bindingHandlers.uniqueFor = {
         init: (element, valueAccessor) => {
-            var value = valueAccessor();
+            let value = valueAccessor();
             value.id = value.id || ko.bindingHandlers.uniqueId.prefix + ++ko.bindingHandlers.uniqueId.counter;
 
             element.setAttribute('for', value.id);
@@ -916,12 +1000,12 @@ ready(() => {
     };
     ko.bindingHandlers.tooltip = {
         init: (element, valueAccessor) => {
-            var value = valueAccessor();
+            let value = valueAccessor();
             $(element).attr('title', value);
             $(element).tooltip();
         },
         update: (element, valueAccessor) => {
-            var value = valueAccessor();
+            let value = valueAccessor();
             $(element).attr('data-original-title', value);
             $(element).tooltip();
         }
