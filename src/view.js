@@ -43,6 +43,9 @@ function getCollection(collectionName) {
     return collection;
 }
 
+//TODO: CHOCOLATE DOOM multi-screen command
+//chocolate-doom -server -window & chocolate-doom -autojoin -left -window & chocolate-doom -autojoin -right -window
+
 let db = new Loki(path.resolve(__dirname, '../../ego.json'), {
     autosave: true,
     env: 'NODEJS'
@@ -50,7 +53,24 @@ let db = new Loki(path.resolve(__dirname, '../../ego.json'), {
 let iwadCollection = getCollection('iwads');
 let pwadCollection = getCollection('pwads');
 let sourceportCollection = getCollection('sourceports');
-// let configurations = getCollection('configurations');
+let configCollection = getCollection('configs');
+let commandLineCollection = getCollection('commands');
+
+fs.readFile(path.resolve(__dirname, '../../commandLineOptions.json'), 'utf8', (err, data) => {
+    if (err) {
+        console.log('file read error!' + err);
+    } else {
+        let commands = JSON.parse(data);
+        /*
+        if (dev) {
+            console.log('buildIwad:: adding ' + fullPath);
+            console.log('reloadFiles: ' + reloadFiles);
+        }*/
+        _.forEach(commands, command => {
+            upsert(commandLineCollection, 'name', command);
+        });
+    }
+});
 
 /**
  * Performs an upsert.
@@ -81,6 +101,29 @@ function upsert(collection, idField, record) {
         collection.insert(record);
     }
 }
+
+function Config(iwad, pwads, sourceport, options) {
+    let self = this;
+    self.iwad = ko.observable(iwad);
+    self.pwads = ko.observableArray(pwads);
+    self.sourceport = ko.observable(sourceport);
+    self.options = options;
+}
+
+function CommandLineOption(enabled, name, description, command, value) {
+    let self = this;
+    self.name = name;
+    self.description = description;
+    self.command = command;
+    self.value = ko.observable(value);
+    self.enabled = ko.observable(enabled);
+}
+
+/*
+function CommandLineOptions(pixelDouble, pixelQuadruple, bits, width, height, blockmap, cdrom, config, nocdaudio, noidle, nojoy, nomusic, nosfx, nosound, nostartup, oldsprites, savedir, timer, turbo, noautoload, loadgame, playdemo, recordDemo, playerclass, skill, timedemo, warpArray, warpMapName, warpwipe, xlat, windowTopLeft, debugfile, devparm, hashfiles, noblit, nodraw, norun, stdout, dup, extratic, host, join, netmode, port, developer, dmflags, dmflags2){
+
+}
+*/
 
 function File(
     filename,
@@ -279,7 +322,32 @@ function AppViewModel() {
     self.pwadDirectory = self.idTechFolder + path.sep + 'pwads';
     self.sourceportDirectory = self.idTechFolder + path.sep + 'sourceports';
 
-    self.sourceportTypes = ko.observableArray(["ZDoom", "Zandronum", "Chocolate", "Other"]);
+    self.sourceportTypes = ko.observableArray(['ZDoom', 'Zandronum', 'Chocolate', 'Other']);
+
+    //Emulate a specific version of Doom.  command = -gameversion <version>
+    self.chocolateDoomGameVersions = ko.observableArray([
+        '1.666',
+        '1.7',
+        '1.8',
+        '1.9',
+        'ultimate',
+        'final',
+        'final2',
+        'hacx',
+        'chex'
+    ]);
+    self.chocolateDoomSelectedGameVersion = ko.observable();
+
+    //Explicitly specify a Doom II "mission pack" to run as, instead of detecting it based on the filename.
+    //I guess use this if your doom2, tnt, or plutonia wads aren't named doom2.wad, tnt.wad, and plutonia.wad respectively?
+    //command = -pack <pack>
+    self.chocolateDoomMissionPacks = ko.observableArray(['doom2', 'tnt', 'plutonia']);
+    self.chocolateDoomSelectedMissionPack = ko.observable();
+
+    //Specify DOS version to emulate for NULL pointer dereference emulation. Supported versions are: dos622, dos71, dosbox. The default is to emulate DOS 7.1 (Windows 98).
+    //command = -setmem <version>
+    self.chocolateDoomSetMemVersions = ko.observableArray(['dos622', 'dos71', 'dosbox']);
+    self.chocolateDoomSelectedSetMemVersion = ko.observable();
 
     self.showHiddenFiles = ko.observable(false);
 
