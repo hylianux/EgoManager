@@ -28,11 +28,13 @@ After cloning or downloading the repository, simply run:
    2. Each found pwad will be listed, each one with a checkbox and a plus button (plus adds that one pwad to the playlist and removes it from the list, checkboxes are for when you click "add selected", again, same as above - adds to playlist and removes from select list).
    3. Chosen Pwad list will need minus buttons to remove them and put them back in the Choosable pwad list.  checkboxes to remove all selected.
    4. Chosen Pwad list can be reordered.  The only way that makes any sense is to make 'em draggable.
-4. store configurations
-5. clone configurations
-6. export configurations as batch file (choose relative paths or absolute paths)
+4. Command line parameters (these are not on/off in nature, so care needs to go into how these will be implemented)
+5. store configurations
+6. clone configurations
+7. export configurations as batch file (choose relative paths or absolute paths)
 
 ### Chocolate-Doom Specific
+
 1. create chocolate-doom pwad and deh constructor (it's different than zdoom-based mods... yay old-school?)
 2. allow user to specify game version from preselected versions
 3. create 3-screen implementation
