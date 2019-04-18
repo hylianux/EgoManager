@@ -55,6 +55,8 @@ let pwadCollection = getCollection('pwads');
 let sourceportCollection = getCollection('sourceports');
 let configCollection = getCollection('configs');
 let commandLineCollection = getCollection('commands');
+let DMFlagsCollection = getCollection('DMFlags');
+
 
 fs.readFile(path.resolve(__dirname, '../../commandLineOptions.json'), 'utf8', (err, data) => {
     if (err) {
@@ -67,7 +69,22 @@ fs.readFile(path.resolve(__dirname, '../../commandLineOptions.json'), 'utf8', (e
             console.log('reloadFiles: ' + reloadFiles);
         }*/
         _.forEach(commands, command => {
-            upsert(commandLineCollection, 'name', command);
+            upsert(commandLineCollection, ['name', 'command', 'sourceports'], command);
+        });
+    }
+});
+fs.readFile(path.resolve(__dirname, '../../DMFlags.json'), 'utf8', (err, data) => {
+    if (err) {
+        console.log('file read error!' + err);
+    } else {
+        let flags = JSON.parse(data);
+        /*
+        if (dev) {
+            console.log('buildIwad:: adding ' + fullPath);
+            console.log('reloadFiles: ' + reloadFiles);
+        }*/
+        _.forEach(flags, flag => {
+            upsert(DMFlagsCollection, ["name", "value", "command", "sourceport"], flag);
         });
     }
 });
@@ -79,13 +96,19 @@ fs.readFile(path.resolve(__dirname, '../../commandLineOptions.json'), 'utf8', (e
  * LokiJS (as at version 1.2.5) lacks this function.
  * TODO: Remove this function when LokiJS has built-in support for upserts.
  * @param {object} collection - The target DB collection.
- * @param {string} idField - The field which contains the record's unique ID.
+ * @param {string} idQuery - The field(s) which contains the record's unique ID.
  * @param {object} record - The record to be upserted.
  * @depends lodash
  */
-function upsert(collection, idField, record) {
+function upsert(collection, idQuery, record) {
     let query = {};
-    query[idField] = record[idField];
+    if (typeof idQuery === 'string'){
+        query[idQuery] = record[idQuery];
+    } else if (Array.isArray(idQuery)){
+        _.forEach(idQuery, field=>{
+            query[field] = record[field];
+        });
+    }
     let existingRecord = collection.findOne(query);
     if (existingRecord) {
         // The record exists. Do an update.

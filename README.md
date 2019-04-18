@@ -27,3 +27,4 @@ After cloning or downloading the repository, simply run:
 ### Chocolate-Doom Specific
 1. create chocolate-doom pwad and deh constructor (it's different than zdoom-based mods... yay old-school?)
 2. allow user to specify game version from preselected versions
+3. create 3-screen implementation
