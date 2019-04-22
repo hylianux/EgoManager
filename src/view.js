@@ -46,6 +46,18 @@ function getCollection(collectionName) {
 //TODO: CHOCOLATE DOOM multi-screen command
 //chocolate-doom -server -window & chocolate-doom -autojoin -left -window & chocolate-doom -autojoin -right -window
 
+//TODO: Add command logic for moving to chosen levels
+/**
+ * 
+    {
+        "command": "-warp",
+        "value": "1 1" or "1",
+        have it lookup from the Levels collection.
+    }
+ */
+
+//TODO: create custom commands for WAD merging in chocolate doom
+
 let db = new Loki(path.resolve(__dirname, '../../ego.json'), {
     autosave: true,
     env: 'NODEJS'
@@ -56,7 +68,7 @@ let sourceportCollection = getCollection('sourceports');
 let configCollection = getCollection('configs');
 let commandLineCollection = getCollection('commands');
 let DMFlagsCollection = getCollection('DMFlags');
-
+let levelsCollection = getcollection('levels');
 
 fs.readFile(path.resolve(__dirname, '../../commandLineOptions.json'), 'utf8', (err, data) => {
     if (err) {
@@ -84,7 +96,22 @@ fs.readFile(path.resolve(__dirname, '../../DMFlags.json'), 'utf8', (err, data) =
             console.log('reloadFiles: ' + reloadFiles);
         }*/
         _.forEach(flags, flag => {
-            upsert(DMFlagsCollection, ["name", "value", "command", "sourceport"], flag);
+            upsert(DMFlagsCollection, ['name', 'value', 'command', 'sourceport'], flag);
+        });
+    }
+});
+fs.readFile(path.resolve(__dirname, '../../Levels.json'), 'utf8', (err, data) => {
+    if (err) {
+        console.log('file read error!' + err);
+    } else {
+        let levels = JSON.parse(data);
+        /*
+        if (dev) {
+            console.log('buildIwad:: adding ' + fullPath);
+            console.log('reloadFiles: ' + reloadFiles);
+        }*/
+        _.forEach(levels, level => {
+            upsert(levelsCollection, 'name', level);
         });
     }
 });
@@ -102,10 +129,10 @@ fs.readFile(path.resolve(__dirname, '../../DMFlags.json'), 'utf8', (err, data) =
  */
 function upsert(collection, idQuery, record) {
     let query = {};
-    if (typeof idQuery === 'string'){
+    if (typeof idQuery === 'string') {
         query[idQuery] = record[idQuery];
-    } else if (Array.isArray(idQuery)){
-        _.forEach(idQuery, field=>{
+    } else if (Array.isArray(idQuery)) {
+        _.forEach(idQuery, field => {
             query[field] = record[field];
         });
     }
@@ -158,7 +185,7 @@ function File(
     longDescription,
     type,
     hidden,
-    sourceportType
+    subtype
 ) {
     let self = this;
     self.filename = ko.observable(filename);
@@ -244,7 +271,7 @@ function File(
     if (hidden === true) {
         self.hidden(true);
     }
-    self.sourceportType = ko.observable(sourceportType);
+    self.subtype = ko.observable(subtype);
 
     self.hideFile = () => {
         let isHidden = self.hidden();
@@ -346,6 +373,56 @@ function AppViewModel() {
     self.sourceportDirectory = self.idTechFolder + path.sep + 'sourceports';
 
     self.sourceportTypes = ko.observableArray(['ZDoom', 'Zandronum', 'Chocolate', 'Other']);
+    self.iwadTypes = ko.observableArray([
+        {
+            name: 'doom',
+            description: 'Doom'
+        },
+        {
+            name: 'doom2',
+            description: 'Doom2'
+        },
+        {
+            name: 'hexen',
+            description: 'Hexen: Beyond Heretic'
+        },
+        {
+            name: 'hexend',
+            description: 'Hexen: Deathkings of the Dark Citadel'
+        },
+        {
+            name: 'strife',
+            description: 'Strife'
+        },
+        {
+            name: 'hacx',
+            description: 'Hacx'
+        },
+        {
+            name: 'tnt',
+            description: 'TNT: Evilution'
+        },
+        {
+            name: 'plutonia',
+            description: 'The Plutonia experiment'
+        },
+        {
+            name: 'nerve',
+            description: 'No Rest for the Living'
+        },
+        {
+            name: 'heretic',
+            description: 'Heretic'
+        },
+        {
+            name: 'chex',
+            description: 'Chex Quest'
+        },
+        {
+            name: 'other',
+            description: 'Other'
+        }
+    ]);
 
     //Emulate a specific version of Doom.  command = -gameversion <version>
     self.chocolateDoomGameVersions = ko.observableArray([
@@ -452,7 +529,7 @@ function AppViewModel() {
             quickDescription: file.quickDescription(),
             longDescription: file.longDescription(),
             hidden: file.hidden(),
-            sourceportType: file.sourceportType()
+            subtype: file.subtype()
         };
         let directory = '';
         switch (file.type()) {
@@ -497,7 +574,8 @@ function AppViewModel() {
                 iwad.quickDescription,
                 iwad.longDescription,
                 'iwad',
-                iwad.hidden
+                iwad.hidden,
+                iwad.subtype
             );
             newIwads.push(newIwad);
         });
@@ -539,7 +617,7 @@ function AppViewModel() {
                 sourceport.longDescription,
                 'sourceport',
                 sourceport.hidden,
-                sourceport.sourceportType
+                sourceport.subtype
             );
             newSourceports.push(newSourceport);
         });
@@ -858,7 +936,8 @@ function AppViewModel() {
                     iwad.quickDescription,
                     iwad.longDescription,
                     'iwad',
-                    iwad.hidden
+                    iwad.hidden,
+                    iwad.subtype
                 );
                 newIwads.push(newIwad);
             });
@@ -997,7 +1076,7 @@ function AppViewModel() {
                     sourceport.longDescription,
                     'sourceport',
                     sourceport.hidden,
-                    sourceport.sourceportType
+                    sourceport.subtype
                 );
                 newSourceports.push(newSourceport);
             });

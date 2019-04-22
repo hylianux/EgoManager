@@ -1,14 +1,17 @@
 [
     {
         "enabled": false,
+        "inputType": "file",
         "name": "Load Extra Config",
         "description": "Load additional configuration from the specified file, instead of the default.",
         "command": "-extraconfig",
+        "value": "",
         "sourceports": ["chocolate"],
         "category": "config"
     },
     {
         "enabled": false,
+        "inputType": "boolean",
         "name": "No Screen Scaling",
         "description": "Don't scale up the screen.  Implies -window.",
         "command": "-1",
@@ -17,6 +20,7 @@
     },
     {
         "enabled": false,
+        "inputType": "boolean",
         "name": "Double Pixels",
         "description": "Forces all video modes to use pixel doubling, resulting in the final video mode being two times larger than specified. (In Chocolate Doom, implies -window)",
         "command": "-2",
@@ -25,6 +29,7 @@
     },
     {
         "enabled": false,
+        "inputType": "boolean",
         "name": "Triple Scale",
         "description": "Double up the screen to 3x its normal size.  Implies -window.",
         "command": "-3",
@@ -33,6 +38,7 @@
     },
     {
         "enabled": false,
+        "inputType": "boolean",
         "name": "Quadruple Pixels",
         "description": "Forces all video modes to use pixel quadrupling, resulting in the final video mode being four times larger than specified.",
         "command": "-4",
@@ -41,6 +47,7 @@
     },
     {
         "enabled": false,
+        "inputType": "text",
         "name": "Specify Window Dimensions",
         "description": "Specify the dimensions of the window.  Implies -window.  Specify as WidthxHeight.",
         "command": "-geometry",
@@ -50,6 +57,7 @@
     },
     {
         "enabled": false,
+        "inputType": "boolean",
         "name": "Don't Grab Mouse",
         "description": "Don't grab the mouse when running in windowed mode.",
         "command": "-nograbmouse",
@@ -58,6 +66,7 @@
     },
     {
         "enabled": false,
+        "inputType": "boolean",
         "name": "Disable Mouse",
         "description": "Disable the mouse.",
         "command": "-nomouse",
@@ -66,6 +75,7 @@
     },
     {
         "enabled": false,
+        "inputType": "boolean",
         "name": "Windowed Mode",
         "description": "Run in a window.",
         "command": "-window",
@@ -74,6 +84,7 @@
     },
     {
         "enabled": false,
+        "inputType": "number",
         "name": "Display Depth",
         "description": "Specifies the display depth. Currently, only 8 is supported (for the software renderer).",
         "command": "-bits",
@@ -83,6 +94,7 @@
     },
     {
         "enabled": false,
+        "inputType": "number",
         "name": "Width",
         "description": "Specifies the desired resolution of the screen. If only one of -width or -height is specified, ZDoom will try to guess the other one based on a standard aspect ratio. If the specified resolution is not supported by your SDL/DirectDraw drivers, ZDoom will try various resolutions until it either finds one that works, or it will finally give up. To determine which resolutions ZDoom can use, use the vid_describemodes command from the console once you have started the game.",
         "command": "-width",
@@ -92,6 +104,7 @@
     },
     {
         "enabled": false,
+        "inputType": "number",
         "name": "Height",
         "description": "Specifies the desired resolution of the screen. If only one of -width or -height is specified, ZDoom will try to guess the other one based on a standard aspect ratio. If the specified resolution is not supported by your SDL/DirectDraw drivers, ZDoom will try various resolutions until it either finds one that works, or it will finally give up. To determine which resolutions ZDoom can use, use the vid_describemodes command from the console once you have started the game.",
         "command": "-height",
@@ -101,6 +114,7 @@
     },
     {
         "enabled": false,
+        "inputType": "boolean",
         "name": "Ignore Blockmap Information",
         "description": "Causes ZDoom to ignore all the BLOCKMAP information a map provides and generate it instead. This is equivalent to +set genblockmap 1.",
         "command": "-blockmap",
@@ -109,6 +123,7 @@
     },
     {
         "enabled": false,
+        "inputType": "boolean",
         "name": "Use C:\\ZDOOMDAT",
         "description": "Causes ZDoom to look for savegames and zdoom.cfg in a directory called C:\\ZDOOMDAT (C:\\doomdata for chocolate doom). Screenshots will also be saved in this directory.",
         "command": "-cdrom",
@@ -117,6 +132,7 @@
     },
     {
         "enabled": false,
+        "inputType": "file",
         "name": "Use Config",
         "description": "Causes ZDoom to use an alternative configuration file. (Zdoom and Zandronum only: if configfile does not exist, it will be created.)",
         "command": "-config",
@@ -126,6 +142,7 @@
     },
     {
         "enabled": false,
+        "inputType": "boolean",
         "name": "No CD Audio",
         "description": "Disables CD audio. Since only the Windows version supports CD audio, other versions ignore this option.",
         "command": "-nocdaudio",
@@ -134,6 +151,7 @@
     },
     {
         "enabled": false,
+        "inputType": "boolean",
         "name": "Keep Priority on Alt-tab (Windows only)",
         "description": "When the user presses Alt-Tab to switch from ZDoom to another window, ZDoom will normally reduce its priority class so that it does not slow the rest of the system down. By specifying this parameter, ZDoom will try to run at full speed even when it is not the active window.",
         "command": "-noidle",
@@ -142,6 +160,7 @@
     },
     {
         "enabled": false,
+        "inputType": "boolean",
         "name": "Disable Joystick",
         "description": "Disables joystick support. If you have an old-fashioned gameport (non-USB) device attached, it can slow down the game even if you do not intend to use it. Use -nojoy to avoid the slowdown that comes from polling it for input. Only the Windows version supports a joystick.",
         "command": "-nojoy",
@@ -150,6 +169,7 @@
     },
     {
         "enabled": false,
+        "inputType": "boolean",
         "name": "Disable Music",
         "description": "Prevents the playback of music.",
         "command": "-nomusic",
@@ -158,6 +178,7 @@
     },
     {
         "enabled": false,
+        "inputType": "boolean",
         "name": "Disable Sound Effects",
         "description": "Prevents the playback of sound effects.",
         "command": "-nosfx",
@@ -166,6 +187,7 @@
     },
     {
         "enabled": false,
+        "inputType": "boolean",
         "name": "Disable All Sound",
         "description": "Disables both music and sound effects.",
         "command": "-nosound",
@@ -174,6 +196,7 @@
     },
     {
         "enabled": false,
+        "inputType": "boolean",
         "name": "Disable Startup Screens",
         "description": "Disables the startup screens used by Heretic, Hexen and Strife, and use the Doom text-mode startup instead.",
         "command": "-nostartup",
@@ -182,6 +205,7 @@
     },
     {
         "enabled": false,
+        "inputType": "boolean",
         "name": "Disable Sprite Renaming",
         "description": "Disables sprite renaming. Unless you are playing a mod for Heretic, Hexen or Strife that replaced a few select sprites, you do not need this.",
         "command": "-oldsprites",
@@ -190,6 +214,7 @@
     },
     {
         "enabled": false,
+        "inputType": "file",
         "name": "Alternate Save Directory",
         "description": "Specifies an alternate directory to use for saved files. If this is not specified, ZDoom stores them in the directory indicated by the save_dir CVAR.",
         "command": "-savedir",
@@ -199,15 +224,21 @@
     },
     {
         "enabled": false,
+        "inputType": "range",
         "name": "Start on Episode",
         "description": "Start playing on episode n (1-4) (only applicable to Chex Quest, Doom and Heretic).",
         "command": "-episode",
         "value": "1",
+        "valueRange": {
+            "min": 1,
+            "max": 4
+        },
         "sourceports": ["chocolate"],
         "category": "gameplay"
     },
     {
         "enabled": false,
+        "inputType": "boolean",
         "name": "Faster Monsters",
         "description": "Monsters move faster",
         "command": "-fast",
@@ -216,6 +247,7 @@
     },
     {
         "enabled": false,
+        "inputType": "boolean",
         "name": "Disable Monsters",
         "description": "Disable monsters.",
         "command": "-nomonsters",
@@ -224,6 +256,7 @@
     },
     {
         "enabled": false,
+        "inputType": "boolean",
         "name": "Respawn Monsters",
         "description": "Monsters respawn after being killed.",
         "command": "-respawn",
@@ -232,6 +265,7 @@
     },
     {
         "enabled": false,
+        "inputType": "number",
         "name": "Auto Advance Timer",
         "description": "Causes ZDoom to automatically advance to the next level after x minutes. This is equivalent to +set timelimit x.",
         "command": "-timer",
@@ -241,15 +275,35 @@
     },
     {
         "enabled": false,
+        "inputType": "range",
         "name": "Modify Player Speed",
         "description": "Causes player movement to be x% as fast as normal. Valid values are 10–255, with 100 being normal. Values larger than 100 are considered cheating. This is equivalent to +set turbo x.",
         "command": "-turbo",
         "value": "100",
-        "sourceports": ["zdoom", "zandronum", "chocolate"],
+        "valueRange": {
+            "min": 10,
+            "max": 255
+        },
+        "sourceports": ["zdoom", "zandronum"],
         "category": "gameplay"
     },
     {
         "enabled": false,
+        "inputType": "range",
+        "name": "Turbo Mode",
+        "description": "Turbo mode. The player's speed is multiplied by x%. If unspecified, x defaults to 200. Values are rounded up to 10 and down to 400.",
+        "command": "-turbo",
+        "value": "200",
+        "valueRange": {
+            "min": 10,
+            "max": 400
+        },
+        "sourceports": ["chocolate"],
+        "category": "gameplay"
+    },
+    {
+        "enabled": false,
+        "inputType": "boolean",
         "name": "Disable Autoloads",
         "description": "Prevents files from being autoloaded based on the “AutoLoad” sections in the user's configuration file. This flag also disables autoloading of zvox.wad and the skins directory. This can be useful if you use files which are autoloaded when playing normally, but want to load without them for debugging purposes or to play a mod which might be incompatible with them.",
         "command": "-noautoload",
@@ -258,6 +312,7 @@
     },
     {
         "enabled": false,
+        "inputType": "file",
         "name": "Load Save File",
         "description": "Automatically loads the specified savegame. To find out a save's file name, press F1 while it is highlighted in the save or load menu. If you do not include the .zds extension, ZDoom will automatically add it for you.",
         "command": "-loadgame",
@@ -267,6 +322,22 @@
     },
     {
         "enabled": false,
+        "inputType": "range",
+        "name": "Load Save Slot",
+        "description": "Load the game in slot s.",
+        "command": "-loadgame",
+        "valueRange": {
+            "min": 0,
+            "max": 9
+        },
+        "value": "0",
+
+        "sourceports": ["zdoom", "zandronum", "chocolate"],
+        "category": "config"
+    },
+    {
+        "enabled": false,
+        "inputType": "file",
         "name": "Play Demo File",
         "description": "ZDoom will automatically play the specified demo when it starts. If the .lmp extension is omitted, it will automatically be added.  (Zandronum only: Plays back the specified demo file. In order to play the previously recorded demo, it is necessary to include the exact PWADs and in its precise order of which the wad files were recorded, failure to do so could result into an error from the Zandronum engine. An example of its usage: 'zandronum -iwad Doom2.wad -file STCTF.wad ICantBelieveItsNotButter.pk3 -playdemo \".\\MyZandronumDemo.cld\"')",
         "command": "-playdemo",
@@ -276,6 +347,7 @@
     },
     {
         "enabled": false,
+        "inputType": "file",
         "name": "Record Gameplay to Demo File",
         "description": "Records a demo. The -warp parameter or +map command should also be used if you do not want to record the demo on MAP01 or E1M1. You may only record from the start of a map. Loading a savegame and recording from there is unsupported.<br> To stop the demo recording, use the “stop” console command. If the .lmp extension is omitted, it will automatically be added. Unlike vanilla Doom, only one person in a multiplayer game needs to specify the -record parameter if they want to record a demo. However, if someone quits before the person recording the demo does, the person recording will automatically quit, too, because demos do not have a way to record when a player leaves the game.  (Zandronum-only: When used, Zandronum will record all actions that take place within the multiplayer game. These demos can be played back later with the -playdemo parameter and the same exact WAD files. An example of its usage: 'zandronum -iwad Doom2.wad -file STCTF.wad ICantBelieveItsNotButter.pk3 -record \".\\MyZandronumDemo.cld\"')",
         "command": "-record",
@@ -285,6 +357,7 @@
     },
     {
         "enabled": false,
+        "inputType": "text",
         "name": "Set Player Class",
         "description": "Only relevant when playing a game with several available player classes. Without mods, this applies to Hexen only. For example:<br>+playerclass Fighter<br>+playerclass Cleric<br>+playerclass Mage<br>+playerclass Random",
         "command": "+playerclass",
@@ -294,15 +367,21 @@
     },
     {
         "enabled": false,
+        "inputType": "range",
         "name": "Set Skill Level",
         "description": "Sets the initial skill level. This is overridden if you start a new game from the New Game menu.  Note that this is different from the skill CVAR, which ranges from 0-4.",
         "command": "-skill",
         "value": "4",
+        "valueRange": {
+            "min": 1,
+            "max": 5
+        },
         "sourceports": ["zdoom", "zandronum", "chocolate"],
         "category": "gameplay"
     },
     {
         "enabled": false,
+        "inputType": "file",
         "name": "Play Demo File Faster with Framerate",
         "description": "Plays back a demo faster than -playdemo and displays a framerate when the demo is over. If the .lmp extension is omitted, it will automatically be added.",
         "command": "-timedemo",
@@ -312,6 +391,7 @@
     },
     {
         "enabled": false,
+        "inputType": "boolean",
         "name": "Record Hi-res Demo",
         "description": "Record a high resolution \"Doom 1.91\" demo.",
         "command": "-longtics",
@@ -320,6 +400,7 @@
     },
     {
         "enabled": false,
+        "inputType": "number",
         "name": "Demo Buffer Size",
         "description": "Specify the demo buffer size (KiB) (originally set to 128KB)",
         "command": "-maxdemo",
@@ -329,6 +410,7 @@
     },
     {
         "enabled": false,
+        "inputType": "boolean",
         "name": "Disable Demo Extensions",
         "description": "When recording or playing back demos, disable any extensions of the vanilla demo format - record demos as vanilla would do, and play back demos as vanilla would do.",
         "command": "-strictdemos",
@@ -337,6 +419,7 @@
     },
     {
         "enabled": false,
+        "inputType": "text",
         "name": "Emulate Donut Memory Overrun",
         "description": "Use the specified magic values when emulating behavior caused by memory overruns from improperly constructed donuts. In Vanilla Doom this can differ depending on the operating system. The default (if this option is not specified) is to emulate the behavior when running under Windows 98.",
         "command": "-donut",
@@ -346,6 +429,7 @@
     },
     {
         "enabled": false,
+        "inputType": "number",
         "name": "Emulate spechit overrun",
         "description": "Use the specified magic value when emulating spechit overruns.",
         "command": "-spechit",
@@ -355,6 +439,7 @@
     },
     {
         "enabled": false,
+        "inputType": "file",
         "name": "Dump Stats",
         "description": "Dump statistics information to the specified file on the levels that were played. The output from this option matches the output from statdump.exe (see ctrlapi.zip in the /idgames archive).",
         "command": "-statdump",
@@ -364,6 +449,7 @@
     },
     {
         "enabled": false,
+        "inputType": "file",
         "name": "Dump Substitution Music Config",
         "description": "Read all MIDI files from loaded WAD files, dump an example substitution music config file to the specified filename and quit.",
         "command": "-dumpsubstconfig",
@@ -373,6 +459,7 @@
     },
     {
         "enabled": false,
+        "inputType": "number",
         "name": "Specify Heap Size",
         "description": "Specify the heap size, in MiB (default 16).",
         "command": "-mb",
@@ -382,6 +469,7 @@
     },
     {
         "enabled": false,
+        "inputType": "boolean",
         "name": "Map Wad Files to Memory",
         "description": "Use the OS's virtual memory subsystem to map WAD files directly into memory.",
         "command": "-mmap",
@@ -390,6 +478,7 @@
     },
     {
         "enabled": false,
+        "inputType": "boolean",
         "name": "Disable Error GUI",
         "description": "If specified, don't show a GUI window for error messages when the game exits with an error.",
         "command": "-nogui",
@@ -398,24 +487,7 @@
     },
     {
         "enabled": false,
-        "name": "Starting Level",
-        "description": "For Doom II, Final Doom, Hexen and Strife, starts the game on map m. For Chex Quest, Doom and Heretic, starts the game on episode e, map m.",
-        "command": "-warp",
-        "value": "1 1",
-        "sourceports": ["zdoom", "zandronum", "chocolate"],
-        "category": "gameplay"
-    },
-    {
-        "enabled": false,
-        "name": "Starting Level Name",
-        "description": "Just like the Starting Level command, but it expects the actual name of the map instead of the numbers (e.g. MAP01, E1M1).",
-        "command": "+map",
-        "value": "E1M1",
-        "sourceports": ["zdoom", "zandronum"],
-        "category": "gameplay"
-    },
-    {
-        "enabled": false,
+        "inputType": "boolean",
         "name": "Screen Wipe On Warped Map Start",
         "description": "Forces a screen wipe to happen after loading a map immediately at startup. Useless unless used in conjunction with -warp or +map.",
         "command": "-warpwipe",
@@ -424,6 +496,7 @@
     },
     {
         "enabled": false,
+        "inputType": "file",
         "name": "Use specified map translator",
         "description": "Specify a different default map translator to use if one isn't specified in MAPINFO. The default translators are xlat/doom.txt for Doom, Chex Quest, Urban Brawl and Harmony; xlat/heretic.txt for Heretic and Hexen (though Hexen maps normally need no translator since only Doom-format maps are translated) and xlat/strife.txt for Strife. For playing an Eternity Engine mod, the xlat/eternity.txt file can be used, though keep in mind that many Eternity features are not implemented in ZDoom and will not work even after translation. You can specify your own custom translator.",
         "command": "-xlat",
@@ -433,6 +506,7 @@
     },
     {
         "enabled": false,
+        "inputType": "boolean",
         "name": "Turn On Console Debug Output",
         "description": "will print a bunch of debugging messages to the console.",
         "command": "+set developer",
@@ -442,6 +516,7 @@
     },
     {
         "enabled": false,
+        "inputType": "boolean",
         "name": "Reset Window Position",
         "description": "Resets the window position to the top-left corner of the screen.",
         "command": "-0",
@@ -450,6 +525,7 @@
     },
     {
         "enabled": false,
+        "inputType": "boolean",
         "name": "Output Debug to File",
         "description": "Causes ZDoom to write network debugging information to a file called debugN.txt where N is your player number.",
         "command": "-debugfile",
@@ -458,6 +534,7 @@
     },
     {
         "enabled": false,
+        "inputType": "boolean",
         "name": "Enable Screenshot Mode",
         "description": "Prints a message telling you that you “useless mode is activated”. With the original Doom, using -devparm was the only way to take screenshots. With ZDoom, screenshot is just another command, so -devparm serves no real purpose unless you're using chocolate doom.  (Chocolate Doom: F1 saves a screenshot)",
         "command": "-devparm",
@@ -466,6 +543,7 @@
     },
     {
         "enabled": false,
+        "inputType": "boolean",
         "name": "Output hash file",
         "description": "Produces a file fileinfo.txt which contains the MD5 hash for every lump and resource ZDoom can load, along with version information and launch parameters. This is useful for synchronization diagnostics with demos and netgames.",
         "command": "-hashfiles",
@@ -474,6 +552,7 @@
     },
     {
         "enabled": false,
+        "inputType": "boolean",
         "name": "Don't update screen display when drawing to internal buffer",
         "description": "Causes ZDoom not to update the display on the screen, but it still draws everything to an internal buffer. Only useful with -timedemo.",
         "command": "-noblit",
@@ -482,6 +561,7 @@
     },
     {
         "enabled": false,
+        "inputType": "boolean",
         "name": "Don't draw anything at all",
         "description": "Causes ZDoom not to draw anything at all. Only useful with -timedemo.",
         "command": "-nodraw",
@@ -490,6 +570,7 @@
     },
     {
         "enabled": false,
+        "inputType": "boolean",
         "name": "Quit before Initilization",
         "description": "Quits the game just before video initialization. To be used to check for errors in scripts without actually running the game.",
         "command": "-norun",
@@ -498,6 +579,7 @@
     },
     {
         "enabled": false,
+        "inputType": "boolean",
         "name": "Print to stdout (Windows)",
         "description": "Sends all output to a system console. Unix and MacOS builds of ZDoom will always do that.",
         "command": "-stdout",
@@ -506,6 +588,7 @@
     },
     {
         "enabled": false,
+        "inputType": "boolean",
         "name": "Enable Deathmatch",
         "description": "Informs ZDoom that you will be playing a deathmatch game and sets the dmflags CVAR so that weapons stay behind when a player picks them up. Only player 1 needs to specify this.",
         "command": "-deathmatch",
@@ -514,6 +597,7 @@
     },
     {
         "enabled": false,
+        "inputType": "boolean",
         "name": "Deathmatch 2.0",
         "description": "Start a deathmatch 2.0 game.  Weapons do not stay in place and all items respawn after 30 seconds.",
         "command": "-altdeath",
@@ -522,15 +606,21 @@
     },
     {
         "enabled": false,
+        "inputType": "range",
         "name": "Set player movements sent across server",
         "description": "Causes ZDoom to transmit fewer player movement commands across the network. Valid values range from 1–9. For example, -dup 2 would cause ZDoom to send half as many movements as normal.",
         "command": "-dup",
         "value": "1",
+        "valueRange": {
+            "min": 1,
+            "max": 9
+        },
         "sourceports": ["zdoom", "zandronum", "chocolate"],
         "category": "networking"
     },
     {
         "enabled": false,
+        "inputType": "boolean",
         "name": "Backup All movement commands",
         "description": "Causes ZDoom to send a backup copy of every movement command across the network.",
         "command": "-extratic",
@@ -539,6 +629,7 @@
     },
     {
         "enabled": false,
+        "inputType": "number",
         "name": "Send Extra Ticks",
         "description": "Send n extra tics in every packet as insurance against dropped packets.",
         "command": "-extratics",
@@ -548,6 +639,7 @@
     },
     {
         "enabled": false,
+        "inputType": "number",
         "name": "Host game for how many players",
         "description": "This machine will function as a host for a multiplayer game with x players (including this machine). It will wait for other machines to connect using the -join parameter and then start the game when everyone is connected.",
         "command": "-host",
@@ -557,6 +649,7 @@
     },
     {
         "enabled": false,
+        "inputType": "boolean",
         "name": "Host Multiplayer Game",
         "description": "Start a multiplayer server, listening for connections.",
         "command": "-server",
@@ -565,6 +658,7 @@
     },
     {
         "enabled": false,
+        "inputType": "text",
         "name": "Specify Server Name",
         "description": "When starting a network server, specify a name for the server.",
         "command": "-servername",
@@ -574,6 +668,7 @@
     },
     {
         "enabled": false,
+        "inputType": "boolean",
         "name": "Play Netgame as Singleplayer",
         "description": "Start the game playing as though in a netgame with a single player. This can also be used to play back single player netgame demos.",
         "command": "-solo-net",
@@ -582,6 +677,7 @@
     },
     {
         "enabled": false,
+        "inputType": "boolean",
         "name": "Autojoin",
         "description": "Automatically search the local LAN for a multiplayer server and join it.",
         "command": "-autojoin",
@@ -590,6 +686,7 @@
     },
     {
         "enabled": false,
+        "inputType": "text",
         "name": "Join Game",
         "description": "Connect to a host for a multiplayer game",
         "command": "-join",
@@ -599,6 +696,7 @@
     },
     {
         "enabled": false,
+        "inputType": "text",
         "name": "Join Game",
         "description": "Connect to a multiplayer server running on the given address.",
         "command": "-connect",
@@ -608,6 +706,7 @@
     },
     {
         "enabled": false,
+        "inputType": "boolean",
         "name": "Host Dedicated Server",
         "description": "Start a dedicated server, routing packets but not participating in the game itself.",
         "command": "-dedicated",
@@ -616,6 +715,7 @@
     },
     {
         "enabled": false,
+        "inputType": "boolean",
         "name": "Search for LAN games",
         "description": "Search the local LAN for running servers.",
         "command": "-localsearch",
@@ -624,6 +724,7 @@
     },
     {
         "enabled": false,
+        "inputType": "boolean",
         "name": "Use New Network Client Sync",
         "description": "Use new network client sync code rather than the classic sync code. This is currently disabled by default because it has some bugs.",
         "command": "-newsync",
@@ -632,6 +733,7 @@
     },
     {
         "enabled": false,
+        "inputType": "number",
         "name": "Set Number of Players",
         "description": "Autostart the netgame when n nodes (clients) have joined the server.",
         "command": "-nodes",
@@ -641,6 +743,7 @@
     },
     {
         "enabled": false,
+        "inputType": "boolean",
         "name": "Use Private Server",
         "description": "When running a server, don't register with the global master server. Implies -server.",
         "command": "-privateserver",
@@ -649,6 +752,7 @@
     },
     {
         "enabled": false,
+        "inputType": "text",
         "name": "Check Server Status",
         "description": "Query the status of the server running on the given IP address.",
         "command": "-query",
@@ -658,6 +762,7 @@
     },
     {
         "enabled": false,
+        "inputType": "boolean",
         "name": "Search for Network Games",
         "description": "Query the Internet master server for a global list of active servers.",
         "command": "-search",
@@ -666,15 +771,114 @@
     },
     {
         "enabled": false,
+        "inputType": "select",
+        "name": "Specify Game Version",
+        "description": "Emulate a specific version of Doom. Valid values are \"1.666\", \"1.7\", \"1.8\", \"1.9\", \"ultimate\", \"final\", \"final2\", \"hacx\" and \"chex\".",
+        "command": "-gameversion",
+        "value": "ultimate",
+        "valueset": [
+            {
+                "text": "1.666",
+                "value": "1.666"
+            },
+            {
+                "text": "1.7",
+                "value": "1.7"
+            },
+            {
+                "text": "1.8",
+                "value": "1.8"
+            },
+            {
+                "text": "1.9",
+                "value": "1.9"
+            },
+            {
+                "text": "Ultimate",
+                "value": "ultimate"
+            },
+            {
+                "text": "Final",
+                "value": "final"
+            },
+            {
+                "text": "Final2",
+                "value": "final2"
+            },
+            {
+                "text": "Hacx",
+                "value": "hacx"
+            },
+            {
+                "text": "Chex",
+                "value": "chex"
+            }
+        ],
+        "sourceports": ["chocolate"],
+        "category": "config"
+    },
+    {
+        "enabled": false,
+        "inputType": "select",
+        "name": "Specify Mission Pack",
+        "description": "Explicitly specify a Doom II \"mission pack\" to run as, instead of detecting it based on the filename. Valid values are: \"doom2\", \"tnt\" and \"plutonia\".",
+        "command": "-pack",
+        "value": "doom2",
+        "valueset": [
+            {
+                "text": "Doom 2",
+                "value": "doom2"
+            },
+            {
+                "text": "TNT: Evilution",
+                "value": "tnt"
+            },
+            {
+                "text": "The Plutonia Experiment",
+                "value": "plutonia"
+            }
+        ],
+        "sourceports": ["chocolate"],
+        "category": "config"
+    },
+    {
+        "enabled": false,
+        "inputType": "select",
+        "name": "Specify DOS Version",
+        "description": "Specify DOS version to emulate for NULL pointer dereference emulation. Supported versions are: dos622, dos71, dosbox. The default is to emulate DOS 7.1 (Windows 98).",
+        "command": "-setmem",
+        "value": "dos71",
+        "valueset": [
+            {
+                "text": "DOS 622",
+                "value": "dos622"
+            },
+            {
+                "text": "DOS 7.1",
+                "value": "dos71"
+            },
+            {
+                "text": "DOSBOX",
+                "value": "dosbox"
+            }
+        ],
+        "sourceports": ["chocolate"],
+        "category": "advanced"
+    },
+    {
+        "enabled": false,
+        "inputType": "select",
         "name": "Set Network Mode",
         "description": "Changes the network mode the game uses (Peer-to-Peer or Packet Server). More information on each mode can be found on the Multiplayer page of the ZDoom wiki.  Use 0 for Peer-to-peer, and 1 for Packet Server.",
         "command": "-netmode",
         "value": "0",
+        "valueset": [{ "text": "Peer-to-peer", "value": "0" }, { "text": "Packet Server", "value": "1" }],
         "sourceports": ["zdoom"],
         "category": "networking"
     },
     {
         "enabled": false,
+        "inputType": "number",
         "name": "Set Port",
         "description": "Specifies an alternate IP port for this machine to use during a network game. By default, port 5029 is used.",
         "command": "-port",
@@ -684,6 +888,7 @@
     },
     {
         "enabled": false,
+        "inputType": "boolean",
         "name": "Hide Game From LAN",
         "description": "When used with '-host', the server will not advertise within the Local Area Network (aka LAN).",
         "command": "-nobroadcast",
@@ -692,6 +897,7 @@
     },
     {
         "enabled": false,
+        "inputType": "boolean",
         "name": "Hide Game from Master List",
         "description": "When used with '-host', the server will not publicly broadcast to the master server.",
         "command": "-private",
@@ -700,6 +906,7 @@
     },
     {
         "enabled": false,
+        "inputType": "number",
         "name": "Enable Universal Plug-and-Play",
         "description": "Enable Universal Plug-and-Play support on Zandronum. The game server tries to automatically add a port mapping on the router that connects the game server to the internet. The external port of the mapping can be overridden if invoked with '-upnp portNumber'. For example: -upnp 10666",
         "command": "-upnp",
@@ -709,6 +916,7 @@
     },
     {
         "enabled": false,
+        "inputType": "text",
         "name": "Use Specified Network Adapter IP",
         "description": "This will set Zandronum to only listen to the network adapter that contains the specified IPv4 address. However, if this command is not used, by default, Zandronum will listen from all network adapters that are available within the system. This command can be ignored if there is no multiple network adapters, or if wanting Zandronum to listen to all network adapters available. For example: -useip 192.168.0.3",
         "command": "-useip",
@@ -718,6 +926,7 @@
     },
     {
         "enabled": false,
+        "inputType": "boolean",
         "name": "(GNU/Linux) Run in Headless Mode",
         "description": "Available in the GNU/Linux platform, the console will only print messages but will never accept and input within the game server's console directly. The game server can still be controlled remotely, but not directly within the actual server. Note: This does not hide the output from Zandronum from your current shell. You can do that by appending to following to your command line parameters: '> /dev/null 2>&1'",
         "command": "-noinput",
@@ -726,6 +935,7 @@
     },
     {
         "enabled": false,
+        "inputType": "file",
         "name": "Execute Specified Config Script",
         "description": "Executes a script file that houses configurations such as settings that can be used within the virtual world and generalized game server specific settings, such as how votes are managed. For example of usage: '-exec \"..\\..\\My Configurations\\SpecialServer.cfg\"'",
         "command": "-exec",
@@ -735,6 +945,7 @@
     },
     {
         "enabled": false,
+        "inputType": "files",
         "name": "Optional WADs",
         "description": "The game server can allow the ability for connecting-clients (players) to join the game server without needing the optional listed PWAD's. However, it is recommended to use this feature for additional customizations such as: announcers, music, high resolution textures, 3D Models, Voxel packs, etc. For example: '-optfile \"C:\\Games\\Zandronum\\WADs\\SVDoom.wad\"'",
         "command": "-optfile",

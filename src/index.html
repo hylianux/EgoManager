@@ -179,11 +179,19 @@
                             </div>
                             <div class="form-group" data-bind="visible: type()==='sourceport'">
                                 <label class="col control-label" data-placement="left"
-                                    data-bind="uniqueFor: sourceportType, tooltip: `This launcher has special support depending on the sourceport.  Selecting the right sourceport type here will greatly assist you later in building configurations based on that sourceport type.  Currently, the sourceport types this launcher supports are Zandronum, Chocolate Doom, and all ZDoom-based sourceports (e.g. GZDoom, QZDoom, or even plain ZDoom itself).`">
+                                    data-bind="uniqueFor: subtype, tooltip: `This launcher has special support depending on the sourceport.  Selecting the right sourceport type here will greatly assist you later in building configurations based on that sourceport type.  Currently, the sourceport types this launcher supports are Zandronum, Chocolate Doom, and all ZDoom-based sourceports (e.g. GZDoom, QZDoom, or even plain ZDoom itself).`">
                                     Sourceport Type
                                 </label>
                                 <select class="form-control"
-                                    data-bind="options: $parent.sourceportTypes, uniqueId: sourceportType, event: {blur: $parent.updateFile}, value: sourceportType, optionsCaption: 'Choose...'"></select>
+                                    data-bind="options: $parent.sourceportTypes, uniqueId: subtype, event: {blur: $parent.updateFile}, value: subtype, optionsCaption: 'Choose...'"></select>
+                            </div>
+                            <div class="form-group" data-bind="visible: type()==='iwad'">
+                                <label class="col control-label" data-placement="left"
+                                    data-bind="uniqueFor: subtype, tooltip: `Selecting an IWad type from the known game types can help with some configuration options (such as selecting maps/levels)`">
+                                    IWad Type
+                                </label>
+                                <select class="form-control"
+                                    data-bind="options: $parent.iwadTypes, optionsText: 'description', uniqueId: subtype, event: {blur: $parent.updateFile}, value: subtype, optionsCaption: 'Choose...'"></select>
                             </div>
                             <div class="form-group">
                                 <label class="col control-label" data-placement="left"

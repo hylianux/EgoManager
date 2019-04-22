@@ -34,11 +34,18 @@ After cloning or downloading the repository, simply run:
    2. searchable - utilize lokijs to "search" for an option
    3. each config has a boolean "on/off" value, but some have a value you can type in.  the load order doesn't matter, so no need to include them in a "chosen configs" array like pwads are in.
    4. treat them like dmFlags - instead of a checkbox, make it a button that changes css class.
-   5. if they come in with ANYTHING in their "value" parameter, it means the user can type something
-   6. if the "valueset" array isn't null, then let the "value" field be a select box instead of an input field, and bind its value to "value".  Set the default value to whatever's in the first index of valueset.
-6. store configurations
-7. clone configurations
-8. export configurations as batch file (choose relative paths or absolute paths)
+   5. type field determines what kind of option it is.
+      1. boolean - simple on or off, no need to render an input field
+      2. text - text input box
+      3. number - use html5 "number" input type
+      4. range - numeric input restriction using a html5 "range" and "number" input box, make both point to the same field.  Use the valueRange object to get the min and max.
+      5. select - input type is select, and options are determined by the 'valueset' array field.  valueset is an array of object that have 'text' and 'value' fields.
+      6. file - input type is 'file', allows you to select a file via text input or via "browse"
+      7. files - same as file, except include the "multiple" attribute
+6. Map Config - Autosuggest a level based on the iwad chosen (subtype field).  Use this as a guideline: http://jsfiddle.net/rniemeyer/MJQ6g/
+7. store configurations
+8. clone configurations
+9. export configurations as batch file (choose relative paths or absolute paths)
 
 ### Chocolate-Doom Specific
 
