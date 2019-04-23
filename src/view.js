@@ -68,7 +68,7 @@ let sourceportCollection = getCollection('sourceports');
 let configCollection = getCollection('configs');
 let commandLineCollection = getCollection('commands');
 let DMFlagsCollection = getCollection('DMFlags');
-let levelsCollection = getcollection('levels');
+let levelsCollection = getCollection('levels');
 
 fs.readFile(path.resolve(__dirname, '../../commandLineOptions.json'), 'utf8', (err, data) => {
     if (err) {
@@ -1112,6 +1112,34 @@ function AppViewModel() {
             });
         });
     };
+
+    self.configName = ko.observable('');
+    self.configDescription = ko.observable('');
+    self.configSearch = ko.observable('');
+
+    self.runCurrentConfig = () =>{
+
+    };
+
+    self.exportCurrentConfig = () =>{
+
+    };
+
+    self.saveCurrentConfig = () => {
+
+    };
+
+    self.findConfig = () => {
+
+    };
+
+    self.clearCurrentConfig = () => {
+
+    };
+
+    self.generatedCommand = ko.computed(()=>{
+        return "gzdoom.exe -iwad doom.wad";
+    });
 
     self.init = () => {
         //self.goToView(self.views[0]);

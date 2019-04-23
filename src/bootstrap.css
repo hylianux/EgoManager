@@ -2164,7 +2164,6 @@ pre code {
 
 .form-control:disabled,
 .form-control[readonly] {
-    background-color: #ebebeb;
     opacity: 1;
 }
 
@@ -11115,4 +11114,7 @@ a.text-dark:focus {
 
 .list-group-item-action .list-group-item-heading {
     color: #fff;
+}
+.text-responsive {
+    font-size: calc(100% + 1vw + 1vh);
 }

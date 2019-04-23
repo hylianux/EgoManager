@@ -42,7 +42,7 @@ After cloning or downloading the repository, simply run:
       5. select - input type is select, and options are determined by the 'valueset' array field.  valueset is an array of object that have 'text' and 'value' fields.
       6. file - input type is 'file', allows you to select a file via text input or via "browse"
       7. files - same as file, except include the "multiple" attribute
-6. Map Config - Autosuggest a level based on the iwad chosen (subtype field).  Use this as a guideline: http://jsfiddle.net/rniemeyer/MJQ6g/
+6. Map Config - Autosuggest a level based on the iwad chosen (subtype field).  Use this as a guideline: <http://jsfiddle.net/rniemeyer/MJQ6g/>
 7. store configurations
 8. clone configurations
 9. export configurations as batch file (choose relative paths or absolute paths)

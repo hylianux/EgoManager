@@ -36,8 +36,273 @@
             </li>
         </ul>
         <div class="tab-content">
-            <div class="tab-pane container active" id="configBuilder">
-                <h1>Welcome to the Configuration Builder.</h1>
+            <div class="tab-pane container-fluid active" id="configBuilder">
+                <div class="row">
+                    <div class="col-md-12 border border-secondary btn btn-xs btn-secondary fa fa-play text-responsive"
+                        data-bind="click: runCurrentConfig" data-toggle="tooltip" title="Run Current Configuration">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-3 border border-secondary">
+                        <div style="margin-top: 10px" class="form-group border border-secondary">
+                            <select class="form-control">
+                                <option>Select from previous 50 configs</option>
+                            </select>
+                        </div>
+                        <div class="form-group border border-secondary">
+                            <span style="width: 74%" class="btn btn-xs btn-secondary fa fa-save"
+                                data-bind="click: saveCurrentConfig" data-toggle="tooltip"
+                                title="Save current configuration"></span>
+                            <span style="width: 24%" class="btn btn-xs btn-secondary fa fa-trash"
+                                data-bind="click: clearCurrentConfig" data-toggle="tooltip"
+                                title="Clear current configuration and reset to default"></span>
+                            <input type="text" class="form-control" data-bind="textInput: configName"
+                                placeholder="Config Name" />
+                            <textarea class="form-control" rows="2" placeholder="Config Description"
+                                data-bind="textInput: configDescription">
+                            </textarea>
+                        </div>
+                        <div class="form-group border border-secondary">
+                            <input type="text" class="form-control" placeholder="Search..."
+                                data-bind="textInput: configSearch, event: { keyup: findConfig()}" />
+                            <div class="list-group">
+                                <!--data-bind="foreach: configs"> -->
+                                <div class="list-group-item list-group-item-action clearfix" data-placement="right"
+                                    data-html="true">
+                                    <!--
+                                    data-bind="tooltip: tooltip(), class: displayClass, hidden: $parent.showHiddenFiles()===false && hidden()===true">-->
+                                    <div class="text-truncate">
+                                        <!-- data-bind="text: displayName">-->
+                                        SomeConfig
+                                    </div>
+                                    <div>
+                                        <span style="width: 32%" class="btn btn-xs btn-secondary fa fa-arrow-circle-up">
+                                            <!--
+                                                        data-bind="click: $parent.editFile.bind($data, type, $index)">-->
+
+                                        </span>
+                                        <span style="width: 32%" class="btn btn-xs btn-secondary fa fa-copy">
+                                            <!--data-bind="click: hideFile">-->
+
+                                        </span>
+                                        <span style="width: 32%" class="btn btn-xs btn-secondary fa fa-remove">
+                                            <!--data-bind="click: hideFile">-->
+
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="list-group-item list-group-item-action clearfix" data-placement="right"
+                                    data-html="true">
+                                    <!--
+                                    data-bind="tooltip: tooltip(), class: displayClass, hidden: $parent.showHiddenFiles()===false && hidden()===true">-->
+                                    <div class="text-truncate">
+                                        <!-- data-bind="text: displayName">-->
+                                        SomeOtherReallyLongRidiculousConfigNameLOLOLOLOLOLOLOLOLOLOLOLOL
+                                    </div>
+                                    <div>
+                                        <span style="width: 32%" class="btn btn-xs btn-secondary fa fa-arrow-circle-up">
+                                            <!--
+                                                    data-bind="click: $parent.editFile.bind($data, type, $index)">-->
+
+                                        </span>
+                                        <span style="width: 32%" class="btn btn-xs btn-secondary fa fa-copy">
+                                            <!--data-bind="click: hideFile">-->
+
+                                        </span>
+                                        <span style="width: 32%" class="btn btn-xs btn-secondary fa fa-remove">
+                                            <!--data-bind="click: hideFile">-->
+
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-9 container-fluid border border-secondary">
+                        <div class="col-md-4 border border-secondary">
+                            <div style="margin-top: 10px" class="form-group border border-secondary">
+                                <select class="form-control">
+                                    <option>Select Sourceport</option>
+                                </select>
+                            </div>
+                            <div class="form-group border border-secondary">
+                                <select class="form-control">
+                                    <option>Solo</option>
+                                    <option>Co-op</option>
+                                    <option>Deathmatch</option>
+                                </select>
+                            </div>
+                            <div class="form-group border border-secondary">
+                                <input type="text" class="form-control" placeholder="Search..."
+                                    data-bind="textInput: configSearch, event: { keyup: findConfig()}" />
+                                <div class="list-group">
+                                    <!--data-bind="foreach: configs"> -->
+                                    <div class="list-group-item list-group-item-action clearfix" data-placement="right"
+                                        data-html="true">
+                                        <!--
+                                                    data-bind="tooltip: tooltip(), class: displayClass, hidden: $parent.showHiddenFiles()===false && hidden()===true">-->
+                                        <div class="text-truncate">
+                                            <!-- data-bind="text: displayName">-->
+                                            SomeDMFlag
+                                        </div>
+                                        <div>
+                                            <span style="width: 32%"
+                                                class="btn btn-xs btn-secondary fa fa-arrow-circle-up">
+                                                <!--
+                                                                        data-bind="click: $parent.editFile.bind($data, type, $index)">-->
+
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="list-group-item list-group-item-action clearfix" data-placement="right"
+                                        data-html="true">
+                                        <!--
+                                                    data-bind="tooltip: tooltip(), class: displayClass, hidden: $parent.showHiddenFiles()===false && hidden()===true">-->
+                                        <div class="text-truncate">
+                                            <!-- data-bind="text: displayName">-->
+                                            SomeOtherReallyLongRidiculousDMFlagNameLOLOLOLOLOLOLOLOLOLOLOLOL
+                                        </div>
+                                        <div>
+                                            <span style="width: 32%"
+                                                class="btn btn-xs btn-secondary fa fa-arrow-circle-up">
+                                                <!--
+                                                                    data-bind="click: $parent.editFile.bind($data, type, $index)">-->
+
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-8 border border-secondary clearfix">
+                            <div class="pull-left form-group border border-secondary" style="margin-top:10px;">
+                                <select class="form-control">
+                                    <option>Select Iwad</option>
+                                </select>
+                            </div>
+                            <div class="pull-right form-group border border-secondary" style="margin-top:10px;">
+                                <select class="form-control">
+                                    <option>Select Ini File</option>
+                                </select>
+                            </div>
+                            <div class="container-fluid form-group border border-secondary">
+                                <div class="col-md-6">
+                                    <input type="text" class="form-control" placeholder="Search for Pwads"
+                                        data-bind="textInput: configSearch, event: { keyup: findConfig()}" />
+                                    <div class="list-group">
+                                        <!--data-bind="foreach: configs"> -->
+                                        <div class="list-group-item list-group-item-action clearfix"
+                                            data-placement="right" data-html="true">
+                                            <!--
+                                                            data-bind="tooltip: tooltip(), class: displayClass, hidden: $parent.showHiddenFiles()===false && hidden()===true">-->
+                                            <div class="text-truncate">
+                                                <!-- data-bind="text: displayName">-->
+                                                SomePwad
+                                            </div>
+                                            <div>
+                                                <span style="width: 32%"
+                                                    class="btn btn-xs btn-secondary fa fa-arrow-circle-up">
+                                                    <!--
+                                                                                data-bind="click: $parent.editFile.bind($data, type, $index)">-->
+
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="list-group-item list-group-item-action clearfix"
+                                            data-placement="right" data-html="true">
+                                            <!--
+                                                            data-bind="tooltip: tooltip(), class: displayClass, hidden: $parent.showHiddenFiles()===false && hidden()===true">-->
+                                            <div class="text-truncate">
+                                                <!-- data-bind="text: displayName">-->
+                                                SomeOtherReallyLongRidiculousPwadNameLOLOLOLOLOLOLOLOLOLOLOLOL
+                                            </div>
+                                            <div>
+                                                <span style="width: 32%"
+                                                    class="btn btn-xs btn-secondary fa fa-arrow-circle-up">
+                                                    <!--
+                                                                            data-bind="click: $parent.editFile.bind($data, type, $index)">-->
+
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="list-group">
+                                        <!--data-bind="foreach: configs"> -->
+                                        <div class="list-group-item list-group-item-action clearfix"
+                                            data-placement="right" data-html="true">
+                                            <!--
+                                                                data-bind="tooltip: tooltip(), class: displayClass, hidden: $parent.showHiddenFiles()===false && hidden()===true">-->
+                                            <div class="text-truncate">
+                                                <!-- data-bind="text: displayName">-->
+                                                ChosenPWad
+                                            </div>
+                                            <div>
+                                                <span style="width: 32%"
+                                                    class="btn btn-xs btn-secondary fa fa-arrow-circle-up">
+                                                    <!--
+                                                                    data-bind="click: $parent.editFile.bind($data, type, $index)">-->
+
+                                                </span>
+                                                <span style="width: 32%" class="btn btn-xs btn-secondary fa fa-copy">
+                                                    <!--data-bind="click: hideFile">-->
+
+                                                </span>
+                                                <span style="width: 32%" class="btn btn-xs btn-secondary fa fa-remove">
+                                                    <!--data-bind="click: hideFile">-->
+
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="list-group-item list-group-item-action clearfix"
+                                            data-placement="right" data-html="true">
+                                            <!--
+                                                                data-bind="tooltip: tooltip(), class: displayClass, hidden: $parent.showHiddenFiles()===false && hidden()===true">-->
+                                            <div class="text-truncate">
+                                                <!-- data-bind="text: displayName">-->
+                                                OtherChosenReallyLongRidiculousPWADNameLOLOLOLOLOLOLOLOLOLOLOLOL
+                                            </div>
+                                            <div>
+                                                <span style="width: 32%"
+                                                    class="btn btn-xs btn-secondary fa fa-arrow-circle-up">
+                                                    <!--
+                                                                    data-bind="click: $parent.editFile.bind($data, type, $index)">-->
+
+                                                </span>
+                                                <span style="width: 32%" class="btn btn-xs btn-secondary fa fa-copy">
+                                                    <!--data-bind="click: hideFile">-->
+
+                                                </span>
+                                                <span style="width: 32%" class="btn btn-xs btn-secondary fa fa-remove">
+                                                    <!--data-bind="click: hideFile">-->
+
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="border border-secondary">
+                                <div class="form-group">
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-10 border border-secondary" style="padding: 0px;">
+                        <textarea class="form-control" style="resize: none; font-family: 'Ubuntu-Mono'; padding: 0px;"
+                            readonly="true" placeholder="Generated Command Here"
+                            data-bind="textInput: generatedCommand">
+                        </textarea>
+                    </div>
+                    <div style="font-size: 1.333rem;"
+                        class="col-md-2 border border-secondary btn btn-xs btn-secondary fa fa-terminal"
+                        data-bind="click: exportCurrentConfig" data-toggle="tooltip"
+                        title="Export current configuration as a bat or .sh file."></div>
+                </div>
             </div>
             <div class="tab-pane container-fluid fade" id="fileDB">
                 <div class="row">
@@ -96,8 +361,10 @@
                                     </span>
                                 </div>
                                 <div data-bind="hidden: files.iwads().length>0 || iwadsAllHidden()==false">
-                                    No Iwads to display. It could be due to your search criteria, hidden files (you
-                                    can click "show hidden files" to see them), or if you just copied files into the
+                                    No Iwads to display. It could be due to your search criteria, hidden files
+                                    (you
+                                    can click "show hidden files" to see them), or if you just copied files into
+                                    the
                                     idTech folder, click the File Database tab to reload.
                                 </div>
                             </div>
@@ -123,8 +390,10 @@
                                     </span>
                                 </div>
                                 <div data-bind="hidden: files.pwads().length>0 || pwadsAllHidden()==false">
-                                    No Pwads to display. It could be due to your search criteria, hidden files (you
-                                    can click "show hidden files" to see them), or if you just copied files into the
+                                    No Pwads to display. It could be due to your search criteria, hidden files
+                                    (you
+                                    can click "show hidden files" to see them), or if you just copied files into
+                                    the
                                     idTech folder, click the File Database tab to reload.
                                 </div>
                             </div>
@@ -150,7 +419,8 @@
                                     </span>
                                 </div>
                                 <div data-bind="hidden: files.sourceports().length>0 || sourceportsAllHidden()==false">
-                                    No Sourceports to display. It could be due to your search criteria, hidden files
+                                    No Sourceports to display. It could be due to your search criteria, hidden
+                                    files
                                     (you can click "show hidden files" to see them), or if you just copied files
                                     into the idTech folder, click the File Database tab to reload.
                                 </div>
@@ -200,7 +470,8 @@
                                 </label>
                                 <div data-bind="hidden: authorsValid()" class="col alert alert-danger">
                                     <strong>Required:</strong>
-                                    If you wish to use this file, you'll need to give credit to the person(s) who
+                                    If you wish to use this file, you'll need to give credit to the person(s)
+                                    who
                                     made it.
                                 </div>
                                 <input type="text" class="form-control" placeholder="Author1,Author2,Author3,..."
@@ -213,7 +484,8 @@
                                 </label>
                                 <div data-bind="hidden: metaTagsValid()" class="col alert alert-warning">
                                     <strong>Warning:</strong>
-                                    It's extremely helpful to have some tags to use so you can find this file more
+                                    It's extremely helpful to have some tags to use so you can find this file
+                                    more
                                     easily, both here and in the Configuration Builder.
                                 </div>
                                 <input type="text" class="form-control"
@@ -227,7 +499,8 @@
                                 </label>
                                 <div data-bind="hidden: sourceValid()" class="col alert alert-danger">
                                     <strong>Required:</strong>
-                                    You'll need to post a link as to where you got this file, or where this file can
+                                    You'll need to post a link as to where you got this file, or where this file
+                                    can
                                     be found.
                                 </div>
 
