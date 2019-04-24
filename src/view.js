@@ -152,41 +152,146 @@ function upsert(collection, idQuery, record) {
     }
 }
 
-function Config(iwad, pwads, sourceport, options) {
+function ConfigChain(
+    configName,
+    configDescription,
+    sourceport,
+    iwad,
+    gamemode,
+    map,
+    skill,
+    pwads,
+    dmFlags,
+    sourceportConfigs
+) {
     let self = this;
-    self.iwad = ko.observable(iwad);
-    self.pwads = ko.observableArray(pwads);
-    self.sourceport = ko.observable(sourceport);
-    self.options = options;
+    self.configName = ko.observable(configName);
+    self.configDescription = ko.observable(configDescription);
+    if (sourceport) {
+        self.sourceport = new File(
+            sourceport.filename,
+            sourceport.authors,
+            sourceport.metaInput,
+            sourceport.source,
+            sourceport.name,
+            sourceport.quickDescription,
+            sourceport.longDescription,
+            sourceport.type,
+            sourceport.hidden,
+            sourceport.subtype
+        );
+    }
+    self.iniFiles = ko.observableArray();
+    self.chosenIniFile = ko.observable();
+    if (iwad) {
+        self.iwad = new File(
+            iwad.filename,
+            iwad.authors,
+            iwad.metaTags,
+            iwad.source,
+            iwad.name,
+            iwad.quickDescription,
+            iwad.longDescription,
+            iwad.type,
+            iwad.hidden,
+            iwad.subtype
+        );
+    }
+    self.gamemode = ko.observable(gamemode);
+    self.map = ko.observable(map);
+    self.skill = ko.observable(skill);
+    self.dmFlags = ko.observableArray();
+    if (dmFlags) {
+        _.foreach(dmFlags, dmflag => {
+            let newDMFlag = new DMFlag(
+                dmflag.enabled,
+                dmflag.name,
+                dmflag.value,
+                dmflag.description,
+                dmflag.command,
+                dmflag.sourceport
+            );
+            self.dmFlags.push(newDMFlag);
+        });
+    }
+    self.pwads = ko.observableArray();
+    if (pwads) {
+        _.forEach(pwads, pwad => {
+            let newPWad = new File(
+                pwad.filename,
+                pwad.author,
+                pwad.metaTags,
+                pwad.source,
+                pwad.name,
+                pwad.quickDescription,
+                pwad.longDescription,
+                pwad.type,
+                pwad.hidden,
+                pwad.subtype
+            );
+            self.pwads.push(newPWad);
+        });
+    }
+    self.sourceportConfigs = ko.observableArray();
+    if (sourceportConfigs) {
+        _.foreach(sourceportConfigs, command => {
+            let newCommand = new CommandLineOption(
+                command.enabled,
+                command.name,
+                command.inputType,
+                command.description,
+                command.command,
+                command.value,
+                command.sourceports,
+                command.category,
+                command.valueExtra
+            );
+            self.sourceportConfigs.push(newCommand);
+        });
+    }
+
+    //this will be generated from the current config chain
+    self.generatedCommand = ko.computed(() => {
+        let command = '';
+        if (self.sourceport) {
+            command += self.sourceport.filename() + ' ';
+        }
+        if (self.iwad) {
+            command += '-iwad ' + self.iwad.filename() + ' ';
+        }
+        if (self.chosenIniFile()) {
+            command += '-config ' + self.iniFile + ' ';
+        }
+        return command;
+    });
 }
 
-function CommandLineOption(enabled, name, description, command, value) {
+function DMFlag(enabled, name, value, description, command, sourceport) {
+    let self = this;
+    self.enabled = ko.observable(enabled);
+    self.name = name;
+    self.value = value;
+    self.description = description;
+    self.command = command;
+    self.sourceport = sourceport;
+}
+
+function CommandLineOption(enabled, name, inputType, description, command, value, sourceports, category, valueExtra) {
     let self = this;
     self.name = name;
+    self.inputType = inputType;
     self.description = description;
     self.command = command;
     self.value = ko.observable(value);
     self.enabled = ko.observable(enabled);
+    self.sourceports = sourceports;
+    self.category = category;
+    if (Array.isArray(valueExtra)) {
+        self.valueset = valueExtra;
+    } else self.valueRange = valueExtra;
 }
 
-/*
-function CommandLineOptions(pixelDouble, pixelQuadruple, bits, width, height, blockmap, cdrom, config, nocdaudio, noidle, nojoy, nomusic, nosfx, nosound, nostartup, oldsprites, savedir, timer, turbo, noautoload, loadgame, playdemo, recordDemo, playerclass, skill, timedemo, warpArray, warpMapName, warpwipe, xlat, windowTopLeft, debugfile, devparm, hashfiles, noblit, nodraw, norun, stdout, dup, extratic, host, join, netmode, port, developer, dmflags, dmflags2){
-
-}
-*/
-
-function File(
-    filename,
-    authors,
-    metaTags,
-    source,
-    name,
-    quickDescription,
-    longDescription,
-    type,
-    hidden,
-    subtype
-) {
+function File(filename, authors, metaTags, source, name, quickDescription, longDescription, type, hidden, subtype) {
     let self = this;
     self.filename = ko.observable(filename);
     self.filenameValid = ko.computed(() => {
@@ -303,9 +408,9 @@ function File(
     self.displayClass = ko.computed(() => {
         let displayClass = '';
         if (self.error()) {
-            displayClass = 'list-group-item-danger';
+            displayClass = 'table-danger';
         } else if (self.warning()) {
-            displayClass = 'list-group-item-warning';
+            displayClass = 'table-warning';
         } else {
             displayClass = '';
         }
@@ -321,7 +426,14 @@ function File(
             return 'fa fa-eye-slash';
         }
     });
-    self.tooltip = ko.computed(() => {
+    self.hideTooltipText = ko.computed(() => {
+        if (self.hidden()) {
+            return 'Show File';
+        } else {
+            return 'Hide File';
+        }
+    });
+    self.tooltipText = ko.computed(() => {
         let text = '';
         let addNewline = false;
         if (self.error() || self.warning()) {
@@ -363,7 +475,7 @@ function File(
 
 function AppViewModel() {
     let self = this;
-
+    self.isDebug = dev;
     self.nodeVersion = process.versions.node;
     self.chromeVersion = process.versions.chrome;
     self.electronVersion = process.versions.electron;
@@ -373,6 +485,24 @@ function AppViewModel() {
     self.sourceportDirectory = self.idTechFolder + path.sep + 'sourceports';
 
     self.sourceportTypes = ko.observableArray(['ZDoom', 'Zandronum', 'Chocolate', 'Other']);
+    self.gamemodes = ko.observableArray([
+        {
+            value: 'solo',
+            displayText: 'Solo'
+        },
+        {
+            value: 'solonet',
+            displayText: 'Solo-Net'
+        },
+        {
+            value: 'coop',
+            displayText: 'Co-op'
+        },
+        {
+            value: 'dm',
+            displayText: 'Deathmatch'
+        }
+    ]);
     self.iwadTypes = ko.observableArray([
         {
             name: 'doom',
@@ -423,31 +553,6 @@ function AppViewModel() {
             description: 'Other'
         }
     ]);
-
-    //Emulate a specific version of Doom.  command = -gameversion <version>
-    self.chocolateDoomGameVersions = ko.observableArray([
-        '1.666',
-        '1.7',
-        '1.8',
-        '1.9',
-        'ultimate',
-        'final',
-        'final2',
-        'hacx',
-        'chex'
-    ]);
-    self.chocolateDoomSelectedGameVersion = ko.observable();
-
-    //Explicitly specify a Doom II "mission pack" to run as, instead of detecting it based on the filename.
-    //I guess use this if your doom2, tnt, or plutonia wads aren't named doom2.wad, tnt.wad, and plutonia.wad respectively?
-    //command = -pack <pack>
-    self.chocolateDoomMissionPacks = ko.observableArray(['doom2', 'tnt', 'plutonia']);
-    self.chocolateDoomSelectedMissionPack = ko.observable();
-
-    //Specify DOS version to emulate for NULL pointer dereference emulation. Supported versions are: dos622, dos71, dosbox. The default is to emulate DOS 7.1 (Windows 98).
-    //command = -setmem <version>
-    self.chocolateDoomSetMemVersions = ko.observableArray(['dos622', 'dos71', 'dosbox']);
-    self.chocolateDoomSelectedSetMemVersion = ko.observable();
 
     self.showHiddenFiles = ko.observable(false);
 
@@ -1113,38 +1218,42 @@ function AppViewModel() {
         });
     };
 
-    self.configName = ko.observable('');
-    self.configDescription = ko.observable('');
+    self.currentConfig = {};
+
+    self.loadDefaultConfig = () => {
+        self.currentConfig = new ConfigChain(
+            'Default',
+            'This is the Default Configuration',
+            null,
+            null,
+            'solo',
+            null,
+            null,
+            null,
+            null,
+            null
+        );
+    };
+
     self.configSearch = ko.observable('');
 
-    self.runCurrentConfig = () =>{
+    self.runCurrentConfig = () => {};
 
-    };
+    self.exportCurrentConfig = () => {};
 
-    self.exportCurrentConfig = () =>{
+    self.saveCurrentConfig = () => {};
 
-    };
+    self.findConfig = () => {};
 
-    self.saveCurrentConfig = () => {
-
-    };
-
-    self.findConfig = () => {
-
-    };
-
-    self.clearCurrentConfig = () => {
-
-    };
-
-    self.generatedCommand = ko.computed(()=>{
-        return "gzdoom.exe -iwad doom.wad";
-    });
+    self.clearCurrentConfig = () => {};
 
     self.init = () => {
         //self.goToView(self.views[0]);
         console.log('loading files');
         self.loadCollections(true);
+
+        //TODO: remove this when you can start loading configs from files.
+        self.loadDefaultConfig();
     };
     self.init();
 }

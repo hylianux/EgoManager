@@ -10948,13 +10948,15 @@ a.text-dark:focus {
 .table-danger,
 .table-danger > th,
 .table-danger > td {
-    background-color: #e74c3c;
+    color: rgb(230, 155, 162);
+    background-color: rgb(72, 13, 19);
 }
 
 .table-warning,
 .table-warning > th,
 .table-warning > td {
-    background-color: #f39c12;
+    color: rgb(251, 219, 127);
+    background-color: rgb(92, 70, 0);
 }
 
 .table-active,
@@ -11002,13 +11004,15 @@ a.text-dark:focus {
 .table-hover .table-danger:hover,
 .table-hover .table-danger:hover > th,
 .table-hover .table-danger:hover > td {
-    background-color: #e43725;
+    color: rgb(230, 155, 162);
+    background-color: rgb(84, 15, 22);
 }
 
 .table-hover .table-warning:hover,
 .table-hover .table-warning:hover > th,
 .table-hover .table-warning:hover > td {
-    background-color: #e08e0b;
+    color: rgb(251, 219, 127);
+    background-color: rgb(107, 81, 0);
 }
 
 .table-hover .table-active:hover,
