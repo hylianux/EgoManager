@@ -2954,14 +2954,14 @@ fieldset:disabled a.btn {
 
 .btn-danger {
     color: #fff;
-    background-color: #e74c3c;
-    border-color: #e74c3c;
+    background-color: rgb(150, 31, 18);
+    border-color: rgb(165, 34, 20);
 }
 
 .btn-danger:hover {
     color: #fff;
-    background-color: #e12e1c;
-    border-color: #d62c1a;
+    background-color: rgb(167, 34, 20);
+    border-color: rgb(176, 36, 22);
 }
 
 .btn-danger:focus,
@@ -2973,8 +2973,8 @@ fieldset:disabled a.btn {
 .btn-danger.disabled,
 .btn-danger:disabled {
     color: #fff;
-    background-color: #e74c3c;
-    border-color: #e74c3c;
+    background-color: rgb(150, 31, 18);
+    border-color: rgb(165, 34, 20);
 }
 
 .btn-danger:not(:disabled):not(.disabled):active,

@@ -3,3 +3,5 @@ dist
 bin
 *.7z
 README.html
+.vscode/ipch/a01421011ec64422/mmap_address.bin
+.vscode/ipch/a01421011ec64422/ZANDRONUMMASTERCLIENT.ipch

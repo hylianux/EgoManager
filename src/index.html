@@ -40,88 +40,136 @@
                 </ul>
             </div>
         </div>
-        <!--Configuration Builder-->
+
         <div class="tab-content row">
+            <!--Configuration Builder-->
             <div class="col-md-12 tab-pane fade active show" id="configBuilder">
                 <!--Run Button-->
                 <div class="row">
-                    <div class="col-md-12 border border-secondary btn btn-xs btn-secondary fa fa-play text-responsive"
+                    <div class="col-md-12 border border-primary btn btn-xs btn-primary fa fa-play text-responsive"
                         data-bind="click: runCurrentConfig" data-toggle="tooltip" title="Run Current Configuration">
                     </div>
+                </div>
+                <!--Generated Command-->
+                <div class="row">
+                    <div class="col-md-10 border border-info" style="padding: 0px;">
+                        <textarea class="form-control" style="resize: none; font-family: 'Ubuntu-Mono'; padding: 0px;"
+                            readonly="true" placeholder="Generated Command Here"
+                            data-bind="textInput: currentConfig.generatedCommand">
+                                    </textarea>
+                    </div>
+                    <div style="font-size: 1.333rem;"
+                        class="col-md-2 border border-info btn btn-xs btn-info fa fa-terminal"
+                        data-bind="click: exportCurrentConfig" data-toggle="tooltip"
+                        title="Export current configuration as a bat or .sh file."></div>
                 </div>
                 <!--All ConfigChain options-->
                 <div class="row">
                     <!--Configchain Saving/Loading options-->
                     <div class="col-md-3 border border-secondary">
-                        <div style="margin-top: 10px" class="form-group border border-secondary">
-                            <select class="form-control">
-                                <option>Select from previous 50 configs</option>
-                            </select>
+                        <!--Config Chain previous configs-->
+                        <div class="row">
+                            <div class="col-md-12 border border-secondary">
+                                <div style="margin-top: 10px" class="form-group">
+                                    <label class="control-label" for="previousConfigs" data-toggle="tooltip"
+                                        title="Previously-run configurations will appear here.">
+                                        Previous Config Chains
+                                    </label>
+                                    <select id="previousConfigs" class="form-control">
+                                        <option>Select from previous 50 configs</option>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
-                        <div class="form-group border border-secondary">
-                            <span style="width: 74%" class="btn btn-xs btn-secondary fa fa-save"
-                                data-bind="click: saveCurrentConfig" data-toggle="tooltip"
-                                title="Save current configuration"></span>
-                            <span style="width: 24%" class="btn btn-xs btn-secondary fa fa-trash"
-                                data-bind="click: clearCurrentConfig" data-toggle="tooltip"
-                                title="Clear current configuration and reset to default"></span>
-                            <input type="text" class="form-control" data-bind="textInput: currentConfig.configName"
-                                placeholder="Config Name" />
-                            <textarea class="form-control" rows="2" placeholder="Config Description"
-                                data-bind="textInput: currentConfig.configDescription">
-                            </textarea>
+                        <!--Config Chain save dialogs-->
+                        <div class="row">
+                            <div class="col-md-12 border border-secondary">
+                                <div style="margin-top: 10px" class="form-group">
+                                    <label class="control-label" for="configName" data-toggle="tooltip"
+                                        title="A human-readable name for your configuration chain.">
+                                        Config Chain Name
+                                    </label>
+                                    <input id="configName" type="text" class="form-control"
+                                        data-bind="textInput: currentConfig.configName" placeholder="Config Name" />
+                                </div>
+                                <div class="form-group">
+                                    <label class="control-label" for="configDescription" data-toggle="tooltip"
+                                        title="Some sort of description as to what your configuration chain is doing.">
+                                        Config Chain Description
+                                    </label>
+                                    <textarea id="configDescription" class="form-control" rows="2"
+                                        placeholder="Config Description"
+                                        data-bind="textInput: currentConfig.configDescription">
+                                    </textarea>
+                                </div>
+                                <div class="form-group">
+                                    <span style="width: 74%" class="btn btn-xs btn-primary fa fa-save"
+                                        data-bind="click: saveCurrentConfig" data-toggle="tooltip"
+                                        title="Save current configuration"></span>
+                                    <span style="width: 24%" class="btn btn-xs btn-danger fa fa-trash"
+                                        data-bind="click: clearCurrentConfig" data-toggle="tooltip"
+                                        title="Clear current configuration and reset to default"></span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="form-group border border-secondary">
-                            <input type="text" class="form-control" placeholder="Search..."
-                                data-bind="textInput: configSearch, event: { keyup: findConfig()}" />
-                            <div class="list-group">
-                                <!--data-bind="foreach: configs"> -->
-                                <div class="list-group-item list-group-item-action clearfix" data-placement="right"
-                                    data-html="true">
-                                    <!--
-                                    data-bind="tooltip: tooltipText(), class: displayClass, hidden: $parent.showHiddenFiles()===false && hidden()===true">-->
-                                    <div class="text-truncate">
-                                        <!-- data-bind="text: displayName">-->
-                                        SomeConfig
-                                    </div>
-                                    <div>
-                                        <span style="width: 32%" class="btn btn-xs btn-secondary fa fa-arrow-circle-up">
+                        <!--Config Chain Search-->
+                        <div class="row">
+                            <div class="col-md-12 border border-secondary">
+                                <div style="margin-top: 10px" class="form-group">
+                                    <input type="text" class="form-control" placeholder="Search..."
+                                        data-bind="textInput: configSearch, event: { keyup: findConfig()}" />
+                                    <div class="list-group">
+                                        <!--data-bind="foreach: configs"> -->
+                                        <div class="list-group-item list-group-item-action clearfix"
+                                            data-placement="right" data-html="true">
                                             <!--
+                                    data-bind="tooltip: tooltipText(), class: displayClass, hidden: $parent.showHiddenFiles()===false && hidden()===true">-->
+                                            <div class="text-truncate">
+                                                <!-- data-bind="text: displayName">-->
+                                                SomeConfig
+                                            </div>
+                                            <div>
+                                                <span style="width: 32%"
+                                                    class="btn btn-xs btn-secondary fa fa-arrow-circle-up">
+                                                    <!--
                                                         data-bind="click: $parent.editFile.bind($data, type, $index)">-->
 
-                                        </span>
-                                        <span style="width: 32%" class="btn btn-xs btn-secondary fa fa-copy">
-                                            <!--data-bind="click: hideFile">-->
+                                                </span>
+                                                <span style="width: 32%" class="btn btn-xs btn-secondary fa fa-copy">
+                                                    <!--data-bind="click: hideFile">-->
 
-                                        </span>
-                                        <span style="width: 32%" class="btn btn-xs btn-secondary fa fa-remove">
-                                            <!--data-bind="click: hideFile">-->
+                                                </span>
+                                                <span style="width: 32%" class="btn btn-xs btn-secondary fa fa-remove">
+                                                    <!--data-bind="click: hideFile">-->
 
-                                        </span>
-                                    </div>
-                                </div>
-                                <div class="list-group-item list-group-item-action clearfix" data-placement="right"
-                                    data-html="true">
-                                    <!--
-                                    data-bind="tooltip: tooltipText(), class: displayClass, hidden: $parent.showHiddenFiles()===false && hidden()===true">-->
-                                    <div class="text-truncate">
-                                        <!-- data-bind="text: displayName">-->
-                                        SomeOtherReallyLongRidiculousConfigNameLOLOLOLOLOLOLOLOLOLOLOLOL
-                                    </div>
-                                    <div>
-                                        <span style="width: 32%" class="btn btn-xs btn-secondary fa fa-arrow-circle-up">
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="list-group-item list-group-item-action clearfix"
+                                            data-placement="right" data-html="true">
                                             <!--
+                                    data-bind="tooltip: tooltipText(), class: displayClass, hidden: $parent.showHiddenFiles()===false && hidden()===true">-->
+                                            <div class="text-truncate">
+                                                <!-- data-bind="text: displayName">-->
+                                                SomeOtherReallyLongRidiculousConfigNameLOLOLOLOLOLOLOLOLOLOLOLOL
+                                            </div>
+                                            <div>
+                                                <span style="width: 32%"
+                                                    class="btn btn-xs btn-secondary fa fa-arrow-circle-up">
+                                                    <!--
                                                     data-bind="click: $parent.editFile.bind($data, type, $index)">-->
 
-                                        </span>
-                                        <span style="width: 32%" class="btn btn-xs btn-secondary fa fa-copy">
-                                            <!--data-bind="click: hideFile">-->
+                                                </span>
+                                                <span style="width: 32%" class="btn btn-xs btn-secondary fa fa-copy">
+                                                    <!--data-bind="click: hideFile">-->
 
-                                        </span>
-                                        <span style="width: 32%" class="btn btn-xs btn-secondary fa fa-remove">
-                                            <!--data-bind="click: hideFile">-->
+                                                </span>
+                                                <span style="width: 32%" class="btn btn-xs btn-secondary fa fa-remove">
+                                                    <!--data-bind="click: hideFile">-->
 
-                                        </span>
+                                                </span>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -132,38 +180,71 @@
                         <!--select: sourceport, ini file, iwad, map, gamemode, skill-->
                         <div class="row">
                             <div class="col-md-4 border border-secondary">
-                                <div style="margin-top: 10px" class="form-group border border-secondary">
-                                    <select class="form-control">
-                                        <option>Select Sourceport</option>
-                                    </select>
-                                </div>
-                                <div class="form-group border border-secondary">
-                                    <select class="form-control">
-                                        <option>Select Ini File</option>
-                                    </select>
+                                <div class="row">
+                                    <div class="col-md-12 border border-secondary">
+                                        <div style="margin-top: 10px" class="form-group">
+                                            <label class="control-label" for="sourceportSelect" data-toggle="tooltip"
+                                                title="Choose from the sourceports you loaded in file database.">
+                                                Select Your Sourceport/Engine
+                                            </label>
+                                            <select id="sourceportSelect" class="form-control"
+                                            data-bind="options: files.sourceports, optionsText: 'displayName', value: currentConfig.sourceport, optionsCaption: 'Choose Sourceport'"></select>
+                                            
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="control-label" for="iniSelect" data-toggle="tooltip"
+                                                title="If you created your own custom ini file that you'd like to use, place it in the same directory as the sourceport.  If you don't know what this is, then just leave this as default.">
+                                                Select your Ini Config
+                                            </label>
+                                            <select id="iniSelect" class="form-control"
+                                            data-bind="options: iniFiles, optionsText: 'filename', value: currentConfig.chosenIniFile, optionsCaption: 'Choose Ini File'"></select>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <div class="col-md-4 border border-secondary">
-                                <div style="margin-top: 10px;" class="form-group border border-secondary">
-                                    <select class="form-control">
-                                        <option>Select Iwad</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <input type="text" class="form-control" placeholder="Select Map" />
+                                <div class="row">
+                                    <div class="col-md-12 border border-secondary">
+                                        <div style="margin-top: 10px;" class="form-group">
+                                            <label class="control-label" for="iwadSelect" data-toggle="tooltip"
+                                                title="Choose which game you'd like to play.  These are loaded from the file database.">
+                                                Select your Iwad/Game
+                                            </label>
+                                            <select id="iwadSelect" class="form-control">
+                                                <option>Select Iwad</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="gamemodeSelect" class="control-label" data-toggle="tooltip"
+                                                title="Choose Solo for Singleplayer, Co-op for Online Co-op, or Deathmatch for Online competitive play.  Solo-net will create a singleplayer game inside a local offline co-op server, allowing you to play through the game alone as though you were playing in online co-op.">Select
+                                                Gamemode</label>
+                                            <select id="gamemodeSelect" class="form-control"
+                                                data-bind="options: gamemodes, optionsText: 'displayText', optionsValue:'value', value: currentConfig.gamemode, optionsCaption: 'Choose Gamemode'"></select>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <div class="col-md-4 border border-secondary">
-                                <div style="margin-top: 10px" class="form-group border border-secondary">
-                                    <select class="form-control">
-                                        <option>Skill</option>
-                                    </select>
-                                </div>
-                                <div class="form-group border border-secondary">
-                                        <sup class="pull-left"
-                                        data-toggle="tooltip"
-                                        title="Choose Solo for Singleplayer, Co-op for Online Co-op, or Deathmatch for Online competitive play.  Solo-net will create a singleplayer game inside a local offline co-op server, allowing you to play through the game alone as though you were playing in online co-op.">?</sup><select class="form-control"
-                                        data-bind="options: gamemodes, optionsText: 'displayText', optionsValue:'value', value: currentConfig.gamemode, optionsCaption: 'Choose Gamemode'"></select>
+                                <div class="row">
+                                    <div class="col-md-12 border border-secondary">
+                                        <div style="margin-top: 10px;" class="form-group">
+                                            <label class="control-label" for="mapInput" data-toggle="tooltip"
+                                                title="Leave this blank if you'd like to start the game from the beginning.  Otherwise, choose a level to warp to.">
+                                                Warp to map/level
+                                            </label>
+                                            <input id="mapInput" type="text" class="form-control"
+                                                placeholder="Select Map" />
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="control-label" for="skillSelect" data-toggle="tooltip"
+                                                title="Use in conjunction with Map Warping, this sets the difficulty level, with 1 being the easiest and 5 being the hardest.">
+                                                Select your skill level/difficulty
+                                            </label>
+                                            <select id="skillSelect" class="form-control">
+                                                <option>Skill</option>
+                                            </select>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -487,311 +568,302 @@
                         </div>
                     </div>
                 </div>
-                <!--Generated Command-->
+            </div>
+            <!--File DB-->
+            <div class="col-md-12 tab-pane fade" id="fileDB">
                 <div class="row">
-                    <div class="col-md-10 border border-secondary" style="padding: 0px;">
-                        <textarea class="form-control" style="resize: none; font-family: 'Ubuntu-Mono'; padding: 0px;"
-                            readonly="true" placeholder="Generated Command Here"
-                            data-bind="textInput: currentConfig.generatedCommand">
-                                </textarea>
-                    </div>
-                    <div style="font-size: 1.333rem;"
-                        class="col-md-2 border border-secondary btn btn-xs btn-secondary fa fa-terminal"
-                        data-bind="click: exportCurrentConfig" data-toggle="tooltip"
-                        title="Export current configuration as a bat or .sh file."></div>
-                </div>
-                <!--debug view-->
-                <div class="row" data-bind="visible: isDebug">
-                    <pre data-bind="text: ko.toJSON($root, null, 2)"></pre>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-12 tab-pane fade" id="fileDB">
-            <div class="row">
-                <div class="col-md-4 border border-secondary">
-                    <ul class="nav nav-tabs">
-                        <li class="nav-item">
-                            <a class="nav-link active" data-toggle="tab" data-bind="click: clearFileEdit()"
-                                href="#Iwads">
-                                Iwads
-                                <sup data-toggle="tooltip"
-                                    title="Iwads are the actual game's binaries, usually stored in a .wad file, but sometimes stored in a .pk3 file. This is where you'd put your Doom, Doom 2, Heretic, Hexen, etc. games">
-                                    ?
-                                </sup>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" data-toggle="tab" data-bind="click: clearFileEdit()" href="#Pwads">
-                                Pwads
-                                <sup data-toggle="tooltip"
-                                    title="Pwads, or 'Patch Wads' are mods.  These could be levels, music, gameplay... these are loaded alongside an iwad.  File extensions include .wad, .deh, .bex, and .pk3">
-                                    ?
-                                </sup>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" data-toggle="tab" data-bind="click: clearFileEdit()"
-                                href="#Sourceports">
-                                Sourceports
-                                <sup data-toggle="tooltip"
-                                    title="The engine that runs an iwad (along with, optionally, pwads).">
-                                    ?
-                                </sup>
-                            </a>
-                        </li>
-                    </ul>
-                    <div class="tab-content">
-                        <div class="tab-pane active" id="Iwads">
-                            <div class="form-group">
-                                <input type="text" class="form-control" placeholder="Search..."
-                                    data-bind="textInput: iwadSearch, event: { keyup: findIwad()}" />
+                    <!--File list/search-->
+                    <div class="col-md-4 border border-secondary">
+                        <ul class="nav nav-tabs">
+                            <li class="nav-item">
+                                <a class="nav-link active" data-toggle="tab" data-bind="click: clearFileEdit()"
+                                    href="#Iwads">
+                                    Iwads
+                                    <sup data-toggle="tooltip"
+                                        title="Iwads are the actual game's binaries, usually stored in a .wad file, but sometimes stored in a .pk3 file. This is where you'd put your Doom, Doom 2, Heretic, Hexen, etc. games">
+                                        ?
+                                    </sup>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-toggle="tab" data-bind="click: clearFileEdit()" href="#Pwads">
+                                    Pwads
+                                    <sup data-toggle="tooltip"
+                                        title="Pwads, or 'Patch Wads' are mods.  These could be levels, music, gameplay... these are loaded alongside an iwad.  File extensions include .wad, .deh, .bex, and .pk3">
+                                        ?
+                                    </sup>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-toggle="tab" data-bind="click: clearFileEdit()"
+                                    href="#Sourceports">
+                                    Sourceports
+                                    <sup data-toggle="tooltip"
+                                        title="The engine that runs an iwad (along with, optionally, pwads).">
+                                        ?
+                                    </sup>
+                                </a>
+                            </li>
+                        </ul>
+                        <div class="tab-content">
+                            <div class="tab-pane active" id="Iwads">
+                                <div class="form-group">
+                                    <input type="text" class="form-control" placeholder="Search..."
+                                        data-bind="textInput: iwadSearch, event: { keyup: findIwad()}" />
+                                </div>
+                                <table class="table table-hover table-striped">
+                                    <thead>
+                                        <tr class="d-flex">
+                                            <th class="col-10">Iwad</th>
+                                            <th class="col-2"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody data-bind="foreach: files.iwads">
+                                        <tr class="d-flex"
+                                            data-bind="class: displayClass, style: { visibility : $parent.showHiddenFiles()===false && hidden()===true ? 'collapse' : ''}">
+                                            <td class="col-10 text-truncate" data-placement="right" data-html="true"
+                                                data-bind="text: displayName, tooltip: tooltipText(), click: $parent.editFile.bind($data, type, $index)">
+                                            </td>
+                                            <td class="col-2">
+                                                <span class="btn btn-xs btn-secondary"
+                                                    data-bind="click: hideFile, class: hideFileClass, tooltip: hideTooltipText()"
+                                                    aria-hidden="true"></span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div data-bind="hidden: files.iwads().length>0 || iwadsAllHidden()==false">
+                                    No Iwads to display. It could be due to your search criteria, hidden files
+                                    (you
+                                    can click "show hidden files" to see them), or if you just copied files into
+                                    the
+                                    idTech folder, click the File Database tab to reload.
+                                </div>
                             </div>
-                            <table class="table table-hover table-striped">
-                                <thead>
-                                    <tr class="d-flex">
-                                        <th class="col-10">Iwad</th>
-                                        <th class="col-2"></th>
-                                    </tr>
-                                </thead>
-                                <tbody data-bind="foreach: files.iwads">
-                                    <tr class="d-flex"
-                                        data-bind="class: displayClass, style: { visibility : $parent.showHiddenFiles()===false && hidden()===true ? 'collapse' : ''}">
-                                        <td class="col-10 text-truncate" data-placement="right" data-html="true"
-                                            data-bind="text: displayName, tooltip: tooltipText(), click: $parent.editFile.bind($data, type, $index)">
-                                        </td>
-                                        <td class="col-2">
-                                            <span class="btn btn-xs btn-secondary"
-                                                data-bind="click: hideFile, class: hideFileClass, tooltip: hideTooltipText()"
-                                                aria-hidden="true"></span>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                            <div data-bind="hidden: files.iwads().length>0 || iwadsAllHidden()==false">
-                                No Iwads to display. It could be due to your search criteria, hidden files
-                                (you
-                                can click "show hidden files" to see them), or if you just copied files into
-                                the
-                                idTech folder, click the File Database tab to reload.
+                            <div class="tab-pane fade" id="Pwads">
+                                <div class="form-group">
+                                    <input type="text" class="form-control" placeholder="Search..."
+                                        data-bind="textInput: pwadSearch, event: { keyup: findPwad()}" />
+                                </div>
+                                <table class="table table-hover table-striped">
+                                    <thead>
+                                        <tr class="d-flex">
+                                            <th class="col-10">Pwad</th>
+                                            <th class="col-2"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody data-bind="foreach: files.pwads">
+                                        <tr class="d-flex"
+                                            data-bind="class: displayClass, style: { visibility : $parent.showHiddenFiles()===false && hidden()===true ? 'collapse' : ''}">
+                                            <td class="col-10 text-truncate" data-placement="right" data-html="true"
+                                                data-bind="text: displayName, tooltip: tooltipText(), click: $parent.editFile.bind($data, type, $index)">
+                                            </td>
+                                            <td class="col-2">
+                                                <span class="btn btn-xs btn-secondary"
+                                                    data-bind="click: hideFile, class: hideFileClass, tooltip: hideTooltipText()"
+                                                    aria-hidden="true"></span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div data-bind="hidden: files.pwads().length>0 || pwadsAllHidden()==false">
+                                    No Pwads to display. It could be due to your search criteria, hidden files
+                                    (you
+                                    can click "show hidden files" to see them), or if you just copied files into
+                                    the
+                                    idTech folder, click the File Database tab to reload.
+                                </div>
                             </div>
-                        </div>
-                        <div class="tab-pane fade" id="Pwads">
-                            <div class="form-group">
-                                <input type="text" class="form-control" placeholder="Search..."
-                                    data-bind="textInput: pwadSearch, event: { keyup: findPwad()}" />
-                            </div>
-                            <table class="table table-hover table-striped">
-                                <thead>
-                                    <tr class="d-flex">
-                                        <th class="col-10">Pwad</th>
-                                        <th class="col-2"></th>
-                                    </tr>
-                                </thead>
-                                <tbody data-bind="foreach: files.pwads">
-                                    <tr class="d-flex"
-                                        data-bind="class: displayClass, style: { visibility : $parent.showHiddenFiles()===false && hidden()===true ? 'collapse' : ''}">
-                                        <td class="col-10 text-truncate" data-placement="right" data-html="true"
-                                            data-bind="text: displayName, tooltip: tooltipText(), click: $parent.editFile.bind($data, type, $index)">
-                                        </td>
-                                        <td class="col-2">
-                                            <span class="btn btn-xs btn-secondary"
-                                                data-bind="click: hideFile, class: hideFileClass, tooltip: hideTooltipText()"
-                                                aria-hidden="true"></span>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                            <div data-bind="hidden: files.pwads().length>0 || pwadsAllHidden()==false">
-                                No Pwads to display. It could be due to your search criteria, hidden files
-                                (you
-                                can click "show hidden files" to see them), or if you just copied files into
-                                the
-                                idTech folder, click the File Database tab to reload.
-                            </div>
-                        </div>
-                        <div class="tab-pane fade" id="Sourceports">
-                            <div class="form-group">
-                                <input type="text" class="form-control" placeholder="Search..."
-                                    data-bind="textInput: sourceportSearch, event: { keyup: findSourceport()}" />
-                            </div>
-                            <table class="table table-hover table-striped">
-                                <thead>
-                                    <tr class="d-flex">
-                                        <th class="col-10">Sourceport</th>
-                                        <th class="col-2"></th>
-                                    </tr>
-                                </thead>
-                                <tbody data-bind="foreach: files.sourceports">
-                                    <tr class="d-flex"
-                                        data-bind="class: displayClass, style: { visibility : $parent.showHiddenFiles()===false && hidden()===true ? 'collapse' : ''}">
-                                        <td class="col-10 text-truncate" data-placement="right" data-html="true"
-                                            data-bind="text: displayName, tooltip: tooltipText(), click: $parent.editFile.bind($data, type, $index)">
-                                        </td>
-                                        <td class="col-2">
-                                            <span class="btn btn-xs btn-secondary"
-                                                data-bind="click: hideFile, class: hideFileClass, tooltip: hideTooltipText()"
-                                                aria-hidden="true"></span>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                            <div data-bind="hidden: files.sourceports().length>0 || sourceportsAllHidden()==false">
-                                No Sourceports to display. It could be due to your search criteria, hidden
-                                files
-                                (you can click "show hidden files" to see them), or if you just copied files
-                                into the idTech folder, click the File Database tab to reload.
+                            <div class="tab-pane fade" id="Sourceports">
+                                <div class="form-group">
+                                    <input type="text" class="form-control" placeholder="Search..."
+                                        data-bind="textInput: sourceportSearch, event: { keyup: findSourceport()}" />
+                                </div>
+                                <table class="table table-hover table-striped">
+                                    <thead>
+                                        <tr class="d-flex">
+                                            <th class="col-10">Sourceport</th>
+                                            <th class="col-2"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody data-bind="foreach: files.sourceports">
+                                        <tr class="d-flex"
+                                            data-bind="class: displayClass, style: { visibility : $parent.showHiddenFiles()===false && hidden()===true ? 'collapse' : ''}">
+                                            <td class="col-10 text-truncate" data-placement="right" data-html="true"
+                                                data-bind="text: displayName, tooltip: tooltipText(), click: $parent.editFile.bind($data, type, $index)">
+                                            </td>
+                                            <td class="col-2">
+                                                <span class="btn btn-xs btn-secondary"
+                                                    data-bind="click: hideFile, class: hideFileClass, tooltip: hideTooltipText()"
+                                                    aria-hidden="true"></span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div data-bind="hidden: files.sourceports().length>0 || sourceportsAllHidden()==false">
+                                    No Sourceports to display. It could be due to your search criteria, hidden
+                                    files
+                                    (you can click "show hidden files" to see them), or if you just copied files
+                                    into the idTech folder, click the File Database tab to reload.
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="col-md-8 border border-secondary">
-                    <form data-bind="with: chosenFile">
-                        <h5>
-                            File Type:
-                            <span data-bind="text: type"></span>
-                            &nbsp;&mdash;&nbsp;Filename:
-                            <span data-bind="text: filename"></span>
-                        </h5>
-                        <div class="form-group">
-                            <label class="col control-label" data-placement="left"
-                                data-bind="uniqueFor: name, tooltip: `A human readable name for your file.`">
-                                Title
-                            </label>
-                            <div data-bind="hidden: nameValid()" class="col alert alert-warning">
-                                <strong>Warning:</strong>
-                                You should provide a human-readable name for this file.
+                    <!--File Edit-->
+                    <div class="col-md-8 border border-secondary">
+                        <form data-bind="with: chosenFile">
+                            <h5>
+                                File Type:
+                                <span data-bind="text: type"></span>
+                                &nbsp;&mdash;&nbsp;Filename:
+                                <span data-bind="text: filename"></span>
+                            </h5>
+                            <div class="form-group">
+                                <label class="control-label" data-placement="left"
+                                    data-bind="uniqueFor: name, tooltip: `A human readable name for your file.`">
+                                    Title
+                                </label>
+                                <div data-bind="hidden: nameValid()" class="col alert alert-warning">
+                                    <strong>Warning:</strong>
+                                    You should provide a human-readable name for this file.
+                                </div>
+                                <input type="text" class="form-control" placeHolder="Human-readable name"
+                                    data-bind="textInput: name, uniqueId: name, event: {blur: $parent.updateFile}" />
                             </div>
-                            <input type="text" class="form-control" placeHolder="Human-readable name"
-                                data-bind="textInput: name, uniqueId: name, event: {blur: $parent.updateFile}" />
-                        </div>
-                        <div class="form-group" data-bind="visible: type()==='sourceport'">
-                            <label class="col control-label" data-placement="left"
-                                data-bind="uniqueFor: subtype, tooltip: `This launcher has special support depending on the sourceport.  Selecting the right sourceport type here will greatly assist you later in building configurations based on that sourceport type.  Currently, the sourceport types this launcher supports are Zandronum, Chocolate Doom, and all ZDoom-based sourceports (e.g. GZDoom, QZDoom, or even plain ZDoom itself).`">
-                                Sourceport Type
-                            </label>
-                            <select class="form-control"
-                                data-bind="options: $parent.sourceportTypes, uniqueId: subtype, event: {blur: $parent.updateFile}, value: subtype, optionsCaption: 'Choose...'"></select>
-                        </div>
-                        <div class="form-group" data-bind="visible: type()==='iwad'">
-                            <label class="col control-label" data-placement="left"
-                                data-bind="uniqueFor: subtype, tooltip: `Selecting an IWad type from the known game types can help with some configuration options (such as selecting maps/levels)`">
-                                IWad Type
-                            </label>
-                            <select class="form-control"
-                                data-bind="options: $parent.iwadTypes, optionsText: 'description', uniqueId: subtype, event: {blur: $parent.updateFile}, value: subtype, optionsValue:'name', optionsCaption: 'Choose...'"></select>
-                        </div>
-                        <div class="form-group">
-                            <label class="col control-label" data-placement="left"
-                                data-bind="uniqueFor: authorInput, tooltip: `Comma-separated list of authors.`">
-                                Authors
-                            </label>
-                            <div data-bind="hidden: authorsValid()" class="col alert alert-danger">
-                                <strong>Required:</strong>
-                                If you wish to use this file, you'll need to give credit to the person(s)
-                                who
-                                made it.
+                            <div class="form-group" data-bind="visible: type()==='sourceport'">
+                                <label class="control-label" data-placement="left"
+                                    data-bind="uniqueFor: subtype, tooltip: `This launcher has special support depending on the sourceport.  Selecting the right sourceport type here will greatly assist you later in building configurations based on that sourceport type.  Currently, the sourceport types this launcher supports are Zandronum, Chocolate Doom, and all ZDoom-based sourceports (e.g. GZDoom, QZDoom, or even plain ZDoom itself).`">
+                                    Sourceport Type
+                                </label>
+                                <select class="form-control"
+                                    data-bind="options: $parent.sourceportTypes, uniqueId: subtype, event: {blur: $parent.updateFile}, value: subtype, optionsCaption: 'Choose...'"></select>
                             </div>
-                            <input type="text" class="form-control" placeholder="Author1,Author2,Author3,..."
-                                data-bind="textInput: authorInput, uniqueId: authorInput, event: {blur: $parent.updateFile}" />
-                        </div>
-                        <div class="form-group">
-                            <label class="col control-label" data-placement="left"
-                                data-bind="uniqueFor: metaInput, tooltip: `Comma-separated list of meta tags (kinda like hash tags, they're ways to find this file).`">
-                                Meta Tags
-                            </label>
-                            <div data-bind="hidden: metaTagsValid()" class="col alert alert-warning">
-                                <strong>Warning:</strong>
-                                It's extremely helpful to have some tags to use so you can find this file
-                                more
-                                easily, both here and in the Configuration Builder.
+                            <div class="form-group" data-bind="visible: type()==='iwad'">
+                                <label class="control-label" data-placement="left"
+                                    data-bind="uniqueFor: subtype, tooltip: `Selecting an IWad type from the known game types can help with some configuration options (such as selecting maps/levels)`">
+                                    IWad Type
+                                </label>
+                                <select class="form-control"
+                                    data-bind="options: $parent.iwadTypes, optionsText: 'description', uniqueId: subtype, event: {blur: $parent.updateFile}, value: subtype, optionsValue:'name', optionsCaption: 'Choose...'"></select>
                             </div>
-                            <input type="text" class="form-control" placeholder="Music,Levels,Textures,Gameplay,etc..."
-                                data-bind="textInput: metaInput, uniqueId: metaInput, event: {blur: $parent.updateFile}" />
-                        </div>
-                        <div class="form-group">
-                            <label class="col control-label" data-placement="left"
-                                data-bind="uniqueFor: source, tooltip: `Where did you find this file?`">
-                                Source
-                            </label>
-                            <div data-bind="hidden: sourceValid()" class="col alert alert-danger">
-                                <strong>Required:</strong>
-                                You'll need to post a link as to where you got this file, or where this file
-                                can
-                                be found.
+                            <div class="form-group">
+                                <label class="control-label" data-placement="left"
+                                    data-bind="uniqueFor: authorInput, tooltip: `Comma-separated list of authors.`">
+                                    Authors
+                                </label>
+                                <div data-bind="hidden: authorsValid()" class="col alert alert-danger">
+                                    <strong>Required:</strong>
+                                    If you wish to use this file, you'll need to give credit to the person(s)
+                                    who
+                                    made it.
+                                </div>
+                                <input type="text" class="form-control" placeholder="Author1,Author2,Author3,..."
+                                    data-bind="textInput: authorInput, uniqueId: authorInput, event: {blur: $parent.updateFile}" />
                             </div>
+                            <div class="form-group">
+                                <label class="control-label" data-placement="left"
+                                    data-bind="uniqueFor: metaInput, tooltip: `Comma-separated list of meta tags (kinda like hash tags, they're ways to find this file).`">
+                                    Meta Tags
+                                </label>
+                                <div data-bind="hidden: metaTagsValid()" class="col alert alert-warning">
+                                    <strong>Warning:</strong>
+                                    It's extremely helpful to have some tags to use so you can find this file
+                                    more
+                                    easily, both here and in the Configuration Builder.
+                                </div>
+                                <input type="text" class="form-control"
+                                    placeholder="Music,Levels,Textures,Gameplay,etc..."
+                                    data-bind="textInput: metaInput, uniqueId: metaInput, event: {blur: $parent.updateFile}" />
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label" data-placement="left"
+                                    data-bind="uniqueFor: source, tooltip: `Where did you find this file?`">
+                                    Source
+                                </label>
+                                <div data-bind="hidden: sourceValid()" class="col alert alert-danger">
+                                    <strong>Required:</strong>
+                                    You'll need to post a link as to where you got this file, or where this file
+                                    can
+                                    be found.
+                                </div>
 
-                            <input type="text" class="form-control" placeholder="http://somesite.com/someplace"
-                                data-bind="textInput: source, uniqueId: source, event: {blur: $parent.updateFile}" />
-                        </div>
-                        <div class="form-group">
-                            <label class="col control-label" data-placement="left"
-                                data-bind="uniqueFor: quickDescription, tooltip: `Just a quick description of the file, not very long.  Just something that pops up real quick so you know more about it.`">
-                                Quick Description
-                            </label>
-                            <div data-bind="hidden: quickDescriptionValid()" class="col alert alert-warning">
-                                <strong>Warning:</strong>
-                                You really should provide a nice quick description. When you hover over the
-                                file, it'll pop up helping you remember what it does.
+                                <input type="text" class="form-control" placeholder="http://somesite.com/someplace"
+                                    data-bind="textInput: source, uniqueId: source, event: {blur: $parent.updateFile}" />
                             </div>
+                            <div class="form-group">
+                                <label class="control-label" data-placement="left"
+                                    data-bind="uniqueFor: quickDescription, tooltip: `Just a quick description of the file, not very long.  Just something that pops up real quick so you know more about it.`">
+                                    Quick Description
+                                </label>
+                                <div data-bind="hidden: quickDescriptionValid()" class="col alert alert-warning">
+                                    <strong>Warning:</strong>
+                                    You really should provide a nice quick description. When you hover over the
+                                    file, it'll pop up helping you remember what it does.
+                                </div>
 
-                            <input type="text" class="form-control col"
-                                placeholder="This file adds levels, music, sounds, textures, gameplay, etc. changes."
-                                data-bind="textInput: quickDescription, uniqueId: quickDescription, event: {blur: $parent.updateFile}" />
-                        </div>
-                        <div class="form-group">
-                            <label class="col control-label" data-placement="left"
-                                data-bind="uniqueFor: longDescription, tooltip: `Here's where you can basically go nuts in long detail about the file.  Most files have a .txt packaged with them... this is a great place to paste that content (if your file comes with a .txt file of the same name, it'll get autoloaded into this field for you)`">
-                                Long Description
-                            </label>
-                            <textarea class="form-control" rows="20" placeholder="====== Blahblahblah=====
-This is very long
-oh my yes, this is going to be long.
-
-Hello?  You still here?  yeah, long stuff in here..."
-                                data-bind="textInput: longDescription, uniqueId: longDescription, event: {blur: $parent.updateFile}"></textarea>
-                        </div>
-                    </form>
+                                <input type="text" class="form-control col"
+                                    placeholder="This file adds levels, music, sounds, textures, gameplay, etc. changes."
+                                    data-bind="textInput: quickDescription, uniqueId: quickDescription, event: {blur: $parent.updateFile}" />
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label" data-placement="left"
+                                    data-bind="uniqueFor: longDescription, tooltip: `Here's where you can basically go nuts in long detail about the file.  Most files have a .txt packaged with them... this is a great place to paste that content (if your file comes with a .txt file of the same name, it'll get autoloaded into this field for you)`">
+                                    Long Description
+                                </label>
+                                <textarea class="form-control" rows="20" placeholder="====== Blahblahblah=====
+        This is very long
+        oh my yes, this is going to be long.
+        
+        Hello?  You still here?  yeah, long stuff in here..."
+                                    data-bind="textInput: longDescription, uniqueId: longDescription, event: {blur: $parent.updateFile}"></textarea>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="col-md-12 tab-pane fade" id="info">
-            <h1>Hello World!</h1>
-            We are using node
-            <span data-bind="text: nodeVersion"></span>
-            <br />
-            Chrome
-            <span data-bind="text: chromeVersion"></span>
-            <br />
-            and Electron
-            <span data-bind="text: electronVersion"></span>
-            .
-            <br />
-            <br />
-            You'll find the idTech folder in
-            <span data-bind="text: idTechFolder"></span>
-            <br />
-            <a href="#" class="btn btn-secondary" data-bind="click: ()=>{ Allfiles([]); walk(idTechFolder)}">
-                Click to read in folders
-            </a>
-            <br />
-            Here's all the files:
-            <br />
-            <div data-bind="foreach:Allfiles">
-                <div data-bind="text: $data"></div>
+            <!--Info-->
+            <div class="col-md-12 tab-pane fade" id="info">
+                <h1>Hello World!</h1>
+                We are using node
+                <span data-bind="text: nodeVersion"></span>
+                <br />
+                Chrome
+                <span data-bind="text: chromeVersion"></span>
+                <br />
+                and Electron
+                <span data-bind="text: electronVersion"></span>
+                .
+                <br />
+                <br />
+                You'll find the idTech folder in
+                <span data-bind="text: idTechFolder"></span>
+                <br />
+                <a href="#" class="btn btn-secondary" data-bind="click: ()=>{ Allfiles([]); walk(idTechFolder)}">
+                    Click to read in folders
+                </a>
+                <br />
+                Here's all the files:
+                <br />
+                <div data-bind="foreach:Allfiles">
+                    <div data-bind="text: $data"></div>
+                </div>
+                <br />
+                And just to reiterate, their directories are:
+                <br />
+                Sourceports:
+                <span data-bind="text: sourceportDirectory"></span>
+                <br />
+                Iwads:
+                <span data-bind="text: iwadDirectory"></span>
+                <br />
+                Pwads:
+                <span data-bind="text: pwadDirectory"></span>
             </div>
-            <br />
-            And just to reiterate, their directories are:
-            <br />
-            Sourceports:
-            <span data-bind="text: sourceportDirectory"></span>
-            <br />
-            Iwads:
-            <span data-bind="text: iwadDirectory"></span>
-            <br />
-            Pwads:
-            <span data-bind="text: pwadDirectory"></span>
         </div>
-    </div>
+        <!--debug view-->
+        <div class="row" data-bind="visible: isDebug">
+            <pre data-bind="text: ko.toJSON($root, null, 2)"></pre>
+        </div>
     </div>
 </body>
 

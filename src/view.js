@@ -156,6 +156,7 @@ function ConfigChain(
     configName,
     configDescription,
     sourceport,
+    iniFile,
     iwad,
     gamemode,
     map,
@@ -167,35 +168,58 @@ function ConfigChain(
     let self = this;
     self.configName = ko.observable(configName);
     self.configDescription = ko.observable(configDescription);
+    self.sourceport = ko.observable();
     if (sourceport) {
-        self.sourceport = new File(
-            sourceport.filename,
-            sourceport.authors,
-            sourceport.metaInput,
-            sourceport.source,
-            sourceport.name,
-            sourceport.quickDescription,
-            sourceport.longDescription,
-            sourceport.type,
-            sourceport.hidden,
-            sourceport.subtype
-        );
+        if (typeof sourceport === 'function') {
+            self.sourceport = sourceport;
+        } else if (typeof sourceport === 'object') {
+            self.sourceport(
+                new File(
+                    sourceport.filepath,
+                    sourceport.filename,
+                    sourceport.authors,
+                    sourceport.metaInput,
+                    sourceport.source,
+                    sourceport.name,
+                    sourceport.quickDescription,
+                    sourceport.longDescription,
+                    sourceport.type,
+                    sourceport.hidden,
+                    sourceport.subtype
+                )
+            );
+        }
     }
-    self.iniFiles = ko.observableArray();
     self.chosenIniFile = ko.observable();
+    if (iniFile) {
+        if (typeof iniFile === 'function') {
+            self.chosenIniFile = iniFile;
+        } else if (typeof iniFile === 'object') {
+            self.chosenIniFile(new IniFile(inifile.filepath, inifile.filename));
+        }
+    }
+
+    self.iwad = ko.observable();
     if (iwad) {
-        self.iwad = new File(
-            iwad.filename,
-            iwad.authors,
-            iwad.metaTags,
-            iwad.source,
-            iwad.name,
-            iwad.quickDescription,
-            iwad.longDescription,
-            iwad.type,
-            iwad.hidden,
-            iwad.subtype
-        );
+        if (typeof iwad === 'function') {
+            self.iwad = iwad;
+        } else if (typeof iwad === 'object') {
+            self.iwad(
+                new File(
+                    iwad.filepath,
+                    iwad.filename,
+                    iwad.authors,
+                    iwad.metaTags,
+                    iwad.source,
+                    iwad.name,
+                    iwad.quickDescription,
+                    iwad.longDescription,
+                    iwad.type,
+                    iwad.hidden,
+                    iwad.subtype
+                )
+            );
+        }
     }
     self.gamemode = ko.observable(gamemode);
     self.map = ko.observable(map);
@@ -218,6 +242,7 @@ function ConfigChain(
     if (pwads) {
         _.forEach(pwads, pwad => {
             let newPWad = new File(
+                pwad.filepath,
                 pwad.filename,
                 pwad.author,
                 pwad.metaTags,
@@ -253,14 +278,14 @@ function ConfigChain(
     //this will be generated from the current config chain
     self.generatedCommand = ko.computed(() => {
         let command = '';
-        if (self.sourceport) {
-            command += self.sourceport.filename() + ' ';
+        if (self.sourceport()) {
+            command += self.sourceport().filename + ' ';
         }
-        if (self.iwad) {
-            command += '-iwad ' + self.iwad.filename() + ' ';
+        if (self.iwad()) {
+            command += '-iwad ' + self.iwad().filename + ' ';
         }
         if (self.chosenIniFile()) {
-            command += '-config ' + self.iniFile + ' ';
+            command += '-config ' + self.chosenIniFile().filename + ' ';
         }
         return command;
     });
@@ -291,12 +316,22 @@ function CommandLineOption(enabled, name, inputType, description, command, value
     } else self.valueRange = valueExtra;
 }
 
-function File(filename, authors, metaTags, source, name, quickDescription, longDescription, type, hidden, subtype) {
+function File(
+    filepath,
+    filename,
+    authors,
+    metaTags,
+    source,
+    name,
+    quickDescription,
+    longDescription,
+    type,
+    hidden,
+    subtype
+) {
     let self = this;
-    self.filename = ko.observable(filename);
-    self.filenameValid = ko.computed(() => {
-        return self.filename() && self.filename().length > 0;
-    });
+    self.filepath = filepath;
+    self.filename = filename;
     self.authors = ko.observableArray(authors);
     self.authorsValid = ko.computed(() => {
         let valid = false;
@@ -384,7 +419,7 @@ function File(filename, authors, metaTags, source, name, quickDescription, longD
     };
 
     self.error = ko.computed(() => {
-        return !self.filenameValid() || !self.authorsValid() || !self.sourceValid() || !self.typeValid();
+        return !self.authorsValid() || !self.sourceValid() || !self.typeValid();
     });
     self.warning = ko.computed(() => {
         return !self.metaTagsValid() || !self.nameValid() || !self.quickDescriptionValid();
@@ -392,10 +427,10 @@ function File(filename, authors, metaTags, source, name, quickDescription, longD
     self.displayName = ko.computed(() => {
         let displayname = '';
         if (!self.name()) {
-            if (!self.filename()) {
+            if (!self.filename) {
                 displayname = '';
             } else {
-                displayname = self.filename();
+                displayname = self.filename;
             }
         } else {
             displayname = self.name();
@@ -437,10 +472,6 @@ function File(filename, authors, metaTags, source, name, quickDescription, longD
         let text = '';
         let addNewline = false;
         if (self.error() || self.warning()) {
-            if (!self.filenameValid()) {
-                text += 'Missing Filename';
-                addNewline = true;
-            }
             if (!self.nameValid()) {
                 text += addNewline ? ' <br> ' : '';
                 text += 'Missing Name/Title';
@@ -471,6 +502,12 @@ function File(filename, authors, metaTags, source, name, quickDescription, longD
         }
         return text;
     });
+}
+
+function IniFile(filepath, filename) {
+    let self = this;
+    self.filepath = filepath;
+    self.filename = filename;
 }
 
 function AppViewModel() {
@@ -626,7 +663,7 @@ function AppViewModel() {
     };
     self.updateFile = file => {
         let rawFileProperties = {
-            filename: file.filename(),
+            filename: file.filename,
             authors: file.authors(),
             metaTags: file.metaTags(),
             source: file.source(),
@@ -648,7 +685,7 @@ function AppViewModel() {
                 directory = self.sourceportDirectory;
                 break;
         }
-        let RealFilename = file.filename().substring(0, file.filename().lastIndexOf('.'));
+        let RealFilename = file.filename.substring(0, file.filename.lastIndexOf('.'));
         fs.writeFile(path.resolve(directory, RealFilename + '.json'), JSON.stringify(rawFileProperties), err => {
             if (err) {
                 return console.log(err);
@@ -671,6 +708,7 @@ function AppViewModel() {
         let newIwads = [];
         _.forEach(allIwads, iwad => {
             let newIwad = new File(
+                iwad.filepath,
                 iwad.filename,
                 iwad.authors,
                 iwad.metaTags,
@@ -693,6 +731,7 @@ function AppViewModel() {
         let newPwads = [];
         _.forEach(allPwads, pwad => {
             let newPwad = new File(
+                pwad.filepath,
                 pwad.filename,
                 pwad.authors,
                 pwad.metaTags,
@@ -713,6 +752,7 @@ function AppViewModel() {
         let newSourceports = [];
         _.forEach(allSourceports, sourceport => {
             let newSourceport = new File(
+                sourceport.filepath,
                 sourceport.filename,
                 sourceport.authors,
                 sourceport.metaTags,
@@ -728,6 +768,62 @@ function AppViewModel() {
         });
         self.files.sourceports.removeAll();
         self.files.sourceports.push.apply(self.files.sourceports, newSourceports);
+    };
+    self.iniFiles = ko.observableArray();
+
+    self.chooseSourceport = (sourceport) => {
+        if (sourceport){
+            self.getIniFilesForGivenSourceport(sourceport);
+        } else {
+            self.iniFiles.removeAll();
+        }
+    };
+
+    self.getIniFilesForGivenSourceport = (sourceport) => {
+        let directory = path.dirname(sourceport.filepath);
+        self.iniFiles.removeAll();
+        function walk(directory) {
+            fs.readdir(directory, (e, files) => {
+                if (e) {
+                    console.log('Error: ', e);
+                    return;
+                }
+                files.forEach(
+                    file => {
+                        let fullPath = path.join(directory, file);
+                        fs.stat(fullPath, (e, f) => {
+                            if (e) {
+                                console.log('Error: ', e);
+                                return;
+                            }
+                            if (f.isDirectory()) {
+                                if (dev) {
+                                    console.log(
+                                        'getIniFilesForGivenSourceport:: ' + file + ' and is directory: ' + fullPath
+                                    );
+                                }
+                                // walk(fullPath); no need to dive into further directories, if your ini file isn't in 
+                                //the same directory as the exe, then I don't care about it.
+                            } else {
+                                let fileExt = file.substring(file.lastIndexOf('.') + 1);
+
+                                if (fileExt === 'ini') {
+                                    let iniFile = new IniFile(fullPath, file);
+                                    self.iniFiles.push(iniFile);
+                                    self.iniFiles.sort();
+                                }
+                            }
+                        });
+                    },
+                    err => {
+                        if (err) {
+                            throw err;
+                        }
+                    }
+                );
+            });
+        }
+        walk(directory);
     };
 
     self.buildIwadCollection = reloadFiles => {
@@ -773,6 +869,7 @@ function AppViewModel() {
                                             console.log('file read error!' + err);
                                         } else {
                                             let iwad = JSON.parse(data);
+                                            iwad.filepath = fullPath;
                                             if (dev) {
                                                 console.log('buildIwad:: adding ' + fullPath);
                                                 console.log('reloadFiles: ' + reloadFiles);
@@ -863,6 +960,7 @@ function AppViewModel() {
                                             console.log('file read error!' + err);
                                         } else {
                                             let pwad = JSON.parse(data);
+                                            pwad.filepath = fullPath;
                                             if (dev) {
                                                 console.log('buildPwad:: adding ' + fullPath);
                                                 console.log('reloadFiles: ' + reloadFiles);
@@ -953,6 +1051,7 @@ function AppViewModel() {
                                             console.log('file read error!' + err);
                                         } else {
                                             let sourceport = JSON.parse(data);
+                                            sourceport.filepath = fullPath;
                                             if (dev) {
                                                 console.log('buildSourceport:: adding ' + fullPath);
                                                 console.log('reloadFiles: ' + reloadFiles);
@@ -1226,6 +1325,7 @@ function AppViewModel() {
             'This is the Default Configuration',
             null,
             null,
+            null,
             'solo',
             null,
             null,
@@ -1317,6 +1417,10 @@ ready(() => {
             $(element).tooltip();
         }
     };
-    ko.applyBindings(new AppViewModel());
+    var viewModel = new AppViewModel();
+    viewModel.currentConfig.sourceport.subscribe(data => {
+        viewModel.chooseSourceport(data);
+    });
+    ko.applyBindings(viewModel);
 });
 // This is a simple *viewmodel* - JavaScript that defines the data and behavior of your UI
