@@ -6,7 +6,7 @@ const titlebar = require('custom-electron-titlebar');
 const Loki = require('lokijs');
 const _ = require('lodash');
 const pwadTypes = ['wad', 'pk3', 'deh', 'bex'];
-const iwadTypes = ['wad', 'pk3'];
+const iwadFileTypes = ['wad', 'pk3'];
 // Importing this adds a right-click menu with 'Inspect Element' option
 const { remote } = require('electron');
 const { Menu, MenuItem } = remote;
@@ -159,7 +159,7 @@ function ConfigChain(
     iniFile,
     iwad,
     gamemode,
-    map,
+    level,
     skill,
     pwads,
     dmFlags,
@@ -183,9 +183,9 @@ function ConfigChain(
                     sourceport.name,
                     sourceport.quickDescription,
                     sourceport.longDescription,
-                    sourceport.type,
+                    sourceport.filetype,
                     sourceport.hidden,
-                    sourceport.subtype
+                    sourceport.basetype
                 )
             );
         }
@@ -214,15 +214,15 @@ function ConfigChain(
                     iwad.name,
                     iwad.quickDescription,
                     iwad.longDescription,
-                    iwad.type,
+                    iwad.filetype,
                     iwad.hidden,
-                    iwad.subtype
+                    iwad.basetype
                 )
             );
         }
     }
     self.gamemode = ko.observable(gamemode);
-    self.map = ko.observable(map);
+    self.level = ko.observable(level);
     self.skill = ko.observable(skill);
     self.dmFlags = ko.observableArray();
     if (dmFlags) {
@@ -250,9 +250,9 @@ function ConfigChain(
                 pwad.name,
                 pwad.quickDescription,
                 pwad.longDescription,
-                pwad.type,
+                pwad.filetype,
                 pwad.hidden,
-                pwad.subtype
+                pwad.basetype
             );
             self.pwads.push(newPWad);
         });
@@ -286,6 +286,9 @@ function ConfigChain(
         }
         if (self.chosenIniFile()) {
             command += '-config ' + self.chosenIniFile().filename + ' ';
+        }
+        if (self.level()) {
+            command += '-warp ' + self.level();
         }
         return command;
     });
@@ -325,9 +328,9 @@ function File(
     name,
     quickDescription,
     longDescription,
-    type,
+    filetype,
     hidden,
-    subtype
+    basetype
 ) {
     let self = this;
     self.filepath = filepath;
@@ -399,27 +402,35 @@ function File(
         return self.quickDescription() && self.quickDescription().length > 0;
     });
     self.longDescription = ko.observable(longDescription);
-    self.type = ko.observable(type);
-    self.typeValid = ko.computed(() => {
+    self.filetype = ko.observable(filetype);
+    self.filetypeValid = ko.computed(() => {
         return (
-            self.type() &&
-            self.type().length > 0 &&
-            (self.type() === 'iwad' || self.type() === 'sourceport' || self.type() === 'pwad')
+            self.filetype() &&
+            self.filetype().length > 0 &&
+            (self.filetype() === 'iwad' || self.filetype() === 'sourceport' || self.filetype() === 'pwad')
         );
     });
     self.hidden = ko.observable(false);
     if (hidden === true) {
         self.hidden(true);
     }
-    self.subtype = ko.observable(subtype);
-
+    self.basetype = ko.observable(basetype);
     self.hideFile = () => {
         let isHidden = self.hidden();
         self.hidden(!isHidden);
     };
 
+    self.sourceportBasetype = ko.observable();
+    if (filetype==='sourceport'){
+        self.sourceportBasetype(basetype);
+    }
+    self.iwadBasetype = ko.observable();
+    if (filetype==='iwad'){
+        self.iwadBasetype(basetype)
+    }
+
     self.error = ko.computed(() => {
-        return !self.authorsValid() || !self.sourceValid() || !self.typeValid();
+        return !self.authorsValid() || !self.sourceValid() || !self.filetypeValid();
     });
     self.warning = ko.computed(() => {
         return !self.metaTagsValid() || !self.nameValid() || !self.quickDescriptionValid();
@@ -510,6 +521,59 @@ function IniFile(filepath, filename) {
     self.filename = filename;
 }
 
+function Level(level, chosenIwadType) {
+    let self = this;
+    if (level) {
+        self.warptext = level.warptext;
+        self.name = level.name;
+        self.doom = level.doom;
+        self.heretic = level.heretic;
+        self.doom2 = level.doom2;
+        self.tnt = level.tnt;
+        self.plutonia = level.plutonia;
+        self.hexen = level.hexen;
+        self.strife = level.strife;
+        self.hacx = level.hacx;
+        self.nerve = level.nerve;
+        self.chex = level.chex;
+        self.displayName = ko.computed(() => {
+            switch (chosenIwadType) {
+                case 'doom':
+                    return self.name + ' - ' + self.doom;
+                    break;
+                case 'heretic':
+                    return self.name + ' - ' + self.heretic;
+                    break;
+                case 'doom2':
+                    return self.name + ' - ' + self.doom2;
+                    break;
+                case 'tnt':
+                    return self.name + ' - ' + self.tnt;
+                    break;
+                case 'plutonia':
+                    return self.name + ' - ' + self.plutonia;
+                    break;
+                case 'hexen':
+                    return self.name + ' - ' + self.hexen;
+                    break;
+                case 'strife':
+                    return self.name + ' - ' + self.strife;
+                    break;
+                case 'hacx':
+                    return self.name + ' - ' + self.hacx;
+                    break;
+                case 'nerve':
+                    return self.name + ' - ' + self.nerve;
+                    break;
+                case 'chex':
+                    return self.name + ' - ' + self.chex;
+                    break;
+                default:
+                    return self.name;
+            }
+        });
+    }
+}
 function AppViewModel() {
     let self = this;
     self.isDebug = dev;
@@ -593,6 +657,8 @@ function AppViewModel() {
 
     self.showHiddenFiles = ko.observable(false);
 
+    self.levels = ko.observableArray();
+
     self.Allfiles = ko.observableArray();
     self.files = {
         iwads: ko.observableArray(),
@@ -626,42 +692,25 @@ function AppViewModel() {
         });
         return counter === self.files.sourceports.length;
     });
-    self.chosenFileType = ko.observable('');
-    self.chosenFileIndex = ko.observable('');
-    self.chosenFile = ko.computed(() => {
-        switch (self.chosenFileType()) {
-            case 'iwad':
-                return self.files.iwads()[self.chosenFileIndex()];
-            case 'pwad':
-                return self.files.pwads()[self.chosenFileIndex()];
-            case 'sourceport':
-                return self.files.sourceports()[self.chosenFileIndex()];
-        }
-    });
     self.loadCollections = reloadFiles => {
         self.buildIwadCollection(reloadFiles);
         self.buildPwadCollection(reloadFiles);
         self.buildSourceportCollection(reloadFiles);
     };
-    self.editFile = (type, index) => {
-        self.chosenFileType(type());
-        self.chosenFileIndex(index());
-    };
-    self.clearFileEdit = () => {
-        self.chosenFileType('');
-        self.chosenFileIndex('');
-    };
-    self.getFile = () => {
-        switch (self.chosenFileType()) {
+    self.chosenFile = ko.observable();
+    self.editFile = (filetype, index) => {
+        let file = {};
+        switch (filetype()) {
             case 'iwad':
-                return self.iwads()[self.chosenFileIndex()];
+                file = self.files.iwads()[index()];
+                break;
             case 'pwad':
-                return self.pwads()[self.chosenFileIndex()];
+                file = self.files.pwads()[index()];
+                break;
             case 'sourceport':
-                return self.sourceports()[self.chosenFileIndex()];
+                file = self.files.sourceports()[index()];
+                break;
         }
-    };
-    self.updateFile = file => {
         let rawFileProperties = {
             filename: file.filename,
             authors: file.authors(),
@@ -671,10 +720,52 @@ function AppViewModel() {
             quickDescription: file.quickDescription(),
             longDescription: file.longDescription(),
             hidden: file.hidden(),
-            subtype: file.subtype()
+            basetype: file.basetype(),
+            filepath: file.filepath,
+            filetype: file.filetype()
         };
+        self.chosenFile(
+            new File(
+                rawFileProperties.filepath,
+                rawFileProperties.filename,
+                rawFileProperties.authors,
+                rawFileProperties.metaTags,
+                rawFileProperties.source,
+                rawFileProperties.name,
+                rawFileProperties.quickDescription,
+                rawFileProperties.longDescription,
+                rawFileProperties.filetype,
+                rawFileProperties.hidden,
+                rawFileProperties.basetype
+            )
+        );
+        if (self.chosenFile().filetype() === 'iwad') {
+            self.chosenFile().iwadBasetype = ko.observable(self.chosenFile().basetype());
+        } else if (self.chosenFile().filetype() === 'sourceport') {
+            self.chosenFile().sourceportBasetype = ko.observable(self.chosenFile().basetype());
+        }
+    };
+    self.clearFileEdit = () => {
+        self.chosenFile(null);
+    };
+    self.updateFile = () => {
+        let rawFileProperties = {
+            filename: self.chosenFile().filename,
+            authors: self.chosenFile().authors(),
+            metaTags: self.chosenFile().metaTags(),
+            source: self.chosenFile().source(),
+            name: self.chosenFile().name(),
+            quickDescription: self.chosenFile().quickDescription(),
+            longDescription: self.chosenFile().longDescription(),
+            hidden: self.chosenFile().hidden()
+        };
+        if (self.chosenFile().filetype() === 'iwad') {
+            rawFileProperties.basetype = self.chosenFile().iwadBasetype();
+        } else if (self.chosenFile().filetype() === 'sourceport') {
+            rawFileProperties.basetype = self.chosenFile().sourceportBasetype();
+        }
         let directory = '';
-        switch (file.type()) {
+        switch (self.chosenFile().filetype()) {
             case 'iwad':
                 directory = self.iwadDirectory;
                 break;
@@ -685,23 +776,24 @@ function AppViewModel() {
                 directory = self.sourceportDirectory;
                 break;
         }
-        let RealFilename = file.filename.substring(0, file.filename.lastIndexOf('.'));
+        let RealFilename = self.chosenFile().filename.substring(0, self.chosenFile().filename.lastIndexOf('.'));
         fs.writeFile(path.resolve(directory, RealFilename + '.json'), JSON.stringify(rawFileProperties), err => {
             if (err) {
                 return console.log(err);
             }
-            switch (file.type()) {
+            switch (self.chosenFile().filetype()) {
                 case 'iwad':
-                    self.buildIwadCollection();
+                    self.buildIwadCollection(true);
                     break;
                 case 'pwad':
-                    self.buildPwadCollection();
+                    self.buildPwadCollection(true);
                     break;
                 case 'sourceport':
-                    self.buildSourceportCollection();
+                    self.buildSourceportCollection(true);
                     break;
             }
         });
+        self.loadLevels();
     };
     self.loadIwadFiles = () => {
         let allIwads = iwadCollection.find();
@@ -718,7 +810,7 @@ function AppViewModel() {
                 iwad.longDescription,
                 'iwad',
                 iwad.hidden,
-                iwad.subtype
+                iwad.basetype
             );
             newIwads.push(newIwad);
         });
@@ -762,7 +854,7 @@ function AppViewModel() {
                 sourceport.longDescription,
                 'sourceport',
                 sourceport.hidden,
-                sourceport.subtype
+                sourceport.basetype
             );
             newSourceports.push(newSourceport);
         });
@@ -771,15 +863,33 @@ function AppViewModel() {
     };
     self.iniFiles = ko.observableArray();
 
-    self.chooseSourceport = (sourceport) => {
-        if (sourceport){
+    self.chooseSourceport = sourceport => {
+        if (sourceport) {
             self.getIniFilesForGivenSourceport(sourceport);
         } else {
             self.iniFiles.removeAll();
         }
     };
 
-    self.getIniFilesForGivenSourceport = (sourceport) => {
+    self.loadLevels = () => {
+        self.levels.removeAll();
+        let query = null;
+        let basetype = null;
+        if (self.currentConfig.iwad()!=null){
+            basetype = self.currentConfig.iwad().iwadBasetype();
+            query = {[basetype]: { $exists: true, $ne: null } };
+            
+        } 
+        let allLevels = levelsCollection.find(query);
+        let newLevels = [];
+        _.forEach(allLevels, level => {
+            let newLevel = new Level(level, basetype);
+            newLevels.push(newLevel);
+        });
+        self.levels.push.apply(self.levels, newLevels);
+    };
+
+    self.getIniFilesForGivenSourceport = sourceport => {
         let directory = path.dirname(sourceport.filepath);
         self.iniFiles.removeAll();
         function walk(directory) {
@@ -802,7 +912,7 @@ function AppViewModel() {
                                         'getIniFilesForGivenSourceport:: ' + file + ' and is directory: ' + fullPath
                                     );
                                 }
-                                // walk(fullPath); no need to dive into further directories, if your ini file isn't in 
+                                // walk(fullPath); no need to dive into further directories, if your ini file isn't in
                                 //the same directory as the exe, then I don't care about it.
                             } else {
                                 let fileExt = file.substring(file.lastIndexOf('.') + 1);
@@ -850,7 +960,7 @@ function AppViewModel() {
                             } else {
                                 let fileExt = file.substring(file.lastIndexOf('.') + 1);
 
-                                if (iwadTypes.indexOf(fileExt) > -1) {
+                                if (iwadFileTypes.indexOf(fileExt) > -1) {
                                     let iwad = {
                                         filename: file,
                                         filepath: fullPath
@@ -1132,6 +1242,7 @@ function AppViewModel() {
         if (result && result.length > 0) {
             _.forEach(result, iwad => {
                 let newIwad = new File(
+                    iwad.filepath,
                     iwad.filename,
                     iwad.authors,
                     iwad.metaTags,
@@ -1141,7 +1252,7 @@ function AppViewModel() {
                     iwad.longDescription,
                     'iwad',
                     iwad.hidden,
-                    iwad.subtype
+                    iwad.basetype
                 );
                 newIwads.push(newIwad);
             });
@@ -1202,6 +1313,7 @@ function AppViewModel() {
         if (result && result.length > 0) {
             _.forEach(result, pwad => {
                 let newPwad = new File(
+                    pwad.filepath,
                     pwad.filename,
                     pwad.authors,
                     pwad.metaTags,
@@ -1271,6 +1383,7 @@ function AppViewModel() {
         if (result && result.length > 0) {
             _.forEach(result, sourceport => {
                 let newSourceport = new File(
+                    sourceport.filepath,
                     sourceport.filename,
                     sourceport.authors,
                     sourceport.metaTags,
@@ -1280,7 +1393,7 @@ function AppViewModel() {
                     sourceport.longDescription,
                     'sourceport',
                     sourceport.hidden,
-                    sourceport.subtype
+                    sourceport.basetype
                 );
                 newSourceports.push(newSourceport);
             });
@@ -1417,9 +1530,123 @@ ready(() => {
             $(element).tooltip();
         }
     };
-    var viewModel = new AppViewModel();
+    //jqAuto -- main binding (should contain additional options to pass to autocomplete)
+    //jqAutoSource -- the array of choices
+    //jqAutoValue -- where to write the selected value
+    //jqAutoSourceLabel -- the property that should be displayed in the possible choices
+    //jqAutoSourceInputValue -- the property that should be displayed in the input box
+    //jqAutoSourceValue -- the property to use for the value
+    ko.bindingHandlers.jqAuto = {
+        init: function(element, valueAccessor, allBindingsAccessor, viewModel) {
+            var options = valueAccessor() || {},
+                allBindings = allBindingsAccessor(),
+                unwrap = ko.utils.unwrapObservable,
+                modelValue = allBindings.jqAutoValue,
+                source = allBindings.jqAutoSource,
+                valueProp = allBindings.jqAutoSourceValue,
+                inputValueProp = allBindings.jqAutoSourceInputValue || valueProp,
+                labelProp = allBindings.jqAutoSourceLabel || valueProp;
+
+            //function that is shared by both select and change event handlers
+            function writeValueToModel(valueToWrite) {
+                if (ko.isWriteableObservable(modelValue)) {
+                    modelValue(valueToWrite);
+                } else {
+                    //write to non-observable
+                    if (allBindings['_ko_property_writers'] && allBindings['_ko_property_writers']['jqAutoValue'])
+                        allBindings['_ko_property_writers']['jqAutoValue'](valueToWrite);
+                }
+            }
+
+            //on a selection write the proper value to the model
+            options.select = function(event, ui) {
+                writeValueToModel(ui.item ? ui.item.actualValue : null);
+            };
+
+            //on a change, make sure that it is a valid value or clear out the model value
+            options.change = function(event, ui) {
+                var currentValue = $(element).val();
+                var matchingItem = ko.utils.arrayFirst(unwrap(source), function(item) {
+                    return unwrap(item[inputValueProp]) === currentValue;
+                });
+
+                if (!matchingItem) {
+                    writeValueToModel(null);
+                }
+            };
+
+            //handle the choices being updated in a DO, to decouple value updates from source (options) updates
+            var mappedSource = ko.dependentObservable(function() {
+                let mapped = ko.utils.arrayMap(unwrap(source), function(item) {
+                    var result = {};
+                    result.label = labelProp ? unwrap(item[labelProp]) : unwrap(item).toString(); //show in pop-up choices
+                    result.value = inputValueProp ? unwrap(item[inputValueProp]) : unwrap(item).toString(); //show in input box
+                    result.actualValue = valueProp ? unwrap(item[valueProp]) : item; //store in model
+                    return result;
+                });
+                return mapped;
+            });
+
+            //whenever the items that make up the source are updated, make sure that autocomplete knows it
+            mappedSource.subscribe(function(newValue) {
+                $(element).autocomplete('option', 'source', newValue);
+            });
+
+            options.source = mappedSource();
+
+            //initialize autocomplete
+            $(element).autocomplete(options);
+        },
+        update: function(element, valueAccessor, allBindingsAccessor, viewModel) {
+            //update value based on a model change
+            var allBindings = allBindingsAccessor(),
+                unwrap = ko.utils.unwrapObservable,
+                modelValue = unwrap(allBindings.jqAutoValue) || '',
+                valueProp = allBindings.jqAutoSourceValue,
+                inputValueProp = allBindings.jqAutoSourceInputValue || valueProp;
+
+            //if we are writing a different property to the input than we are writing to the model, then locate the object
+            if (valueProp && inputValueProp !== valueProp) {
+                var source = unwrap(allBindings.jqAutoSource) || [];
+                var modelValue =
+                    ko.utils.arrayFirst(source, function(item) {
+                        return unwrap(item[valueProp]) === modelValue;
+                    }) || {}; //probably don't need the || {}, but just protect against a bad value
+            }
+
+            //update the element with the value that should be shown in the input
+            $(element).val(
+                modelValue && inputValueProp !== valueProp ? unwrap(modelValue[inputValueProp]) : modelValue.toString()
+            );
+        }
+    };
+
+    ko.bindingHandlers.jqAutoCombo = {
+        init: function(element, valueAccessor) {
+            var autoEl = $('#' + valueAccessor());
+
+            $(element).click(function() {
+                // close if already visible
+                if (autoEl.autocomplete('widget').is(':visible')) {
+                    console.log('close');
+                    autoEl.autocomplete('close');
+                    return;
+                }
+
+                //autoEl.blur();
+                console.log('search');
+                autoEl.autocomplete('search', ' ');
+                autoEl.focus();
+            });
+        }
+    };
+
+    let viewModel = new AppViewModel();
     viewModel.currentConfig.sourceport.subscribe(data => {
         viewModel.chooseSourceport(data);
+    });
+    viewModel.currentConfig.iwad.subscribe(data => {
+        viewModel.loadLevels();
     });
     ko.applyBindings(viewModel);
 });

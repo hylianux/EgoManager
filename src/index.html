@@ -8,8 +8,10 @@
     <link rel="stylesheet" href="app.css" />
     <script>
         window.$ = window.jQuery = require('jquery');
+        require('jquery-ui-dist/jquery-ui');
         window.Bootstrap = require('bootstrap');
     </script>
+    <link rel="stylesheet" href="node_modules/jquery-ui-dist/jquery-ui.min.css" />
     <link rel="stylesheet" href="bootstrap.css" />
     <script src="node_modules/knockout-dragdrop/lib/knockout.dragdrop.js"></script>
     <script src="view.js"></script>
@@ -188,8 +190,8 @@
                                                 Select Your Sourceport/Engine
                                             </label>
                                             <select id="sourceportSelect" class="form-control"
-                                            data-bind="options: files.sourceports, optionsText: 'displayName', value: currentConfig.sourceport, optionsCaption: 'Choose Sourceport'"></select>
-                                            
+                                                data-bind="options: files.sourceports, optionsText: 'displayName', value: currentConfig.sourceport, optionsCaption: 'Choose Sourceport'"></select>
+
                                         </div>
                                         <div class="form-group">
                                             <label class="control-label" for="iniSelect" data-toggle="tooltip"
@@ -197,7 +199,7 @@
                                                 Select your Ini Config
                                             </label>
                                             <select id="iniSelect" class="form-control"
-                                            data-bind="options: iniFiles, optionsText: 'filename', value: currentConfig.chosenIniFile, optionsCaption: 'Choose Ini File'"></select>
+                                                data-bind="options: iniFiles, optionsText: 'filename', value: currentConfig.chosenIniFile, optionsCaption: 'Choose Ini File'"></select>
                                         </div>
                                     </div>
                                 </div>
@@ -210,9 +212,8 @@
                                                 title="Choose which game you'd like to play.  These are loaded from the file database.">
                                                 Select your Iwad/Game
                                             </label>
-                                            <select id="iwadSelect" class="form-control">
-                                                <option>Select Iwad</option>
-                                            </select>
+                                            <select id="iwadSelect" class="form-control"
+                                                data-bind="options: files.iwads, optionsText: 'displayName', value: currentConfig.iwad, optionsCaption: 'Choose Iwad'"></select>
                                         </div>
                                         <div class="form-group">
                                             <label for="gamemodeSelect" class="control-label" data-toggle="tooltip"
@@ -233,7 +234,8 @@
                                                 Warp to map/level
                                             </label>
                                             <input id="mapInput" type="text" class="form-control"
-                                                placeholder="Select Map" />
+                                                placeholder="Select Map"
+                                                data-bind="jqAuto: {autoFocus: true}, jqAutoSource: levels, jqAutoValue: currentConfig.level, jqAutoSourceLabel: 'displayName', jqAutoSourceInputValue: 'name', jqAutoSourceValue: 'warptext'" />
                                         </div>
                                         <div class="form-group">
                                             <label class="control-label" for="skillSelect" data-toggle="tooltip"
@@ -362,7 +364,7 @@
                         </div>
                         <!--DMFlags (only available when gamemode not solo and sourceport not chocolate doom)-->
                         <div class="row"
-                            data-bind="hidden: currentConfig.gamemode()==='solo'||(currentConfig.sourceport&&'Chocolate'===currentConfig.sourceport.subtype())">
+                            data-bind="hidden: currentConfig.gamemode()==='solo'||(currentConfig.sourceport&&'Chocolate'===currentConfig.sourceport.basetype())">
                             <div class="col-md-12 border border-secondary">
                                 <div class="form-group border border-secondary">
                                     <input type="text" class="form-control" placeholder="Search..."
@@ -622,7 +624,7 @@
                                         <tr class="d-flex"
                                             data-bind="class: displayClass, style: { visibility : $parent.showHiddenFiles()===false && hidden()===true ? 'collapse' : ''}">
                                             <td class="col-10 text-truncate" data-placement="right" data-html="true"
-                                                data-bind="text: displayName, tooltip: tooltipText(), click: $parent.editFile.bind($data, type, $index)">
+                                                data-bind="text: displayName, tooltip: tooltipText(), click: $parent.editFile.bind($data, filetype, $index)">
                                             </td>
                                             <td class="col-2">
                                                 <span class="btn btn-xs btn-secondary"
@@ -656,7 +658,7 @@
                                         <tr class="d-flex"
                                             data-bind="class: displayClass, style: { visibility : $parent.showHiddenFiles()===false && hidden()===true ? 'collapse' : ''}">
                                             <td class="col-10 text-truncate" data-placement="right" data-html="true"
-                                                data-bind="text: displayName, tooltip: tooltipText(), click: $parent.editFile.bind($data, type, $index)">
+                                                data-bind="text: displayName, tooltip: tooltipText(), click: $parent.editFile.bind($data, filetype, $index)">
                                             </td>
                                             <td class="col-2">
                                                 <span class="btn btn-xs btn-secondary"
@@ -690,7 +692,7 @@
                                         <tr class="d-flex"
                                             data-bind="class: displayClass, style: { visibility : $parent.showHiddenFiles()===false && hidden()===true ? 'collapse' : ''}">
                                             <td class="col-10 text-truncate" data-placement="right" data-html="true"
-                                                data-bind="text: displayName, tooltip: tooltipText(), click: $parent.editFile.bind($data, type, $index)">
+                                                data-bind="text: displayName, tooltip: tooltipText(), click: $parent.editFile.bind($data, filetype, $index)">
                                             </td>
                                             <td class="col-2">
                                                 <span class="btn btn-xs btn-secondary"
@@ -714,88 +716,94 @@
                         <form data-bind="with: chosenFile">
                             <h5>
                                 File Type:
-                                <span data-bind="text: type"></span>
+                                <span data-bind="text: filetype"></span>
                                 &nbsp;&mdash;&nbsp;Filename:
                                 <span data-bind="text: filename"></span>
                             </h5>
                             <div class="form-group">
-                                <label class="control-label" data-placement="left"
-                                    data-bind="uniqueFor: name, tooltip: `A human readable name for your file.`">
+                                <label class="control-label" for="inputFilename" data-placement="left"
+                                    data-toggle="tooltip" title="A human readable name for your file.">
                                     Title
                                 </label>
-                                <div data-bind="hidden: nameValid()" class="col alert alert-warning">
+                                <div data-bind="hidden: nameValid" class="col alert alert-warning">
                                     <strong>Warning:</strong>
                                     You should provide a human-readable name for this file.
                                 </div>
-                                <input type="text" class="form-control" placeHolder="Human-readable name"
-                                    data-bind="textInput: name, uniqueId: name, event: {blur: $parent.updateFile}" />
+                                <input type="text" id="inputFilename" class="form-control"
+                                    placeHolder="Human-readable name"
+                                    data-bind="textInput: name, event: {blur: $parent.updateFile}" />
                             </div>
-                            <div class="form-group" data-bind="visible: type()==='sourceport'">
-                                <label class="control-label" data-placement="left"
-                                    data-bind="uniqueFor: subtype, tooltip: `This launcher has special support depending on the sourceport.  Selecting the right sourceport type here will greatly assist you later in building configurations based on that sourceport type.  Currently, the sourceport types this launcher supports are Zandronum, Chocolate Doom, and all ZDoom-based sourceports (e.g. GZDoom, QZDoom, or even plain ZDoom itself).`">
+                            <div class="form-group" data-bind="visible: filetype()==='sourceport'">
+                                <label class="control-label" for="sourceportFileType" data-placement="left"
+                                    data-toggle="tooltip"
+                                    title="This launcher has special support depending on the sourceport.  Selecting the right sourceport type here will greatly assist you later in building configurations based on that sourceport type.  Currently, the sourceport types this launcher supports are Zandronum, Chocolate Doom, and all ZDoom-based sourceports (e.g. GZDoom, QZDoom, or even plain ZDoom itself).">
                                     Sourceport Type
                                 </label>
-                                <select class="form-control"
-                                    data-bind="options: $parent.sourceportTypes, uniqueId: subtype, event: {blur: $parent.updateFile}, value: subtype, optionsCaption: 'Choose...'"></select>
+                                <select id="sourceportFileType" class="form-control"
+                                    data-bind="options: $parent.sourceportTypes, event: {blur: $parent.updateFile}, value: sourceportBasetype, optionsCaption: 'Choose...'"></select>
                             </div>
-                            <div class="form-group" data-bind="visible: type()==='iwad'">
-                                <label class="control-label" data-placement="left"
-                                    data-bind="uniqueFor: subtype, tooltip: `Selecting an IWad type from the known game types can help with some configuration options (such as selecting maps/levels)`">
+                            <div class="form-group" data-bind="visible: filetype()==='iwad'">
+                                <label class="control-label" for="iwadFileType" data-placement="left"
+                                    data-toggle="tooltip"
+                                    title="Selecting an IWad type from the known game types can help with some configuration options (such as selecting maps/levels)">
                                     IWad Type
                                 </label>
-                                <select class="form-control"
-                                    data-bind="options: $parent.iwadTypes, optionsText: 'description', uniqueId: subtype, event: {blur: $parent.updateFile}, value: subtype, optionsValue:'name', optionsCaption: 'Choose...'"></select>
+                                <select class="form-control" id="iwadFileType"
+                                    data-bind="options: $parent.iwadTypes, optionsText: 'description', event: {blur: $parent.updateFile}, value: iwadBasetype, optionsValue:'name', optionsCaption: 'Choose...'"></select>
                             </div>
                             <div class="form-group">
-                                <label class="control-label" data-placement="left"
-                                    data-bind="uniqueFor: authorInput, tooltip: `Comma-separated list of authors.`">
+                                <label class="control-label" data-placement="left" for="inputAuthor"
+                                    data-toggle="tooltip" title="Comma-separated list of authors.">
                                     Authors
                                 </label>
-                                <div data-bind="hidden: authorsValid()" class="col alert alert-danger">
+                                <div data-bind="hidden: authorsValid" class="col alert alert-danger">
                                     <strong>Required:</strong>
                                     If you wish to use this file, you'll need to give credit to the person(s)
                                     who
                                     made it.
                                 </div>
-                                <input type="text" class="form-control" placeholder="Author1,Author2,Author3,..."
-                                    data-bind="textInput: authorInput, uniqueId: authorInput, event: {blur: $parent.updateFile}" />
+                                <input type="text" class="form-control" id="inputAuthor"
+                                    placeholder="Author1,Author2,Author3,..."
+                                    data-bind="textInput: authorInput, event: {blur: $parent.updateFile}" />
                             </div>
                             <div class="form-group">
-                                <label class="control-label" data-placement="left"
-                                    data-bind="uniqueFor: metaInput, tooltip: `Comma-separated list of meta tags (kinda like hash tags, they're ways to find this file).`">
+                                <label class="control-label" data-placement="left" for="inputMeta" data-toggle="tooltip"
+                                    title="Comma-separated list of meta tags (kinda like hash tags, they're ways to find this file).">
                                     Meta Tags
                                 </label>
-                                <div data-bind="hidden: metaTagsValid()" class="col alert alert-warning">
+                                <div data-bind="hidden: metaTagsValid" class="col alert alert-warning">
                                     <strong>Warning:</strong>
                                     It's extremely helpful to have some tags to use so you can find this file
                                     more
                                     easily, both here and in the Configuration Builder.
                                 </div>
                                 <input type="text" class="form-control"
-                                    placeholder="Music,Levels,Textures,Gameplay,etc..."
-                                    data-bind="textInput: metaInput, uniqueId: metaInput, event: {blur: $parent.updateFile}" />
+                                    placeholder="Music,Levels,Textures,Gameplay,etc..." id="inputMeta"
+                                    data-bind="textInput: metaInput, event: {blur: $parent.updateFile}" />
                             </div>
                             <div class="form-group">
-                                <label class="control-label" data-placement="left"
-                                    data-bind="uniqueFor: source, tooltip: `Where did you find this file?`">
+                                <label class="control-label" data-placement="left" for="inputSource"
+                                    data-toggle="tooltip" title="Where did you find this file?">
                                     Source
                                 </label>
-                                <div data-bind="hidden: sourceValid()" class="col alert alert-danger">
+                                <div data-bind="hidden: sourceValid" class="col alert alert-danger">
                                     <strong>Required:</strong>
                                     You'll need to post a link as to where you got this file, or where this file
                                     can
                                     be found.
                                 </div>
 
-                                <input type="text" class="form-control" placeholder="http://somesite.com/someplace"
-                                    data-bind="textInput: source, uniqueId: source, event: {blur: $parent.updateFile}" />
+                                <input type="text" class="form-control" id="inputSource"
+                                    placeholder="http://somesite.com/someplace"
+                                    data-bind="textInput: source, event: {blur: $parent.updateFile}" />
                             </div>
                             <div class="form-group">
-                                <label class="control-label" data-placement="left"
-                                    data-bind="uniqueFor: quickDescription, tooltip: `Just a quick description of the file, not very long.  Just something that pops up real quick so you know more about it.`">
+                                <label class="control-label" data-placement="left" for="inputQuickDescription"
+                                    data-toggle="tooltip"
+                                    title="Just a quick description of the file, not very long.  Just something that pops up real quick so you know more about it.">
                                     Quick Description
                                 </label>
-                                <div data-bind="hidden: quickDescriptionValid()" class="col alert alert-warning">
+                                <div data-bind="hidden: quickDescriptionValid" class="col alert alert-warning">
                                     <strong>Warning:</strong>
                                     You really should provide a nice quick description. When you hover over the
                                     file, it'll pop up helping you remember what it does.
@@ -803,19 +811,21 @@
 
                                 <input type="text" class="form-control col"
                                     placeholder="This file adds levels, music, sounds, textures, gameplay, etc. changes."
-                                    data-bind="textInput: quickDescription, uniqueId: quickDescription, event: {blur: $parent.updateFile}" />
+                                    id="inputQuickDescription"
+                                    data-bind="textInput: quickDescription, event: {blur: $parent.updateFile}" />
                             </div>
                             <div class="form-group">
-                                <label class="control-label" data-placement="left"
-                                    data-bind="uniqueFor: longDescription, tooltip: `Here's where you can basically go nuts in long detail about the file.  Most files have a .txt packaged with them... this is a great place to paste that content (if your file comes with a .txt file of the same name, it'll get autoloaded into this field for you)`">
+                                <label class="control-label" data-placement="left" for="inputLongDescription"
+                                    data-toggle="tooltip"
+                                    title="Here's where you can basically go nuts in long detail about the file.  Most files have a .txt packaged with them... this is a great place to paste that content (if your file comes with a .txt file of the same name, it'll get autoloaded into this field for you)">
                                     Long Description
                                 </label>
-                                <textarea class="form-control" rows="20" placeholder="====== Blahblahblah=====
+                                <textarea class="form-control" rows="20" id="inputLongDescription" placeholder="====== Blahblahblah=====
         This is very long
         oh my yes, this is going to be long.
         
         Hello?  You still here?  yeah, long stuff in here..."
-                                    data-bind="textInput: longDescription, uniqueId: longDescription, event: {blur: $parent.updateFile}"></textarea>
+                                    data-bind="textInput: longDescription, event: {blur: $parent.updateFile}"></textarea>
                             </div>
                         </form>
                     </div>
