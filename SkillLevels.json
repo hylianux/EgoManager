@@ -1,0 +1,302 @@
+[
+    {
+        "iwad": "doom",
+        "skillLevels" : [
+            {
+                "name" : "I'm too young to die",
+                "skillLevel" : 1
+            },
+            {
+                "name" : "Hey, not too rough",
+                "skillLevel" : 2
+            },
+            {
+                "name" : "Hurt me plenty",
+                "skillLevel" : 3
+            },
+            {
+                "name" : "Ultra-Violence",
+                "skillLevel" : 4
+            },
+            {
+                "name" : "Nightmare!",
+                "skillLevel" : 5
+            }
+        ]
+    },
+    {
+        "iwad": "doom2",
+        "skillLevels" : [
+            {
+                "name" : "I'm too young to die",
+                "skillLevel" : 1
+            },
+            {
+                "name" : "Hey, not too rough",
+                "skillLevel" : 2
+            },
+            {
+                "name" : "Hurt me plenty",
+                "skillLevel" : 3
+            },
+            {
+                "name" : "Ultra-Violence",
+                "skillLevel" : 4
+            },
+            {
+                "name" : "Nightmare!",
+                "skillLevel" : 5
+            }
+        ]
+    },
+    {
+        "iwad": "tnt",
+        "skillLevels" : [
+            {
+                "name" : "I'm too young to die",
+                "skillLevel" : 1
+            },
+            {
+                "name" : "Hey, not too rough",
+                "skillLevel" : 2
+            },
+            {
+                "name" : "Hurt me plenty",
+                "skillLevel" : 3
+            },
+            {
+                "name" : "Ultra-Violence",
+                "skillLevel" : 4
+            },
+            {
+                "name" : "Nightmare!",
+                "skillLevel" : 5
+            }
+        ]
+    },
+    {
+        "iwad": "plutonia",
+        "skillLevels" : [
+            {
+                "name" : "I'm too young to die",
+                "skillLevel" : 1
+            },
+            {
+                "name" : "Hey, not too rough",
+                "skillLevel" : 2
+            },
+            {
+                "name" : "Hurt me plenty",
+                "skillLevel" : 3
+            },
+            {
+                "name" : "Ultra-Violence",
+                "skillLevel" : 4
+            },
+            {
+                "name" : "Nightmare!",
+                "skillLevel" : 5
+            }
+        ]
+    },
+    {
+        "iwad": "nerve",
+        "skillLevels" : [
+            {
+                "name" : "I'm too young to die",
+                "skillLevel" : 1
+            },
+            {
+                "name" : "Hey, not too rough",
+                "skillLevel" : 2
+            },
+            {
+                "name" : "Hurt me plenty",
+                "skillLevel" : 3
+            },
+            {
+                "name" : "Ultra-Violence",
+                "skillLevel" : 4
+            },
+            {
+                "name" : "Nightmare!",
+                "skillLevel" : 5
+            }
+        ]
+    },
+    {
+        "iwad": "plutonia",
+        "skillLevels" : [
+            {
+                "name" : "I'm too young to die",
+                "skillLevel" : 1
+            },
+            {
+                "name" : "Hey, not too rough",
+                "skillLevel" : 2
+            },
+            {
+                "name" : "Hurt me plenty",
+                "skillLevel" : 3
+            },
+            {
+                "name" : "Ultra-Violence",
+                "skillLevel" : 4
+            },
+            {
+                "name" : "Nightmare!",
+                "skillLevel" : 5
+            }
+        ]
+    },
+    {
+        "iwad": "hacx",
+        "skillLevels" : [
+            {
+                "name" : "Please don't shoot!",
+                "skillLevel" : 1
+            },
+            {
+                "name" : "Arrgh, I need health!",
+                "skillLevel" : 2
+            },
+            {
+                "name" : "Let's rip them apart!",
+                "skillLevel" : 3
+            },
+            {
+                "name" : "I am immortal",
+                "skillLevel" : 4
+            },
+            {
+                "name" : "Insanity!",
+                "skillLevel" : 5
+            }
+        ]
+    },
+    {
+        "iwad": "heretic",
+        "skillLevels" : [
+            {
+                "name" : "Thou needeth a wet-nurse",
+                "skillLevel" : 1
+            },
+            {
+                "name" : "Yellowbellies-r-us",
+                "skillLevel" : 2
+            },
+            {
+                "name" : "Bringest them oneth",
+                "skillLevel" : 3
+            },
+            {
+                "name" : "Thou art a smite-meister",
+                "skillLevel" : 4
+            },
+            {
+                "name" : "Black plague possesses thee",
+                "skillLevel" : 5
+            }
+        ]
+    },
+    {
+        "iwad": "hexen",
+        "skillLevels" : [
+            {
+                "name" : "Squire/Altar Boy/Apprentice",
+                "skillLevel" : 1
+            },
+            {
+                "name" : "Knight/Acolyte/Enchanter",
+                "skillLevel" : 2
+            },
+            {
+                "name" : "Warrior/Priest/Sorceror",
+                "skillLevel" : 3
+            },
+            {
+                "name" : "Berserker/Cardinal/Warlock",
+                "skillLevel" : 4
+            },
+            {
+                "name" : "Titan/Pope/Archmage",
+                "skillLevel" : 5
+            }
+        ]
+    },
+    {
+        "iwad": "hexend",
+        "skillLevels" : [
+            {
+                "name" : "Squire/Altar Boy/Apprentice",
+                "skillLevel" : 1
+            },
+            {
+                "name" : "Knight/Acolyte/Enchanter",
+                "skillLevel" : 2
+            },
+            {
+                "name" : "Warrior/Priest/Sorceror",
+                "skillLevel" : 3
+            },
+            {
+                "name" : "Berserker/Cardinal/Warlock",
+                "skillLevel" : 4
+            },
+            {
+                "name" : "Titan/Pope/Archmage",
+                "skillLevel" : 5
+            }
+        ]
+    },
+    {
+        "iwad": "strife",
+        "skillLevels" : [
+            {
+                "name" : "Training",
+                "skillLevel" : 1
+            },
+            {
+                "name" : "Rookie",
+                "skillLevel" : 2
+            },
+            {
+                "name" : "Veteran",
+                "skillLevel" : 3
+            },
+            {
+                "name" : "Elite",
+                "skillLevel" : 4
+            },
+            {
+                "name" : "Bloodbath",
+                "skillLevel" : 5
+            }
+        ]
+    },
+    {
+        "iwad": "chex",
+        "skillLevels" : [
+            {
+                "name" : "Easy Does It",
+                "skillLevel" : 1
+            },
+            {
+                "name" : "Not So Sticky",
+                "skillLevel" : 2
+            },
+            {
+                "name" : "Gobs of Goo",
+                "skillLevel" : 3
+            },
+            {
+                "name" : "Extreme Ooze",
+                "skillLevel" : 4
+            },
+            {
+                "name" : "Super Slimey!",
+                "skillLevel" : 5
+            }
+        ]
+    }
+]

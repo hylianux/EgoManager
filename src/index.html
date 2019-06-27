@@ -242,9 +242,7 @@
                                                 title="Use in conjunction with Map Warping, this sets the difficulty level, with 1 being the easiest and 5 being the hardest.">
                                                 Select your skill level/difficulty
                                             </label>
-                                            <select id="skillSelect" class="form-control">
-                                                <option>Skill</option>
-                                            </select>
+                                            <select id="skillSelect" class="form-control" data-bind="options: skillLevels, optionsText: 'name', optionsValue:'skillLevel', value: currentConfig.skill, optionsCaption: 'Choose Skill Level'"></select>
                                         </div>
                                     </div>
                                 </div>

@@ -5,3 +5,4 @@ shell.mkdir('-p', 'bin/Ego Manager-win32-x64/idTech/sourceports', 'bin/Ego Manag
 shell.cp('./commandLineOptions.json', 'bin/Ego Manager-win32-x64/');
 shell.cp('./DMFlags.json', 'bin/Ego Manager-win32-x64/');
 shell.cp('./Levels.json', 'bin/Ego Manager-win32-x64/');
+shell.cp('./SkillLevels.json', 'bin/Ego Manager-win32-x64/');

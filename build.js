@@ -11,3 +11,4 @@ shell.cp('-Rf', './testData/*', './dist/idTech/');
 shell.cp('./commandLineOptions.json', './dist/');
 shell.cp('./DMFlags.json', './dist/');
 shell.cp('./Levels.json', './dist/');
+shell.cp('./SkillLevels.json', './dist/');

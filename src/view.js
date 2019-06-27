@@ -69,6 +69,7 @@ let configCollection = getCollection('configs');
 let commandLineCollection = getCollection('commands');
 let DMFlagsCollection = getCollection('DMFlags');
 let levelsCollection = getCollection('levels');
+let skillLevelsCollection = getCollection('skillLevels');
 
 fs.readFile(path.resolve(__dirname, '../../commandLineOptions.json'), 'utf8', (err, data) => {
     if (err) {
@@ -112,6 +113,21 @@ fs.readFile(path.resolve(__dirname, '../../Levels.json'), 'utf8', (err, data) =>
         }*/
         _.forEach(levels, level => {
             upsert(levelsCollection, 'name', level);
+        });
+    }
+});
+fs.readFile(path.resolve(__dirname, '../../SkillLevels.json'), 'utf8', (err, data) => {
+    if (err) {
+        console.log('file read error!' + err);
+    } else {
+        let skillLevels = JSON.parse(data);
+        /*
+        if (dev) {
+            console.log('buildIwad:: adding ' + fullPath);
+            console.log('reloadFiles: ' + reloadFiles);
+        }*/
+        _.forEach(skillLevels, skillLevel => {
+            upsert(skillLevelsCollection, 'iwad', skillLevel);
         });
     }
 });
@@ -288,7 +304,10 @@ function ConfigChain(
             command += '-config ' + self.chosenIniFile().filename + ' ';
         }
         if (self.level()) {
-            command += '-warp ' + self.level();
+            command += '-warp ' + self.level() + ' ';
+        }
+        if (self.skill()) {
+            command += '-skill ' + self.skill() + ' ';
         }
         return command;
     });
@@ -574,6 +593,13 @@ function Level(level, chosenIwadType) {
         });
     }
 }
+
+function SkillLevel(name, level){
+    let self = this;
+    self.name = name;
+    self.skillLevel = level;
+}
+
 function AppViewModel() {
     let self = this;
     self.isDebug = dev;
@@ -584,7 +610,7 @@ function AppViewModel() {
     self.iwadDirectory = self.idTechFolder + path.sep + 'iwads';
     self.pwadDirectory = self.idTechFolder + path.sep + 'pwads';
     self.sourceportDirectory = self.idTechFolder + path.sep + 'sourceports';
-
+    self.skillLevels = ko.observableArray();
     self.sourceportTypes = ko.observableArray(['ZDoom', 'Zandronum', 'Chocolate', 'Other']);
     self.gamemodes = ko.observableArray([
         {
@@ -635,7 +661,7 @@ function AppViewModel() {
         },
         {
             name: 'plutonia',
-            description: 'The Plutonia experiment'
+            description: 'The Plutonia Experiment'
         },
         {
             name: 'nerve',
@@ -794,6 +820,7 @@ function AppViewModel() {
             }
         });
         self.loadLevels();
+        self.loadSkillLevels();
     };
     self.loadIwadFiles = () => {
         let allIwads = iwadCollection.find();
@@ -816,6 +843,8 @@ function AppViewModel() {
         });
         self.files.iwads.removeAll();
         self.files.iwads.push.apply(self.files.iwads, newIwads);
+        self.loadLevels();
+        self.loadSkillLevels();
     };
 
     self.loadPwadFiles = () => {
@@ -878,7 +907,6 @@ function AppViewModel() {
         if (self.currentConfig.iwad()!=null){
             basetype = self.currentConfig.iwad().iwadBasetype();
             query = {[basetype]: { $exists: true, $ne: null } };
-            
         } 
         let allLevels = levelsCollection.find(query);
         let newLevels = [];
@@ -887,6 +915,24 @@ function AppViewModel() {
             newLevels.push(newLevel);
         });
         self.levels.push.apply(self.levels, newLevels);
+    };
+    self.loadSkillLevels = () => {
+        self.skillLevels.removeAll();
+        let query = null;
+        let iwadType = null;
+        if (self.currentConfig.iwad()!=null){
+            iwadType = self.currentConfig.iwad().iwadBasetype();
+        } else {
+            iwadType = 'doom';
+        }
+        query = {'iwad': iwadType};
+        let skillLevelSet = skillLevelsCollection.find(query);
+        let newSkillLevels = [];
+        _.forEach(skillLevelSet[0].skillLevels, skillLevel => {
+            let newSkillLevel = new SkillLevel(skillLevel.name, skillLevel.skillLevel);
+            newSkillLevels.push(newSkillLevel);
+        });
+        self.skillLevels.push.apply(self.skillLevels, newSkillLevels);
     };
 
     self.getIniFilesForGivenSourceport = sourceport => {
@@ -1647,6 +1693,7 @@ ready(() => {
     });
     viewModel.currentConfig.iwad.subscribe(data => {
         viewModel.loadLevels();
+        viewModel.loadSkillLevels();
     });
     ko.applyBindings(viewModel);
 });
