@@ -48,22 +48,22 @@
             <div class="col-md-12 tab-pane fade active show" id="configBuilder">
                 <!--Run Button-->
                 <div class="row">
-                    <div class="col-md-12 border border-primary btn btn-xs btn-primary fa fa-play text-responsive"
+                    <div class="col-md-11 border border-primary btn btn-xs btn-primary fa fa-play text-responsive"
                         data-bind="click: runCurrentConfig" data-toggle="tooltip" title="Run Current Configuration">
                     </div>
+                    <div style="font-size: 2rem" class="col-md-1 border border-info btn btn-xs btn-info fa fa-terminal"
+                        data-bind="click: exportCurrentConfig" data-toggle="tooltip"
+                        title="Export current configuration as a bat or .sh file."></div>
                 </div>
                 <!--Generated Command-->
                 <div class="row">
-                    <div class="col-md-10 border border-info" style="padding: 0px;">
-                        <textarea class="form-control" style="resize: none; font-family: 'Ubuntu-Mono'; padding: 0px;"
+                    <div class="col-md-12 border border-info" style="padding: 0px;">
+                        <textarea class="form-control"
+                            style="height: 100%; overflow: hidden; resize: none; font-family: 'Ubuntu-Mono'; padding: 0px;"
                             readonly="true" placeholder="Generated Command Here"
-                            data-bind="textInput: currentConfig.generatedCommand">
-                                    </textarea>
+                            data-bind="textInput: currentConfig.generatedCommand, autoResize: currentConfig.generatedCommand"></textarea>
+
                     </div>
-                    <div style="font-size: 1.333rem;"
-                        class="col-md-2 border border-info btn btn-xs btn-info fa fa-terminal"
-                        data-bind="click: exportCurrentConfig" data-toggle="tooltip"
-                        title="Export current configuration as a bat or .sh file."></div>
                 </div>
                 <!--All ConfigChain options-->
                 <div class="row">
@@ -242,7 +242,8 @@
                                                 title="Use in conjunction with Map Warping, this sets the difficulty level, with 1 being the easiest and 5 being the hardest.">
                                                 Select your skill level/difficulty
                                             </label>
-                                            <select id="skillSelect" class="form-control" data-bind="options: skillLevels, optionsText: 'name', optionsValue:'skillLevel', value: currentConfig.skill, optionsCaption: 'Choose Skill Level'"></select>
+                                            <select id="skillSelect" class="form-control"
+                                                data-bind="options: skillLevels, optionsText: 'name', optionsValue:'skillLevel', value: currentConfig.skill, optionsCaption: 'Choose Skill Level'"></select>
                                         </div>
                                     </div>
                                 </div>

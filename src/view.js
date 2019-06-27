@@ -295,13 +295,13 @@ function ConfigChain(
     self.generatedCommand = ko.computed(() => {
         let command = '';
         if (self.sourceport()) {
-            command += self.sourceport().filename + ' ';
+            command += self.sourceport().filepath + ' ';
         }
         if (self.iwad()) {
-            command += '-iwad ' + self.iwad().filename + ' ';
+            command += '-iwad ' + self.iwad().filepath + ' ';
         }
         if (self.chosenIniFile()) {
-            command += '-config ' + self.chosenIniFile().filename + ' ';
+            command += '-config ' + self.chosenIniFile().filepath + ' ';
         }
         if (self.level()) {
             command += '-warp ' + self.level() + ' ';
@@ -1524,6 +1524,11 @@ function ready(fn) {
         document.addEventListener('DOMContentLoaded', fn);
     }
 }
+function resizeToFitContent (el) {
+    // http://stackoverflow.com/a/995374/3297291
+    el.style.height = "1px";
+    el.style.height = el.scrollHeight + "px";
+  }
 ready(() => {
     /* this was fun, but seriously, no
     document.querySelectorAll('body')[0].addEventListener('click', function () {
@@ -1544,6 +1549,7 @@ ready(() => {
     new titlebar.Titlebar(titleOptions);
     /* eslint-enable no-new */
     $('[data-toggle="tooltip"]').tooltip();
+
     // Activates knockout.js
     ko.bindingHandlers.uniqueId = {
         init: (element, valueAccessor) => {
@@ -1576,6 +1582,15 @@ ready(() => {
             $(element).tooltip();
         }
     };
+
+    ko.bindingHandlers.autoResize = {
+        init: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
+          ko.computed(function() {
+            ko.unwrap(valueAccessor());
+            resizeToFitContent(element);
+          })
+        }
+      };
     //jqAuto -- main binding (should contain additional options to pass to autocomplete)
     //jqAutoSource -- the array of choices
     //jqAutoValue -- where to write the selected value
