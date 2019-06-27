@@ -440,12 +440,12 @@ function File(
     };
 
     self.sourceportBasetype = ko.observable();
-    if (filetype==='sourceport'){
+    if (filetype === 'sourceport') {
         self.sourceportBasetype(basetype);
     }
     self.iwadBasetype = ko.observable();
-    if (filetype==='iwad'){
-        self.iwadBasetype(basetype)
+    if (filetype === 'iwad') {
+        self.iwadBasetype(basetype);
     }
 
     self.error = ko.computed(() => {
@@ -594,7 +594,7 @@ function Level(level, chosenIwadType) {
     }
 }
 
-function SkillLevel(name, level){
+function SkillLevel(name, level) {
     let self = this;
     self.name = name;
     self.skillLevel = level;
@@ -904,10 +904,10 @@ function AppViewModel() {
         self.levels.removeAll();
         let query = null;
         let basetype = null;
-        if (self.currentConfig.iwad()!=null){
+        if (self.currentConfig.iwad() != null) {
             basetype = self.currentConfig.iwad().iwadBasetype();
-            query = {[basetype]: { $exists: true, $ne: null } };
-        } 
+            query = { [basetype]: { $exists: true, $ne: null } };
+        }
         let allLevels = levelsCollection.find(query);
         let newLevels = [];
         _.forEach(allLevels, level => {
@@ -920,17 +920,19 @@ function AppViewModel() {
         self.skillLevels.removeAll();
         let query = null;
         let iwadType = null;
-        if (self.currentConfig.iwad()!=null){
+        if (self.currentConfig.iwad() != null) {
             iwadType = self.currentConfig.iwad().iwadBasetype();
         } else {
             iwadType = 'doom';
         }
-        query = {'iwad': iwadType};
-        let skillLevelSet = skillLevelsCollection.find(query);
+        query = { iwad: iwadType };
+        let skillLevelSets = skillLevelsCollection.find(query);
         let newSkillLevels = [];
-        _.forEach(skillLevelSet[0].skillLevels, skillLevel => {
-            let newSkillLevel = new SkillLevel(skillLevel.name, skillLevel.skillLevel);
-            newSkillLevels.push(newSkillLevel);
+        _.forEach(skillLevelSets, skillLevelSet => {
+            _.forEach(skillLevelSet, skillLevel => {
+                let newSkillLevel = new SkillLevel(skillLevel.name, skillLevel.skillLevel);
+                newSkillLevels.push(newSkillLevel);
+            });
         });
         self.skillLevels.push.apply(self.skillLevels, newSkillLevels);
     };
@@ -1524,11 +1526,11 @@ function ready(fn) {
         document.addEventListener('DOMContentLoaded', fn);
     }
 }
-function resizeToFitContent (el) {
+function resizeToFitContent(el) {
     // http://stackoverflow.com/a/995374/3297291
-    el.style.height = "1px";
-    el.style.height = el.scrollHeight + "px";
-  }
+    el.style.height = '1px';
+    el.style.height = el.scrollHeight + 'px';
+}
 ready(() => {
     /* this was fun, but seriously, no
     document.querySelectorAll('body')[0].addEventListener('click', function () {
@@ -1585,12 +1587,12 @@ ready(() => {
 
     ko.bindingHandlers.autoResize = {
         init: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
-          ko.computed(function() {
-            ko.unwrap(valueAccessor());
-            resizeToFitContent(element);
-          })
+            ko.computed(function() {
+                ko.unwrap(valueAccessor());
+                resizeToFitContent(element);
+            });
         }
-      };
+    };
     //jqAuto -- main binding (should contain additional options to pass to autocomplete)
     //jqAutoSource -- the array of choices
     //jqAutoValue -- where to write the selected value
