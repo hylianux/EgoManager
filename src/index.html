@@ -363,7 +363,8 @@
                         </div>
                         <!--DMFlags (only available when gamemode not solo and sourceport not chocolate doom)-->
                         <div class="row"
-                            data-bind="hidden: currentConfig.gamemode()==='solo'||(currentConfig.sourceport&&'Chocolate'===currentConfig.sourceport.basetype())">
+                            data-bind="hidden: (currentConfig.gamemode()==='solo'||(currentConfig.sourceport()&&currentConfig.sourceport().sourceportBasetype()==='Chocolate'))">
+                            
                             <div class="col-md-12 border border-secondary">
                                 <div class="form-group border border-secondary">
                                     <input type="text" class="form-control" placeholder="Search..."

@@ -790,19 +790,8 @@ function AppViewModel() {
         } else if (self.chosenFile().filetype() === 'sourceport') {
             rawFileProperties.basetype = self.chosenFile().sourceportBasetype();
         }
-        let directory = '';
-        switch (self.chosenFile().filetype()) {
-            case 'iwad':
-                directory = self.iwadDirectory;
-                break;
-            case 'pwad':
-                directory = self.pwadDirectory;
-                break;
-            case 'sourceport':
-                directory = self.sourceportDirectory;
-                break;
-        }
-        let RealFilename = self.chosenFile().filename.substring(0, self.chosenFile().filename.lastIndexOf('.'));
+        let directory = path.dirname(self.chosenFile().filepath);
+        let RealFilename = self.chosenFile().filepath.substring(0, self.chosenFile().filepath.lastIndexOf('.'));
         fs.writeFile(path.resolve(directory, RealFilename + '.json'), JSON.stringify(rawFileProperties), err => {
             if (err) {
                 return console.log(err);
@@ -914,7 +903,9 @@ function AppViewModel() {
             let newLevel = new Level(level, basetype);
             newLevels.push(newLevel);
         });
-        self.levels.push.apply(self.levels, newLevels);
+        if (newLevels.length > 0) {
+            self.levels.push.apply(self.levels, newLevels);
+        }
     };
     self.loadSkillLevels = () => {
         self.skillLevels.removeAll();
@@ -929,12 +920,14 @@ function AppViewModel() {
         let skillLevelSets = skillLevelsCollection.find(query);
         let newSkillLevels = [];
         _.forEach(skillLevelSets, skillLevelSet => {
-            _.forEach(skillLevelSet, skillLevel => {
+            _.forEach(skillLevelSet.skillLevels, skillLevel => {
                 let newSkillLevel = new SkillLevel(skillLevel.name, skillLevel.skillLevel);
                 newSkillLevels.push(newSkillLevel);
             });
         });
-        self.skillLevels.push.apply(self.skillLevels, newSkillLevels);
+        if (newSkillLevels.length > 0) {
+            self.skillLevels.push.apply(self.skillLevels, newSkillLevels);
+        }
     };
 
     self.getIniFilesForGivenSourceport = sourceport => {
@@ -1027,7 +1020,6 @@ function AppViewModel() {
                                             console.log('file read error!' + err);
                                         } else {
                                             let iwad = JSON.parse(data);
-                                            iwad.filepath = fullPath;
                                             if (dev) {
                                                 console.log('buildIwad:: adding ' + fullPath);
                                                 console.log('reloadFiles: ' + reloadFiles);
@@ -1118,7 +1110,6 @@ function AppViewModel() {
                                             console.log('file read error!' + err);
                                         } else {
                                             let pwad = JSON.parse(data);
-                                            pwad.filepath = fullPath;
                                             if (dev) {
                                                 console.log('buildPwad:: adding ' + fullPath);
                                                 console.log('reloadFiles: ' + reloadFiles);
@@ -1209,7 +1200,6 @@ function AppViewModel() {
                                             console.log('file read error!' + err);
                                         } else {
                                             let sourceport = JSON.parse(data);
-                                            sourceport.filepath = fullPath;
                                             if (dev) {
                                                 console.log('buildSourceport:: adding ' + fullPath);
                                                 console.log('reloadFiles: ' + reloadFiles);
