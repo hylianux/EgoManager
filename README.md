@@ -42,7 +42,8 @@ After cloning or downloading the repository, simply run:
       5. select - input type is select, and options are determined by the 'valueset' array field.  valueset is an array of object that have 'text' and 'value' fields.
       6. file - input type is 'file', allows you to select a file via text input or via "browse"
       7. files - same as file, except include the "multiple" attribute
-6. Map Config - Autosuggest a level based on the iwad chosen (subtype field).  Use this as a guideline: <http://jsfiddle.net/rniemeyer/MJQ6g/>
+   6. place all configs into clickable category menu titles.
+6. ~~Map Config - Autosuggest a level based on the iwad chosen (subtype field).  Use this as a guideline: <http://jsfiddle.net/rniemeyer/MJQ6g/>~~Completed!
 7. store configurations
 8. clone configurations
 9. export configurations as batch file (choose relative paths or absolute paths)
@@ -50,5 +51,5 @@ After cloning or downloading the repository, simply run:
 ### Chocolate-Doom Specific
 
 1. create chocolate-doom pwad and deh constructor (it's different than zdoom-based mods... yay old-school?)
-2. allow user to specify game version from preselected versions
+2. ~~allow user to specify game version from preselected versions~~Part of the main config database
 3. create 3-screen implementation

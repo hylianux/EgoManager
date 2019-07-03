@@ -37,7 +37,7 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" data-toggle="tab" href="#info">Info</a>
+                        <a class="nav-link" data-toggle="tab" href="#info">Info/Debug</a>
                     </li>
                 </ul>
             </div>
@@ -53,7 +53,7 @@
                     </div>
                     <div style="font-size: 2rem" class="col-md-1 border border-info btn btn-xs btn-info fa fa-terminal"
                         data-bind="click: exportCurrentConfig" data-toggle="tooltip"
-                        title="Export current configuration as a bat or .sh file."></div>
+                        title="Export current configuration to a file."></div>
                 </div>
                 <!--Generated Command-->
                 <div class="row">
@@ -252,119 +252,29 @@
                         <!--multiplayer options (only available when gamemode not solo)-->
                         <div class="row" data-bind="hidden: currentConfig.gamemode()==='solo'">
                             <div class="col-md-12 border border-secondary">
-                                <div class="row">
-                                    <div class="col-md-6 border border-secondary">
-                                        <div style="margin-top: 10px" class="form-group">
-                                            <input type="text" class="form-control"
-                                                placeholder="Placeholder for multiplayer config"
-                                                data-bind="textInput: configSearch, event: { keyup: findConfig()}" />
-                                            <div class="list-group">
-                                                <!--data-bind="foreach: configs"> -->
-                                                <div class="list-group-item list-group-item-action clearfix"
-                                                    data-placement="right" data-html="true">
-                                                    <!--
-                                                                    data-bind="tooltip: tooltipText(), class: displayClass, hidden: $parent.showHiddenFiles()===false && hidden()===true">-->
-                                                    <div class="text-truncate">
-                                                        <!-- data-bind="text: displayName">-->
-                                                        Multiplayer config
-                                                    </div>
-                                                    <div>
-                                                        <span style="width: 32%"
-                                                            class="btn btn-xs btn-secondary fa fa-arrow-circle-up">
-                                                            <!--
-                                                                                        data-bind="click: $parent.editFile.bind($data, type, $index)">-->
-
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                                <div class="list-group-item list-group-item-action clearfix"
-                                                    data-placement="right" data-html="true">
-                                                    <!--
-                                                                    data-bind="tooltip: tooltipText(), class: displayClass, hidden: $parent.showHiddenFiles()===false && hidden()===true">-->
-                                                    <div class="text-truncate">
-                                                        <!-- data-bind="text: displayName">-->
-                                                        SomeOtherReallyLongRidiculousMultiplayerConfigNameLOLOLOLOLOLOLOLOLOLOLOLOL
-                                                    </div>
-                                                    <div>
-                                                        <span style="width: 32%"
-                                                            class="btn btn-xs btn-secondary fa fa-arrow-circle-up">
-                                                            <!--
-                                                                                    data-bind="click: $parent.editFile.bind($data, type, $index)">-->
-
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6 border border-secondary">
-                                        <div style="margin-top: 10px" class="form-group">
-                                            <div class="list-group">
-                                                <!--data-bind="foreach: configs"> -->
-                                                <div class="list-group-item list-group-item-action clearfix"
-                                                    data-placement="right" data-html="true">
-                                                    <!--
-                                                                        data-bind="tooltip: tooltipText(), class: displayClass, hidden: $parent.showHiddenFiles()===false && hidden()===true">-->
-                                                    <div class="text-truncate">
-                                                        <!-- data-bind="text: displayName">-->
-                                                        More Multiplayer Config
-                                                    </div>
-                                                    <div>
-                                                        <span style="width: 32%"
-                                                            class="btn btn-xs btn-secondary fa fa-arrow-circle-up">
-                                                            <!--
-                                                                            data-bind="click: $parent.editFile.bind($data, type, $index)">-->
-
-                                                        </span>
-                                                        <span style="width: 32%"
-                                                            class="btn btn-xs btn-secondary fa fa-copy">
-                                                            <!--data-bind="click: hideFile">-->
-
-                                                        </span>
-                                                        <span style="width: 32%"
-                                                            class="btn btn-xs btn-secondary fa fa-remove">
-                                                            <!--data-bind="click: hideFile">-->
-
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                                <div class="list-group-item list-group-item-action clearfix"
-                                                    data-placement="right" data-html="true">
-                                                    <!--
-                                                                        data-bind="tooltip: tooltipText(), class: displayClass, hidden: $parent.showHiddenFiles()===false && hidden()===true">-->
-                                                    <div class="text-truncate">
-                                                        <!-- data-bind="text: displayName">-->
-                                                        OtherReallyLongRidiculousMultiplayerConfigNameLOLOLOLOLOLOLOLOLOLOLOLOL
-                                                    </div>
-                                                    <div>
-                                                        <span style="width: 32%"
-                                                            class="btn btn-xs btn-secondary fa fa-arrow-circle-up">
-                                                            <!--
-                                                                            data-bind="click: $parent.editFile.bind($data, type, $index)">-->
-
-                                                        </span>
-                                                        <span style="width: 32%"
-                                                            class="btn btn-xs btn-secondary fa fa-copy">
-                                                            <!--data-bind="click: hideFile">-->
-
-                                                        </span>
-                                                        <span style="width: 32%"
-                                                            class="btn btn-xs btn-secondary fa fa-remove">
-                                                            <!--data-bind="click: hideFile">-->
-
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                <ul class="nav nav-tabs">
+                                    <li class="nav-item">
+                                        <a class="nav-link" data-toggle="tab" href="#Multiplayer">
+                                            Multiplayer
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" data-toggle="tab" href="#Networking">
+                                            Networking
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" data-toggle="tab" href="#DMFlags" data-bind="hidden: (currentConfig.gamemode()==='solo'||(currentConfig.sourceport()&&currentConfig.sourceport().sourceportBasetype()==='Chocolate'))">
+                                            DMFlags
+                                        </a>
+                                    </li>
+                                </ul>
                             </div>
                         </div>
                         <!--DMFlags (only available when gamemode not solo and sourceport not chocolate doom)-->
                         <div class="row"
                             data-bind="hidden: (currentConfig.gamemode()==='solo'||(currentConfig.sourceport()&&currentConfig.sourceport().sourceportBasetype()==='Chocolate'))">
-                            
+
                             <div class="col-md-12 border border-secondary">
                                 <div class="form-group border border-secondary">
                                     <input type="text" class="form-control" placeholder="Search..."
@@ -525,47 +435,38 @@
                         <div class="row">
                             <div class="col-md-12 border border-secondary">
                                 <!-- Configuration selection-->
-                                <div style="margin-top: 10px" class="form-group">
-                                    <input type="text" class="form-control" placeholder="Search for Configurations"
-                                        data-bind="textInput: configSearch, event: { keyup: findConfig()}" />
-                                    <div class="list-group">
-                                        <!--data-bind="foreach: configs"> -->
-                                        <div class="list-group-item list-group-item-action clearfix"
-                                            data-placement="right" data-html="true">
-                                            <!--
-                                                                    data-bind="tooltip: tooltipText(), class: displayClass, hidden: $parent.showHiddenFiles()===false && hidden()===true">-->
-                                            <div class="text-truncate">
-                                                <!-- data-bind="text: displayName">-->
-                                                SomeConfig
-                                            </div>
-                                            <div>
-                                                <span style="width: 32%"
-                                                    class="btn btn-xs btn-secondary fa fa-arrow-circle-up">
-                                                    <!--
-                                                                                        data-bind="click: $parent.editFile.bind($data, type, $index)">-->
-
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div class="list-group-item list-group-item-action clearfix"
-                                            data-placement="right" data-html="true">
-                                            <!--
-                                                                    data-bind="tooltip: tooltipText(), class: displayClass, hidden: $parent.showHiddenFiles()===false && hidden()===true">-->
-                                            <div class="text-truncate">
-                                                <!-- data-bind="text: displayName">-->
-                                                SomeOtherReallyLongRidiculousConfigNameLOLOLOLOLOLOLOLOLOLOLOLOL
-                                            </div>
-                                            <div>
-                                                <span style="width: 32%"
-                                                    class="btn btn-xs btn-secondary fa fa-arrow-circle-up">
-                                                    <!--
-                                                                                    data-bind="click: $parent.editFile.bind($data, type, $index)">-->
-
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                <ul class="nav nav-tabs">
+                                    <li class="nav-item">
+                                        <a class="nav-link" data-toggle="tab" href="#Config">
+                                            Config
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" data-toggle="tab" href="#Display">
+                                            Display
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" data-toggle="tab" href="#Gameplay">
+                                            Gameplay
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" data-toggle="tab" href="#Recording">
+                                            Recording
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" data-toggle="tab" href="#Advanced">
+                                            Advanced
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" data-toggle="tab" href="#Debug">
+                                            Debug
+                                        </a>
+                                    </li>
+                                </ul>
                             </div>
                         </div>
                     </div>
@@ -624,7 +525,7 @@
                                         <tr class="d-flex"
                                             data-bind="class: displayClass, style: { visibility : $parent.showHiddenFiles()===false && hidden()===true ? 'collapse' : ''}">
                                             <td class="col-10 text-truncate" data-placement="right" data-html="true"
-                                                data-bind="text: displayName, tooltip: tooltipText(), click: $parent.editFile.bind($data, filetype, $index)">
+                                                data-bind="text: displayName, click: $parent.editFile.bind($data, filetype, $index)">
                                             </td>
                                             <td class="col-2">
                                                 <span class="btn btn-xs btn-secondary"
@@ -658,7 +559,7 @@
                                         <tr class="d-flex"
                                             data-bind="class: displayClass, style: { visibility : $parent.showHiddenFiles()===false && hidden()===true ? 'collapse' : ''}">
                                             <td class="col-10 text-truncate" data-placement="right" data-html="true"
-                                                data-bind="text: displayName, tooltip: tooltipText(), click: $parent.editFile.bind($data, filetype, $index)">
+                                                data-bind="text: displayName, click: $parent.editFile.bind($data, filetype, $index)">
                                             </td>
                                             <td class="col-2">
                                                 <span class="btn btn-xs btn-secondary"
@@ -692,7 +593,7 @@
                                         <tr class="d-flex"
                                             data-bind="class: displayClass, style: { visibility : $parent.showHiddenFiles()===false && hidden()===true ? 'collapse' : ''}">
                                             <td class="col-10 text-truncate" data-placement="right" data-html="true"
-                                                data-bind="text: displayName, tooltip: tooltipText(), click: $parent.editFile.bind($data, filetype, $index)">
+                                                data-bind="text: displayName, click: $parent.editFile.bind($data, filetype, $index)">
                                             </td>
                                             <td class="col-2">
                                                 <span class="btn btn-xs btn-secondary"
@@ -849,7 +750,7 @@
                 <span data-bind="text: idTechFolder"></span>
                 <br />
                 <a href="#" class="btn btn-secondary" data-bind="click: ()=>{ Allfiles([]); walk(idTechFolder)}">
-                    Click to read in folders
+                    Click to list all files
                 </a>
                 <br />
                 Here's all the files:
