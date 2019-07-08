@@ -7,7 +7,8 @@
         "command": "-extraconfig",
         "value": "",
         "sourceports": ["chocolate"],
-        "category": "config"
+        "category": "config",
+        "uniqueCommandId": "loadExtraConfig"
     },
     {
         "enabled": false,
@@ -16,7 +17,8 @@
         "description": "Don't scale up the screen.  Implies -window.",
         "command": "-1",
         "sourceports": ["chocolate"],
-        "category": "display"
+        "category": "display",
+        "uniqueCommandId": "screenScaling"
     },
     {
         "enabled": false,
@@ -25,7 +27,8 @@
         "description": "Forces all video modes to use pixel doubling, resulting in the final video mode being two times larger than specified. (In Chocolate Doom, implies -window)",
         "command": "-2",
         "sourceports": ["zdoom", "zandronum", "chocolate"],
-        "category": "display"
+        "category": "display",
+        "uniqueCommandId": "doublePixels"
     },
     {
         "enabled": false,
@@ -34,7 +37,8 @@
         "description": "Double up the screen to 3x its normal size.  Implies -window.",
         "command": "-3",
         "sourceports": ["chocolate"],
-        "category": "display"
+        "category": "display",
+        "uniqueCommandId": "tripleScale"
     },
     {
         "enabled": false,
@@ -43,7 +47,8 @@
         "description": "Forces all video modes to use pixel quadrupling, resulting in the final video mode being four times larger than specified.",
         "command": "-4",
         "sourceports": ["zdoom", "zandronum"],
-        "category": "display"
+        "category": "display",
+        "uniqueCommandId": "quadruplePixels"
     },
     {
         "enabled": false,
@@ -53,7 +58,8 @@
         "command": "-geometry",
         "value": "1280X1024",
         "sourceports": ["chocolate"],
-        "category": "display"
+        "category": "display",
+        "uniqueCommandId": "windowDimensions"
     },
     {
         "enabled": false,
@@ -62,7 +68,8 @@
         "description": "Don't grab the mouse when running in windowed mode.",
         "command": "-nograbmouse",
         "sourceports": ["chocolate"],
-        "category": "config"
+        "category": "config",
+        "uniqueCommandId": "dontGrabMouse"
     },
     {
         "enabled": false,
@@ -71,7 +78,8 @@
         "description": "Disable the mouse.",
         "command": "-nomouse",
         "sourceports": ["chocolate"],
-        "category": "config"
+        "category": "config",
+        "uniqueCommandId": "disableMouse"
     },
     {
         "enabled": false,
@@ -80,7 +88,8 @@
         "description": "Run in a window.",
         "command": "-window",
         "sourceports": ["chocolate"],
-        "category": "display"
+        "category": "display",
+        "uniqueCommandId": "windowedMode"
     },
     {
         "enabled": false,
@@ -90,7 +99,8 @@
         "command": "-bits",
         "value": "8",
         "sourceports": ["zdoom", "zandronum"],
-        "category": "display"
+        "category": "display",
+        "uniqueCommandId": "displayDepth"
     },
     {
         "enabled": false,
@@ -100,7 +110,8 @@
         "command": "-width",
         "value": "1920",
         "sourceports": ["zdoom", "zandronum", "chocolate"],
-        "category": "display"
+        "category": "display",
+        "uniqueCommandId": "screenWidth"
     },
     {
         "enabled": false,
@@ -110,7 +121,8 @@
         "command": "-height",
         "value": "1080",
         "sourceports": ["zdoom", "zandronum", "chocolate"],
-        "category": "display"
+        "category": "display",
+        "uniqueCommandId": "screenHeight"
     },
     {
         "enabled": false,
@@ -119,7 +131,8 @@
         "description": "Causes ZDoom to ignore all the BLOCKMAP information a map provides and generate it instead. This is equivalent to +set genblockmap 1.",
         "command": "-blockmap",
         "sourceports": ["zdoom", "zandronum"],
-        "category": "display"
+        "category": "display",
+        "uniqueCommandId": "blockMapInfo"
     },
     {
         "enabled": false,
@@ -128,7 +141,8 @@
         "description": "Causes ZDoom to look for savegames and zdoom.cfg in a directory called C:\\ZDOOMDAT (C:\\doomdata for chocolate doom). Screenshots will also be saved in this directory.",
         "command": "-cdrom",
         "sourceports": ["zdoom", "zandronum", "chocolate"],
-        "category": "config"
+        "category": "config",
+        "uniqueCommandId": "zdoomdat"
     },
     {
         "enabled": false,
@@ -138,7 +152,8 @@
         "command": "-config",
         "value": "",
         "sourceports": ["zdoom", "zandronum", "chocolate"],
-        "category": "config"
+        "category": "config",
+        "uniqueCommandId": "useConfigFile"
     },
     {
         "enabled": false,
@@ -147,7 +162,8 @@
         "description": "Disables CD audio. Since only the Windows version supports CD audio, other versions ignore this option.",
         "command": "-nocdaudio",
         "sourceports": ["zdoom", "zandronum"],
-        "category": "audio"
+        "category": "audio",
+        "uniqueCommandId": "noCDAudio"
     },
     {
         "enabled": false,
@@ -156,7 +172,8 @@
         "description": "When the user presses Alt-Tab to switch from ZDoom to another window, ZDoom will normally reduce its priority class so that it does not slow the rest of the system down. By specifying this parameter, ZDoom will try to run at full speed even when it is not the active window.",
         "command": "-noidle",
         "sourceports": ["zdoom", "zandronum"],
-        "category": "display"
+        "category": "display",
+        "uniqueCommandId": "keepAltTabPriority"
     },
     {
         "enabled": false,
@@ -165,7 +182,8 @@
         "description": "Disables joystick support. If you have an old-fashioned gameport (non-USB) device attached, it can slow down the game even if you do not intend to use it. Use -nojoy to avoid the slowdown that comes from polling it for input. Only the Windows version supports a joystick.",
         "command": "-nojoy",
         "sourceports": ["zdoom", "zandronum"],
-        "category": "config"
+        "category": "config",
+        "uniqueCommandId": "disableJoystick"
     },
     {
         "enabled": false,
@@ -174,7 +192,8 @@
         "description": "Prevents the playback of music.",
         "command": "-nomusic",
         "sourceports": ["zdoom", "zandronum", "chocolate"],
-        "category": "audio"
+        "category": "audio",
+        "uniqueCommandId": "disableMusic"
     },
     {
         "enabled": false,
@@ -183,7 +202,8 @@
         "description": "Prevents the playback of sound effects.",
         "command": "-nosfx",
         "sourceports": ["zdoom", "zandronum", "chocolate"],
-        "category": "audio"
+        "category": "audio",
+        "uniqueCommandId": "disableSoundEffects"
     },
     {
         "enabled": false,
@@ -192,7 +212,8 @@
         "description": "Disables both music and sound effects.",
         "command": "-nosound",
         "sourceports": ["zdoom", "zandronum", "chocolate"],
-        "category": "audio"
+        "category": "audio",
+        "uniqueCommandId": "disableAllSound"
     },
     {
         "enabled": false,
@@ -201,7 +222,8 @@
         "description": "Disables the startup screens used by Heretic, Hexen and Strife, and use the Doom text-mode startup instead.",
         "command": "-nostartup",
         "sourceports": ["zdoom", "zandronum"],
-        "category": "display"
+        "category": "display",
+        "uniqueCommandId": "disableStartupScreen"
     },
     {
         "enabled": false,
@@ -210,17 +232,19 @@
         "description": "Disables sprite renaming. Unless you are playing a mod for Heretic, Hexen or Strife that replaced a few select sprites, you do not need this.",
         "command": "-oldsprites",
         "sourceports": ["zdoom", "zandronum"],
-        "category": "config"
+        "category": "config",
+        "uniqueCommandId": "disableSpriteRenaming"
     },
     {
         "enabled": false,
-        "inputType": "file",
+        "inputType": "directory",
         "name": "Alternate Save Directory",
         "description": "Specifies an alternate directory to use for saved files. If this is not specified, ZDoom stores them in the directory indicated by the save_dir CVAR.",
         "command": "-savedir",
         "value": "../../idTech/save",
         "sourceports": ["zdoom", "zandronum", "chocolate"],
-        "category": "config"
+        "category": "config",
+        "uniqueCommandId": "altSaveDirectory"
     },
     {
         "enabled": false,
@@ -234,7 +258,8 @@
             "max": 4
         },
         "sourceports": ["chocolate"],
-        "category": "gameplay"
+        "category": "gameplay",
+        "uniqueCommandId": "startOnEpisode"
     },
     {
         "enabled": false,
@@ -243,7 +268,8 @@
         "description": "Monsters move faster",
         "command": "-fast",
         "sourceports": ["chocolate"],
-        "category": "gameplay"
+        "category": "gameplay",
+        "uniqueCommandId": "fasterMonsters"
     },
     {
         "enabled": false,
@@ -252,7 +278,8 @@
         "description": "Disable monsters.",
         "command": "-nomonsters",
         "sourceports": ["chocolate"],
-        "category": "gameplay"
+        "category": "gameplay",
+        "uniqueCommandId": "disableMonsters"
     },
     {
         "enabled": false,
@@ -261,7 +288,8 @@
         "description": "Monsters respawn after being killed.",
         "command": "-respawn",
         "sourceports": ["chocolate"],
-        "category": "gameplay"
+        "category": "gameplay",
+        "uniqueCommandId": "respawnMonsters"
     },
     {
         "enabled": false,
@@ -271,7 +299,8 @@
         "command": "-timer",
         "value": "20",
         "sourceports": ["zdoom", "zandronum", "chocolate"],
-        "category": "gameplay"
+        "category": "gameplay",
+        "uniqueCommandId": "autoAdvanceTimer"
     },
     {
         "enabled": false,
@@ -285,7 +314,8 @@
             "max": 255
         },
         "sourceports": ["zdoom", "zandronum"],
-        "category": "gameplay"
+        "category": "gameplay",
+        "uniqueCommandId": "modifyPlayerSpeed"
     },
     {
         "enabled": false,
@@ -299,7 +329,8 @@
             "max": 400
         },
         "sourceports": ["chocolate"],
-        "category": "gameplay"
+        "category": "gameplay",
+        "uniqueCommandId": "turboMode"
     },
     {
         "enabled": false,
@@ -308,7 +339,8 @@
         "description": "Prevents files from being autoloaded based on the “AutoLoad” sections in the user's configuration file. This flag also disables autoloading of zvox.wad and the skins directory. This can be useful if you use files which are autoloaded when playing normally, but want to load without them for debugging purposes or to play a mod which might be incompatible with them.",
         "command": "-noautoload",
         "sourceports": ["zdoom", "zandronum"],
-        "category": "config"
+        "category": "config",
+        "uniqueCommandId": "disableAutoloads"
     },
     {
         "enabled": false,
@@ -318,7 +350,8 @@
         "command": "-loadgame",
         "value": "doom.zds",
         "sourceports": ["zdoom", "zandronum", "chocolate"],
-        "category": "config"
+        "category": "config",
+        "uniqueCommandId": "loadSaveFile"
     },
     {
         "enabled": false,
@@ -333,7 +366,8 @@
         "value": "0",
 
         "sourceports": ["zdoom", "zandronum", "chocolate"],
-        "category": "config"
+        "category": "config",
+        "uniqueCommandId": "loadSaveSlot"
     },
     {
         "enabled": false,
@@ -343,7 +377,8 @@
         "command": "-playdemo",
         "value": "somefile.lmp",
         "sourceports": ["zdoom", "zandronum", "chocolate"],
-        "category": "recording"
+        "category": "recording",
+        "uniqueCommandId": "playDemoFile"
     },
     {
         "enabled": false,
@@ -353,7 +388,8 @@
         "command": "-record",
         "value": "someDemoFile.lmp",
         "sourceports": ["zdoom", "zandronum", "chocolate"],
-        "category": "recording"
+        "category": "recording",
+        "uniqueCommandId": "recordGameplayToDemo"
     },
     {
         "enabled": false,
@@ -363,7 +399,8 @@
         "command": "+playerclass",
         "value": "Fighter",
         "sourceports": ["zdoom", "zandronum"],
-        "category": "gameplay"
+        "category": "gameplay",
+        "uniqueCommandId": "setPlayerClass"
     },
     {
         "enabled": false,
@@ -377,7 +414,8 @@
             "max": 5
         },
         "sourceports": ["zdoom", "zandronum", "chocolate"],
-        "category": "gameplay"
+        "category": "gameplay",
+        "uniqueCommandId": "setSkillLevel"
     },
     {
         "enabled": false,
@@ -387,7 +425,8 @@
         "command": "-timedemo",
         "value": "someFile.lmp",
         "sourceports": ["zdoom", "zandronum", "chocolate"],
-        "category": "recording"
+        "category": "recording",
+        "uniqueCommandId": "playDemoFaster"
     },
     {
         "enabled": false,
@@ -396,7 +435,8 @@
         "description": "Record a high resolution \"Doom 1.91\" demo.",
         "command": "-longtics",
         "sourceports": ["chocolate"],
-        "category": "recording"
+        "category": "recording",
+        "uniqueCommandId": "recordHiResDemo"
     },
     {
         "enabled": false,
@@ -406,7 +446,8 @@
         "command": "-maxdemo",
         "value": "128",
         "sourceports": ["chocolate"],
-        "category": "recording"
+        "category": "recording",
+        "uniqueCommandId": "demoBufferSize"
     },
     {
         "enabled": false,
@@ -415,7 +456,8 @@
         "description": "When recording or playing back demos, disable any extensions of the vanilla demo format - record demos as vanilla would do, and play back demos as vanilla would do.",
         "command": "-strictdemos",
         "sourceports": ["chocolate"],
-        "category": "recording"
+        "category": "recording",
+        "uniqueCommandId": "disableDemoExtensions"
     },
     {
         "enabled": false,
@@ -425,7 +467,8 @@
         "command": "-donut",
         "value": "1 1",
         "sourceports": ["chocolate"],
-        "category": "advanced"
+        "category": "advanced",
+        "uniqueCommandId": "emulateDonutMemory"
     },
     {
         "enabled": false,
@@ -435,7 +478,8 @@
         "command": "-spechit",
         "value": "1",
         "sourceports": ["chocolate"],
-        "category": "advanced"
+        "category": "advanced",
+        "uniqueCommandId": "emulatespechit"
     },
     {
         "enabled": false,
@@ -445,7 +489,8 @@
         "command": "-statdump",
         "value": "../../idtech/statdump.txt",
         "sourceports": ["chocolate"],
-        "category": "debug"
+        "category": "debug",
+        "uniqueCommandId": "dumpSTats"
     },
     {
         "enabled": false,
@@ -455,7 +500,8 @@
         "command": "-dumpsubstconfig",
         "value": "../../idtech/musicDump.txt",
         "sourceports": ["chocolate"],
-        "category": "advanced"
+        "category": "advanced",
+        "uniqueCommandId": "dumpSubMusicConfig"
     },
     {
         "enabled": false,
@@ -465,7 +511,8 @@
         "command": "-mb",
         "value": "16",
         "sourceports": ["chocolate"],
-        "category": "advanced"
+        "category": "advanced",
+        "uniqueCommandId": "specifyHeapSize"
     },
     {
         "enabled": false,
@@ -474,7 +521,8 @@
         "description": "Use the OS's virtual memory subsystem to map WAD files directly into memory.",
         "command": "-mmap",
         "sourceports": ["chocolate"],
-        "category": "advanced"
+        "category": "advanced",
+        "uniqueCommandId": "mapWadToMemory"
     },
     {
         "enabled": false,
@@ -483,7 +531,8 @@
         "description": "If specified, don't show a GUI window for error messages when the game exits with an error.",
         "command": "-nogui",
         "sourceports": ["chocolate"],
-        "category": "config"
+        "category": "config",
+        "uniqueCommandId": "disableErrorGUI"
     },
     {
         "enabled": false,
@@ -492,7 +541,8 @@
         "description": "Forces a screen wipe to happen after loading a map immediately at startup. Useless unless used in conjunction with -warp or +map.",
         "command": "-warpwipe",
         "sourceports": ["zdoom", "zandronum"],
-        "category": "config"
+        "category": "config",
+        "uniqueCommandId": "screenWipeOnWarped"
     },
     {
         "enabled": false,
@@ -502,7 +552,8 @@
         "command": "-xlat",
         "value": "xlat/.txt",
         "sourceports": ["zdoom", "zandronum"],
-        "category": "config"
+        "category": "config",
+        "uniqueCommandId": "useMapTranslator"
     },
     {
         "enabled": false,
@@ -512,7 +563,8 @@
         "command": "+set developer",
         "value": "1",
         "sourceports": ["zdoom", "zandronum"],
-        "category": "debug"
+        "category": "debug",
+        "uniqueCommandId": "consoleDebugOutput"
     },
     {
         "enabled": false,
@@ -521,7 +573,8 @@
         "description": "Resets the window position to the top-left corner of the screen.",
         "command": "-0",
         "sourceports": ["zdoom", "zandronum"],
-        "category": "display"
+        "category": "display",
+        "uniqueCommandId": "resetWindowPosition"
     },
     {
         "enabled": false,
@@ -530,7 +583,8 @@
         "description": "Causes ZDoom to write network debugging information to a file called debugN.txt where N is your player number.",
         "command": "-debugfile",
         "sourceports": ["zdoom", "zandronum"],
-        "category": "debug"
+        "category": "debug",
+        "uniqueCommandId": "outputDebugToFile"
     },
     {
         "enabled": false,
@@ -539,7 +593,8 @@
         "description": "Prints a message telling you that you “useless mode is activated”. With the original Doom, using -devparm was the only way to take screenshots. With ZDoom, screenshot is just another command, so -devparm serves no real purpose unless you're using chocolate doom.  (Chocolate Doom: F1 saves a screenshot)",
         "command": "-devparm",
         "sourceports": ["zdoom", "zandronum", "chocolate"],
-        "category": "config"
+        "category": "config",
+        "uniqueCommandId": "enableScreenshotMode"
     },
     {
         "enabled": false,
@@ -548,7 +603,8 @@
         "description": "Produces a file fileinfo.txt which contains the MD5 hash for every lump and resource ZDoom can load, along with version information and launch parameters. This is useful for synchronization diagnostics with demos and netgames.",
         "command": "-hashfiles",
         "sourceports": ["zdoom", "zandronum"],
-        "category": "debug"
+        "category": "debug",
+        "uniqueCommandId": "outputHashFile"
     },
     {
         "enabled": false,
@@ -557,7 +613,8 @@
         "description": "Causes ZDoom not to update the display on the screen, but it still draws everything to an internal buffer. Only useful with -timedemo.",
         "command": "-noblit",
         "sourceports": ["zdoom", "zandronum", "chocolate"],
-        "category": "display"
+        "category": "display",
+        "uniqueCommandId": "noupdatescreendisplaywhendrawing"
     },
     {
         "enabled": false,
@@ -566,7 +623,8 @@
         "description": "Causes ZDoom not to draw anything at all. Only useful with -timedemo.",
         "command": "-nodraw",
         "sourceports": ["zdoom", "zandronum", "chocolate"],
-        "category": "display"
+        "category": "display",
+        "uniqueCommandId": "dontdrawanything"
     },
     {
         "enabled": false,
@@ -575,7 +633,8 @@
         "description": "Quits the game just before video initialization. To be used to check for errors in scripts without actually running the game.",
         "command": "-norun",
         "sourceports": ["zdoom", "zandronum"],
-        "category": "debug"
+        "category": "debug",
+        "uniqueCommandId": "quitbeforeinit"
     },
     {
         "enabled": false,
@@ -584,7 +643,8 @@
         "description": "Sends all output to a system console. Unix and MacOS builds of ZDoom will always do that.",
         "command": "-stdout",
         "sourceports": ["zdoom", "zandronum"],
-        "category": "debug"
+        "category": "debug",
+        "uniqueCommandId": "printtostdout"
     },
     {
         "enabled": false,
@@ -593,7 +653,8 @@
         "description": "Informs ZDoom that you will be playing a deathmatch game and sets the dmflags CVAR so that weapons stay behind when a player picks them up. Only player 1 needs to specify this.",
         "command": "-deathmatch",
         "sourceports": ["zdoom", "zandronum", "chocolate"],
-        "category": "multiplayer"
+        "category": "multiplayer",
+        "uniqueCommandId": "enabledeathmatch"
     },
     {
         "enabled": false,
@@ -602,7 +663,8 @@
         "description": "Start a deathmatch 2.0 game.  Weapons do not stay in place and all items respawn after 30 seconds.",
         "command": "-altdeath",
         "sourceports": ["chocolate"],
-        "category": "multiplayer"
+        "category": "multiplayer",
+        "uniqueCommandId": "deathmatchtwopointoh"
     },
     {
         "enabled": false,
@@ -616,7 +678,8 @@
             "max": 9
         },
         "sourceports": ["zdoom", "zandronum", "chocolate"],
-        "category": "networking"
+        "category": "networking",
+        "uniqueCommandId": "playermovementonserver"
     },
     {
         "enabled": false,
@@ -625,7 +688,8 @@
         "description": "Causes ZDoom to send a backup copy of every movement command across the network.",
         "command": "-extratic",
         "sourceports": ["zdoom", "zandronum"],
-        "category": "networking"
+        "category": "networking",
+        "uniqueCommandId": "backupmovementcommands"
     },
     {
         "enabled": false,
@@ -635,7 +699,8 @@
         "command": "-extratics",
         "value": "1",
         "sourceports": ["chocolate"],
-        "category": "networking"
+        "category": "networking",
+        "uniqueCommandId": "sendextratics"
     },
     {
         "enabled": false,
@@ -645,7 +710,8 @@
         "command": "-host",
         "value": "4",
         "sourceports": ["zdoom", "zandronum"],
-        "category": "multiplayer"
+        "category": "multiplayer",
+        "uniqueCommandId": "hostgameforplayers"
     },
     {
         "enabled": false,
@@ -654,7 +720,8 @@
         "description": "Start a multiplayer server, listening for connections.",
         "command": "-server",
         "sourceports": ["chocolate"],
-        "category": "multiplayer"
+        "category": "multiplayer",
+        "uniqueCommandId": "hostmultiplayergame"
     },
     {
         "enabled": false,
@@ -664,7 +731,8 @@
         "command": "-servername",
         "value": "EGOManager-delivered Chocolate Doom Server!",
         "sourceports": ["chocolate"],
-        "category": "multiplayer"
+        "category": "multiplayer",
+        "uniqueCommandId": "specifyservername"
     },
     {
         "enabled": false,
@@ -673,7 +741,8 @@
         "description": "Start the game playing as though in a netgame with a single player. This can also be used to play back single player netgame demos.",
         "command": "-solo-net",
         "sourceports": ["chocolate"],
-        "category": "gameplay"
+        "category": "gameplay",
+        "uniqueCommandId": "netgameassingleplayer"
     },
     {
         "enabled": false,
@@ -682,7 +751,8 @@
         "description": "Automatically search the local LAN for a multiplayer server and join it.",
         "command": "-autojoin",
         "sourceports": ["chocolate"],
-        "category": "multiplayer"
+        "category": "multiplayer",
+        "uniqueCommandId": "autojoinstuff"
     },
     {
         "enabled": false,
@@ -692,7 +762,8 @@
         "command": "-join",
         "value": "192.168.1.1:5029",
         "sourceports": ["zdoom", "zandronum"],
-        "category": "multiplayer"
+        "category": "multiplayer",
+        "uniqueCommandId": "joinsomegame"
     },
     {
         "enabled": false,
@@ -702,7 +773,8 @@
         "command": "-connect",
         "value": "192.168.1.1:2342",
         "sourceports": ["chocolate"],
-        "category": "multiplayer"
+        "category": "multiplayer",
+        "uniqueCommandId": "srslyjoingame"
     },
     {
         "enabled": false,
@@ -711,7 +783,8 @@
         "description": "Start a dedicated server, routing packets but not participating in the game itself.",
         "command": "-dedicated",
         "sourceports": ["chocolate"],
-        "category": "multiplayer"
+        "category": "multiplayer",
+        "uniqueCommandId": "hostdedicatedserver"
     },
     {
         "enabled": false,
@@ -720,7 +793,8 @@
         "description": "Search the local LAN for running servers.",
         "command": "-localsearch",
         "sourceports": ["chocolate"],
-        "category": "multiplayer"
+        "category": "multiplayer",
+        "uniqueCommandId": "searchforlangames"
     },
     {
         "enabled": false,
@@ -729,7 +803,8 @@
         "description": "Use new network client sync code rather than the classic sync code. This is currently disabled by default because it has some bugs.",
         "command": "-newsync",
         "sourceports": ["chocolate"],
-        "category": "network"
+        "category": "network",
+        "uniqueCommandId": "newnetworkclientsync"
     },
     {
         "enabled": false,
@@ -739,7 +814,8 @@
         "command": "-nodes",
         "value": "4",
         "sourceports": ["chocolate"],
-        "category": "multiplayer"
+        "category": "multiplayer",
+        "uniqueCommandId": "numberofplayers"
     },
     {
         "enabled": false,
@@ -748,7 +824,8 @@
         "description": "When running a server, don't register with the global master server. Implies -server.",
         "command": "-privateserver",
         "sourceports": ["chocolate"],
-        "category": "networking"
+        "category": "networking",
+        "uniqueCommandId": "useprivateserver"
     },
     {
         "enabled": false,
@@ -758,7 +835,8 @@
         "command": "-query",
         "value": "192.168.1.1:2342",
         "sourceports": ["chocolate"],
-        "category": "debug"
+        "category": "debug",
+        "uniqueCommandId": "checkserverstatus"
     },
     {
         "enabled": false,
@@ -767,7 +845,8 @@
         "description": "Query the Internet master server for a global list of active servers.",
         "command": "-search",
         "sourceports": ["chocolate"],
-        "category": "debug"
+        "category": "debug",
+        "uniqueCommandId": "sarchfornetworkgames"
     },
     {
         "enabled": false,
@@ -815,7 +894,8 @@
             }
         ],
         "sourceports": ["chocolate"],
-        "category": "config"
+        "category": "config",
+        "uniqueCommandId": "specifygameversion"
     },
     {
         "enabled": false,
@@ -839,7 +919,8 @@
             }
         ],
         "sourceports": ["chocolate"],
-        "category": "config"
+        "category": "config",
+        "uniqueCommandId": "specifymissionpack"
     },
     {
         "enabled": false,
@@ -863,7 +944,8 @@
             }
         ],
         "sourceports": ["chocolate"],
-        "category": "advanced"
+        "category": "advanced",
+        "uniqueCommandId": "specifydosversion"
     },
     {
         "enabled": false,
@@ -874,7 +956,8 @@
         "value": "0",
         "valueset": [{ "text": "Peer-to-peer", "value": "0" }, { "text": "Packet Server", "value": "1" }],
         "sourceports": ["zdoom"],
-        "category": "networking"
+        "category": "networking",
+        "uniqueCommandId": "setnetworkmode"
     },
     {
         "enabled": false,
@@ -884,7 +967,8 @@
         "command": "-port",
         "value": "666",
         "sourceports": ["zdoom", "zandronum", "chocolate"],
-        "category": "networking"
+        "category": "networking",
+        "uniqueCommandId": "setsomeport"
     },
     {
         "enabled": false,
@@ -893,7 +977,8 @@
         "description": "When used with '-host', the server will not advertise within the Local Area Network (aka LAN).",
         "command": "-nobroadcast",
         "sourceports": ["zandronum"],
-        "category": "networking"
+        "category": "networking",
+        "uniqueCommandId": "hidegamefromlan"
     },
     {
         "enabled": false,
@@ -902,7 +987,8 @@
         "description": "When used with '-host', the server will not publicly broadcast to the master server.",
         "command": "-private",
         "sourceports": ["zandronum"],
-        "category": "networking"
+        "category": "networking",
+        "uniqueCommandId": "hidegamefrommasterlist"
     },
     {
         "enabled": false,
@@ -912,7 +998,8 @@
         "command": "-upnp",
         "value": "10666",
         "sourceports": ["zandronum"],
-        "category": "networking"
+        "category": "networking",
+        "uniqueCommandId": "universalplugandplay"
     },
     {
         "enabled": false,
@@ -922,7 +1009,8 @@
         "command": "-useip",
         "value": "192.168.1.2",
         "sourceports": ["zandronum"],
-        "category": "networking"
+        "category": "networking",
+        "uniqueCommandId": "usespecifiednetadapterip"
     },
     {
         "enabled": false,
@@ -931,7 +1019,8 @@
         "description": "Available in the GNU/Linux platform, the console will only print messages but will never accept and input within the game server's console directly. The game server can still be controlled remotely, but not directly within the actual server. Note: This does not hide the output from Zandronum from your current shell. You can do that by appending to following to your command line parameters: '> /dev/null 2>&1'",
         "command": "-noinput",
         "sourceports": ["zandronum"],
-        "category": "config"
+        "category": "config",
+        "uniqueCommandId": "runinheadlessmode"
     },
     {
         "enabled": false,
@@ -941,7 +1030,8 @@
         "command": "-exec",
         "value": "\"..\\..\\My Configurations\\SpecialServer.cfg\"",
         "sourceports": ["zandronum"],
-        "category": "config"
+        "category": "config",
+        "uniqueCommandId": "executeconfigscript"
     },
     {
         "enabled": false,
@@ -951,6 +1041,7 @@
         "command": "-optfile",
         "value": "\"C:\\Games\\Zandronum\\WADs\\SVDoom.wad\"",
         "sourceports": ["zandronum"],
-        "category": "config"
+        "category": "config",
+        "uniqueCommandId": "optionalwads"
     }
 ]

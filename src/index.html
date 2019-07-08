@@ -271,22 +271,74 @@
                                     </li>
                                 </ul>
                                 <div class="tab-content">
-                                    <div class="tab-pane active" id="Multiplayer">
+                                    <div class="tab-pane active" id="Multiplayer"
+                                        data-bind="foreach: currentConfig.sourceportConfigs.multiplayer">
                                         <div class="form-group">
-                                            <input type="text" class="form-control"
-                                                placeholder="Multiplayer Placeholder Search..." />
+                                            <input type="checkbox" data-bind="checked: enabled, uniqueId: enabled" />
+                                            <label class="control-label" data-toggle="tooltip"
+                                                data-bind="attr: {title: description}, uniqueFor:enabled, text:name"></label>
+                                            <!-- ko if: inputType==='text' -->
+                                            <input type="text" class="form-control" data-bind="textInput: value" />
+                                            <!-- /ko -->
+                                            <!-- ko if: inputType==='number' -->
+                                            <input type="number" class="form-control" data-bind="textInput: value" />
+                                            <!-- /ko -->
+                                            <!-- ko if: inputType==='range' -->
+                                            <input type="number" class="form-control"
+                                                data-bind="textInput: value, attr: {min: valueRange.min, max: valueRange.max}" />
+                                            <!-- /ko -->
+                                            <!-- ko if: inputType==='select' -->
+                                            <select class="form-control"
+                                                data-bind="options: valueset, optionsText: 'text', optionsValue:'value', value: value, optionsCaption: 'Choose...'"></select>
+                                            <!-- /ko -->
+                                            <!-- ko if: inputType==='file' -->
+                                            <input type="file" class="form-control" data-bind="file: value" />
+                                            <!-- /ko -->
+                                            <!-- ko if: inputType==='directory' -->
+                                            <input type="file" class="form-control" data-bind="file: value"
+                                                webkitdirectory directory multiple />
+                                            <!-- /ko -->
+                                            <!-- ko if: inputType==='files' -->
+                                            <input type="file" class="form-control" data-bind="file: value" multiple />
+                                            <!-- /ko -->
                                         </div>
                                     </div>
                                     <div class="tab-pane fade" id="DMFlags">
                                         <div class="form-group">
                                             <input type="text" class="form-control"
-                                                placeholder="DMFlags Placeholder Search..." />
+                                                placeholder="Placeholder Search..." />
                                         </div>
                                     </div>
-                                    <div class="tab-pane fade" id="Networking">
+                                    <div class="tab-pane fade" id="Networking"
+                                        data-bind="foreach: currentConfig.sourceportConfigs.networking">
                                         <div class="form-group">
-                                            <input type="text" class="form-control"
-                                                placeholder="Networking Placeholder Search..." />
+                                            <input type="checkbox" data-bind="checked: enabled, uniqueId: enabled" />
+                                            <label class="control-label" data-toggle="tooltip"
+                                                data-bind="attr: {title: description}, uniqueFor:enabled, text:name"></label>
+                                            <!-- ko if: inputType==='text' -->
+                                            <input type="text" class="form-control" data-bind="textInput: value" />
+                                            <!-- /ko -->
+                                            <!-- ko if: inputType==='number' -->
+                                            <input type="number" class="form-control" data-bind="textInput: value" />
+                                            <!-- /ko -->
+                                            <!-- ko if: inputType==='range' -->
+                                            <input type="number" class="form-control"
+                                                data-bind="textInput: value, attr: {min: valueRange.min, max: valueRange.max}" />
+                                            <!-- /ko -->
+                                            <!-- ko if: inputType==='select' -->
+                                            <select class="form-control"
+                                                data-bind="options: valueset, optionsText: 'text', optionsValue:'value', value: value, optionsCaption: 'Choose...'"></select>
+                                            <!-- /ko -->
+                                            <!-- ko if: inputType==='file' -->
+                                            <input type="file" class="form-control" data-bind="file: value" />
+                                            <!-- /ko -->
+                                            <!-- ko if: inputType==='directory' -->
+                                            <input type="file" class="form-control" data-bind="file: value"
+                                                webkitdirectory directory multiple />
+                                            <!-- /ko -->
+                                            <!-- ko if: inputType==='files' -->
+                                            <input type="file" class="form-control" data-bind="file: value" multiple />
+                                            <!-- /ko -->
                                         </div>
                                     </div>
                                 </div>
@@ -442,40 +494,196 @@
                                     </li>
                                 </ul>
                                 <div class="tab-content">
-                                    <div class="tab-pane active" id="Config">
+                                    <div class="tab-pane active" id="Config"
+                                        data-bind="foreach: currentConfig.sourceportConfigs.config">
                                         <div class="form-group">
-                                            <input type="text" class="form-control"
-                                                placeholder="Config Placeholder Search..." />
+                                            <input type="checkbox" data-bind="checked: enabled, uniqueId: enabled" />
+                                            <label class="control-label" data-toggle="tooltip"
+                                                data-bind="attr: {title: description}, uniqueFor:enabled, text:name"></label>
+                                            <!-- ko if: inputType==='text' -->
+                                            <input type="text" class="form-control" data-bind="textInput: value" />
+                                            <!-- /ko -->
+                                            <!-- ko if: inputType==='number' -->
+                                            <input type="number" class="form-control" data-bind="textInput: value" />
+                                            <!-- /ko -->
+                                            <!-- ko if: inputType==='range' -->
+                                            <input type="number" class="form-control"
+                                                data-bind="textInput: value, attr: {min: valueRange.min, max: valueRange.max}" />
+                                            <!-- /ko -->
+                                            <!-- ko if: inputType==='select' -->
+                                            <select class="form-control"
+                                                data-bind="options: valueset, optionsText: 'text', optionsValue:'value', value: value, optionsCaption: 'Choose...'"></select>
+                                            <!-- /ko -->
+                                            <!-- ko if: inputType==='file' -->
+                                            <input type="file" class="form-control" data-bind="file: value" />
+                                            <!-- /ko -->
+                                            <!-- ko if: inputType==='directory' -->
+                                            <input type="file" class="form-control" data-bind="file: value"
+                                                webkitdirectory directory multiple />
+                                            <!-- /ko -->
+                                            <!-- ko if: inputType==='files' -->
+                                            <input type="file" class="form-control" data-bind="file: value" multiple />
+                                            <!-- /ko -->
                                         </div>
                                     </div>
-                                    <div class="tab-pane fade" id="Display">
+                                    <div class="tab-pane fade" id="Display"
+                                        data-bind="foreach: currentConfig.sourceportConfigs.display">
                                         <div class="form-group">
-                                            <input type="text" class="form-control"
-                                                placeholder="Display Placeholder Search..." />
+                                            <input type="checkbox" data-bind="checked: enabled, uniqueId: enabled" />
+                                            <label class="control-label" data-toggle="tooltip"
+                                                data-bind="attr: {title: description}, uniqueFor:enabled, text:name"></label>
+                                            <!-- ko if: inputType==='text' -->
+                                            <input type="text" class="form-control" data-bind="textInput: value" />
+                                            <!-- /ko -->
+                                            <!-- ko if: inputType==='number' -->
+                                            <input type="number" class="form-control" data-bind="textInput: value" />
+                                            <!-- /ko -->
+                                            <!-- ko if: inputType==='range' -->
+                                            <input type="number" class="form-control"
+                                                data-bind="textInput: value, attr: {min: valueRange.min, max: valueRange.max}" />
+                                            <!-- /ko -->
+                                            <!-- ko if: inputType==='select' -->
+                                            <select class="form-control"
+                                                data-bind="options: valueset, optionsText: 'text', optionsValue:'value', value: value, optionsCaption: 'Choose...'"></select>
+                                            <!-- /ko -->
+                                            <!-- ko if: inputType==='file' -->
+                                            <input type="file" class="form-control" data-bind="file: value" />
+                                            <!-- /ko -->
+                                            <!-- ko if: inputType==='directory' -->
+                                            <input type="file" class="form-control" data-bind="file: value"
+                                                webkitdirectory directory multiple />
+                                            <!-- /ko -->
+                                            <!-- ko if: inputType==='files' -->
+                                            <input type="file" class="form-control" data-bind="file: value" multiple />
+                                            <!-- /ko -->
                                         </div>
                                     </div>
-                                    <div class="tab-pane fade" id="Gameplay">
+                                    <div class="tab-pane fade" id="Gameplay"
+                                        data-bind="foreach: currentConfig.sourceportConfigs.gameplay">
                                         <div class="form-group">
-                                            <input type="text" class="form-control"
-                                                placeholder="Gameplay Placeholder Search..." />
+                                            <input type="checkbox" data-bind="checked: enabled, uniqueId: enabled" />
+                                            <label class="control-label" data-toggle="tooltip"
+                                                data-bind="attr: {title: description}, uniqueFor:enabled, text:name"></label>
+                                            <!-- ko if: inputType==='text' -->
+                                            <input type="text" class="form-control" data-bind="textInput: value" />
+                                            <!-- /ko -->
+                                            <!-- ko if: inputType==='number' -->
+                                            <input type="number" class="form-control" data-bind="textInput: value" />
+                                            <!-- /ko -->
+                                            <!-- ko if: inputType==='range' -->
+                                            <input type="number" class="form-control"
+                                                data-bind="textInput: value, attr: {min: valueRange.min, max: valueRange.max}" />
+                                            <!-- /ko -->
+                                            <!-- ko if: inputType==='select' -->
+                                            <select class="form-control"
+                                                data-bind="options: valueset, optionsText: 'text', optionsValue:'value', value: value, optionsCaption: 'Choose...'"></select>
+                                            <!-- /ko -->
+                                            <!-- ko if: inputType==='file' -->
+                                            <input type="file" class="form-control" data-bind="file: value" />
+                                            <!-- /ko -->
+                                            <!-- ko if: inputType==='directory' -->
+                                            <input type="file" class="form-control" data-bind="file: value"
+                                                webkitdirectory directory multiple />
+                                            <!-- /ko -->
+                                            <!-- ko if: inputType==='files' -->
+                                            <input type="file" class="form-control" data-bind="file: value" multiple />
+                                            <!-- /ko -->
                                         </div>
                                     </div>
-                                    <div class="tab-pane fade" id="Recording">
+                                    <div class="tab-pane fade" id="Recording"
+                                        data-bind="foreach: currentConfig.sourceportConfigs.recording">
                                         <div class="form-group">
-                                            <input type="text" class="form-control"
-                                                placeholder="Recording Placeholder Search..." />
+                                            <input type="checkbox" data-bind="checked: enabled, uniqueId: enabled" />
+                                            <label class="control-label" data-toggle="tooltip"
+                                                data-bind="attr: {title: description}, uniqueFor:enabled, text:name"></label>
+                                            <!-- ko if: inputType==='text' -->
+                                            <input type="text" class="form-control" data-bind="textInput: value" />
+                                            <!-- /ko -->
+                                            <!-- ko if: inputType==='number' -->
+                                            <input type="number" class="form-control" data-bind="textInput: value" />
+                                            <!-- /ko -->
+                                            <!-- ko if: inputType==='range' -->
+                                            <input type="number" class="form-control"
+                                                data-bind="textInput: value, attr: {min: valueRange.min, max: valueRange.max}" />
+                                            <!-- /ko -->
+                                            <!-- ko if: inputType==='select' -->
+                                            <select class="form-control"
+                                                data-bind="options: valueset, optionsText: 'text', optionsValue:'value', value: value, optionsCaption: 'Choose...'"></select>
+                                            <!-- /ko -->
+                                            <!-- ko if: inputType==='file' -->
+                                            <input type="file" class="form-control" data-bind="file: value" />
+                                            <!-- /ko -->
+                                            <!-- ko if: inputType==='directory' -->
+                                            <input type="file" class="form-control" data-bind="file: value"
+                                                webkitdirectory directory multiple />
+                                            <!-- /ko -->
+                                            <!-- ko if: inputType==='files' -->
+                                            <input type="file" class="form-control" data-bind="file: value" multiple />
+                                            <!-- /ko -->
                                         </div>
                                     </div>
-                                    <div class="tab-pane fade" id="Advanced">
+                                    <div class="tab-pane fade" id="Advanced"
+                                        data-bind="foreach: currentConfig.sourceportConfigs.advanced">
                                         <div class="form-group">
-                                            <input type="text" class="form-control"
-                                                placeholder="Advanced Placeholder Search..." />
+                                            <input type="checkbox" data-bind="checked: enabled, uniqueId: enabled" />
+                                            <label class="control-label" data-toggle="tooltip"
+                                                data-bind="attr: {title: description}, uniqueFor:enabled, text:name"></label>
+                                            <!-- ko if: inputType==='text' -->
+                                            <input type="text" class="form-control" data-bind="textInput: value" />
+                                            <!-- /ko -->
+                                            <!-- ko if: inputType==='number' -->
+                                            <input type="number" class="form-control" data-bind="textInput: value" />
+                                            <!-- /ko -->
+                                            <!-- ko if: inputType==='range' -->
+                                            <input type="number" class="form-control"
+                                                data-bind="textInput: value, attr: {min: valueRange.min, max: valueRange.max}" />
+                                            <!-- /ko -->
+                                            <!-- ko if: inputType==='select' -->
+                                            <select class="form-control"
+                                                data-bind="options: valueset, optionsText: 'text', optionsValue:'value', value: value, optionsCaption: 'Choose...'"></select>
+                                            <!-- /ko -->
+                                            <!-- ko if: inputType==='file' -->
+                                            <input type="file" class="form-control" data-bind="file: value" />
+                                            <!-- /ko -->
+                                            <!-- ko if: inputType==='directory' -->
+                                            <input type="file" class="form-control" data-bind="file: value"
+                                                webkitdirectory directory multiple />
+                                            <!-- /ko -->
+                                            <!-- ko if: inputType==='files' -->
+                                            <input type="file" class="form-control" data-bind="file: value" multiple />
+                                            <!-- /ko -->
                                         </div>
                                     </div>
-                                    <div class="tab-pane fade" id="Debug">
+                                    <div class="tab-pane fade" id="Debug"
+                                        data-bind="foreach: currentConfig.sourceportConfigs.debug">
                                         <div class="form-group">
-                                            <input type="text" class="form-control"
-                                                placeholder="Debug Placeholder Search..." />
+                                            <input type="checkbox" data-bind="checked: enabled, uniqueId: enabled" />
+                                            <label class="control-label" data-toggle="tooltip"
+                                                data-bind="attr: {title: description}, uniqueFor:enabled, text:name"></label>
+                                            <!-- ko if: inputType==='text' -->
+                                            <input type="text" class="form-control" data-bind="textInput: value" />
+                                            <!-- /ko -->
+                                            <!-- ko if: inputType==='number' -->
+                                            <input type="number" class="form-control" data-bind="textInput: value" />
+                                            <!-- /ko -->
+                                            <!-- ko if: inputType==='range' -->
+                                            <input type="number" class="form-control"
+                                                data-bind="textInput: value, attr: {min: valueRange.min, max: valueRange.max}" />
+                                            <!-- /ko -->
+                                            <!-- ko if: inputType==='select' -->
+                                            <select class="form-control"
+                                                data-bind="options: valueset, optionsText: 'text', optionsValue:'value', value: value, optionsCaption: 'Choose...'"></select>
+                                            <!-- /ko -->
+                                            <!-- ko if: inputType==='file' -->
+                                            <input type="file" class="form-control" data-bind="file: value" />
+                                            <!-- /ko -->
+                                            <!-- ko if: inputType==='directory' -->
+                                            <input type="file" class="form-control" data-bind="file: value"
+                                                webkitdirectory directory multiple />
+                                            <!-- /ko -->
+                                            <!-- ko if: inputType==='files' -->
+                                            <input type="file" class="form-control" data-bind="file: value" multiple />
+                                            <!-- /ko -->
                                         </div>
                                     </div>
                                 </div>
@@ -484,307 +692,308 @@
                     </div>
                 </div>
             </div>
-        </div>
-        <!--File DB-->
-        <div class="col-md-12 tab-pane fade" id="fileDB">
-            <div class="row">
-                <!--File list/search-->
-                <div class="col-md-4 border border-secondary">
-                    <ul class="nav nav-tabs">
-                        <li class="nav-item">
-                            <a class="nav-link active" data-toggle="tab" data-bind="click: clearFileEdit()"
-                                href="#Iwads">
-                                Iwads
-                                <sup data-toggle="tooltip"
-                                    title="Iwads are the actual game's binaries, usually stored in a .wad file, but sometimes stored in a .pk3 file. This is where you'd put your Doom, Doom 2, Heretic, Hexen, etc. games">
-                                    ?
-                                </sup>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" data-toggle="tab" data-bind="click: clearFileEdit()" href="#Pwads">
-                                Pwads
-                                <sup data-toggle="tooltip"
-                                    title="Pwads, or 'Patch Wads' are mods.  These could be levels, music, gameplay... these are loaded alongside an iwad.  File extensions include .wad, .deh, .bex, and .pk3">
-                                    ?
-                                </sup>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" data-toggle="tab" data-bind="click: clearFileEdit()"
-                                href="#Sourceports">
-                                Sourceports
-                                <sup data-toggle="tooltip"
-                                    title="The engine that runs an iwad (along with, optionally, pwads).">
-                                    ?
-                                </sup>
-                            </a>
-                        </li>
-                    </ul>
-                    <div class="tab-content">
-                        <div class="tab-pane active" id="Iwads">
-                            <div class="form-group">
-                                <input type="text" class="form-control" placeholder="Search..."
-                                    data-bind="textInput: iwadSearch, event: { keyup: findIwad()}" />
+            <!--File DB-->
+            <div class="col-md-12 tab-pane fade" id="fileDB">
+                <div class="row">
+                    <!--File list/search-->
+                    <div class="col-md-4 border border-secondary">
+                        <ul class="nav nav-tabs">
+                            <li class="nav-item">
+                                <a class="nav-link active" data-toggle="tab" data-bind="click: clearFileEdit()"
+                                    href="#Iwads">
+                                    Iwads
+                                    <sup data-toggle="tooltip"
+                                        title="Iwads are the actual game's binaries, usually stored in a .wad file, but sometimes stored in a .pk3 file. This is where you'd put your Doom, Doom 2, Heretic, Hexen, etc. games">
+                                        ?
+                                    </sup>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-toggle="tab" data-bind="click: clearFileEdit()" href="#Pwads">
+                                    Pwads
+                                    <sup data-toggle="tooltip"
+                                        title="Pwads, or 'Patch Wads' are mods.  These could be levels, music, gameplay... these are loaded alongside an iwad.  File extensions include .wad, .deh, .bex, and .pk3">
+                                        ?
+                                    </sup>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-toggle="tab" data-bind="click: clearFileEdit()"
+                                    href="#Sourceports">
+                                    Sourceports
+                                    <sup data-toggle="tooltip"
+                                        title="The engine that runs an iwad (along with, optionally, pwads).">
+                                        ?
+                                    </sup>
+                                </a>
+                            </li>
+                        </ul>
+                        <div class="tab-content">
+                            <div class="tab-pane active" id="Iwads">
+                                <div class="form-group">
+                                    <input type="text" class="form-control" placeholder="Search..."
+                                        data-bind="textInput: iwadSearch, event: { keyup: findIwad()}" />
+                                </div>
+                                <table class="table table-hover table-striped">
+                                    <thead>
+                                        <tr class="d-flex">
+                                            <th class="col-10">Iwad</th>
+                                            <th class="col-2"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody data-bind="foreach: files.iwads">
+                                        <tr class="d-flex"
+                                            data-bind="class: displayClass, style: { visibility : $parent.showHiddenFiles()===false && hidden()===true ? 'collapse' : ''}">
+                                            <td class="col-10 text-truncate" data-placement="right" data-html="true"
+                                                data-bind="text: displayName, click: $parent.editFile.bind($data, filetype, $index)">
+                                            </td>
+                                            <td class="col-2">
+                                                <span class="btn btn-xs btn-secondary"
+                                                    data-bind="click: hideFile, class: hideFileClass, tooltip: hideTooltipText()"
+                                                    aria-hidden="true"></span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div data-bind="hidden: files.iwads().length>0 || iwadsAllHidden()==false">
+                                    No Iwads to display. It could be due to your search criteria, hidden files
+                                    (you
+                                    can click "show hidden files" to see them), or if you just copied files into
+                                    the
+                                    idTech folder, click the File Database tab to reload.
+                                </div>
                             </div>
-                            <table class="table table-hover table-striped">
-                                <thead>
-                                    <tr class="d-flex">
-                                        <th class="col-10">Iwad</th>
-                                        <th class="col-2"></th>
-                                    </tr>
-                                </thead>
-                                <tbody data-bind="foreach: files.iwads">
-                                    <tr class="d-flex"
-                                        data-bind="class: displayClass, style: { visibility : $parent.showHiddenFiles()===false && hidden()===true ? 'collapse' : ''}">
-                                        <td class="col-10 text-truncate" data-placement="right" data-html="true"
-                                            data-bind="text: displayName, click: $parent.editFile.bind($data, filetype, $index)">
-                                        </td>
-                                        <td class="col-2">
-                                            <span class="btn btn-xs btn-secondary"
-                                                data-bind="click: hideFile, class: hideFileClass, tooltip: hideTooltipText()"
-                                                aria-hidden="true"></span>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                            <div data-bind="hidden: files.iwads().length>0 || iwadsAllHidden()==false">
-                                No Iwads to display. It could be due to your search criteria, hidden files
-                                (you
-                                can click "show hidden files" to see them), or if you just copied files into
-                                the
-                                idTech folder, click the File Database tab to reload.
+                            <div class="tab-pane fade" id="Pwads">
+                                <div class="form-group">
+                                    <input type="text" class="form-control" placeholder="Search..."
+                                        data-bind="textInput: pwadSearch, event: { keyup: findPwad()}" />
+                                </div>
+                                <table class="table table-hover table-striped">
+                                    <thead>
+                                        <tr class="d-flex">
+                                            <th class="col-10">Pwad</th>
+                                            <th class="col-2"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody data-bind="foreach: files.pwads">
+                                        <tr class="d-flex"
+                                            data-bind="class: displayClass, style: { visibility : $parent.showHiddenFiles()===false && hidden()===true ? 'collapse' : ''}">
+                                            <td class="col-10 text-truncate" data-placement="right" data-html="true"
+                                                data-bind="text: displayName, click: $parent.editFile.bind($data, filetype, $index)">
+                                            </td>
+                                            <td class="col-2">
+                                                <span class="btn btn-xs btn-secondary"
+                                                    data-bind="click: hideFile, class: hideFileClass, tooltip: hideTooltipText()"
+                                                    aria-hidden="true"></span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div data-bind="hidden: files.pwads().length>0 || pwadsAllHidden()==false">
+                                    No Pwads to display. It could be due to your search criteria, hidden files
+                                    (you
+                                    can click "show hidden files" to see them), or if you just copied files into
+                                    the
+                                    idTech folder, click the File Database tab to reload.
+                                </div>
                             </div>
-                        </div>
-                        <div class="tab-pane fade" id="Pwads">
-                            <div class="form-group">
-                                <input type="text" class="form-control" placeholder="Search..."
-                                    data-bind="textInput: pwadSearch, event: { keyup: findPwad()}" />
-                            </div>
-                            <table class="table table-hover table-striped">
-                                <thead>
-                                    <tr class="d-flex">
-                                        <th class="col-10">Pwad</th>
-                                        <th class="col-2"></th>
-                                    </tr>
-                                </thead>
-                                <tbody data-bind="foreach: files.pwads">
-                                    <tr class="d-flex"
-                                        data-bind="class: displayClass, style: { visibility : $parent.showHiddenFiles()===false && hidden()===true ? 'collapse' : ''}">
-                                        <td class="col-10 text-truncate" data-placement="right" data-html="true"
-                                            data-bind="text: displayName, click: $parent.editFile.bind($data, filetype, $index)">
-                                        </td>
-                                        <td class="col-2">
-                                            <span class="btn btn-xs btn-secondary"
-                                                data-bind="click: hideFile, class: hideFileClass, tooltip: hideTooltipText()"
-                                                aria-hidden="true"></span>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                            <div data-bind="hidden: files.pwads().length>0 || pwadsAllHidden()==false">
-                                No Pwads to display. It could be due to your search criteria, hidden files
-                                (you
-                                can click "show hidden files" to see them), or if you just copied files into
-                                the
-                                idTech folder, click the File Database tab to reload.
-                            </div>
-                        </div>
-                        <div class="tab-pane fade" id="Sourceports">
-                            <div class="form-group">
-                                <input type="text" class="form-control" placeholder="Search..."
-                                    data-bind="textInput: sourceportSearch, event: { keyup: findSourceport()}" />
-                            </div>
-                            <table class="table table-hover table-striped">
-                                <thead>
-                                    <tr class="d-flex">
-                                        <th class="col-10">Sourceport</th>
-                                        <th class="col-2"></th>
-                                    </tr>
-                                </thead>
-                                <tbody data-bind="foreach: files.sourceports">
-                                    <tr class="d-flex"
-                                        data-bind="class: displayClass, style: { visibility : $parent.showHiddenFiles()===false && hidden()===true ? 'collapse' : ''}">
-                                        <td class="col-10 text-truncate" data-placement="right" data-html="true"
-                                            data-bind="text: displayName, click: $parent.editFile.bind($data, filetype, $index)">
-                                        </td>
-                                        <td class="col-2">
-                                            <span class="btn btn-xs btn-secondary"
-                                                data-bind="click: hideFile, class: hideFileClass, tooltip: hideTooltipText()"
-                                                aria-hidden="true"></span>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                            <div data-bind="hidden: files.sourceports().length>0 || sourceportsAllHidden()==false">
-                                No Sourceports to display. It could be due to your search criteria, hidden
-                                files
-                                (you can click "show hidden files" to see them), or if you just copied files
-                                into the idTech folder, click the File Database tab to reload.
+                            <div class="tab-pane fade" id="Sourceports">
+                                <div class="form-group">
+                                    <input type="text" class="form-control" placeholder="Search..."
+                                        data-bind="textInput: sourceportSearch, event: { keyup: findSourceport()}" />
+                                </div>
+                                <table class="table table-hover table-striped">
+                                    <thead>
+                                        <tr class="d-flex">
+                                            <th class="col-10">Sourceport</th>
+                                            <th class="col-2"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody data-bind="foreach: files.sourceports">
+                                        <tr class="d-flex"
+                                            data-bind="class: displayClass, style: { visibility : $parent.showHiddenFiles()===false && hidden()===true ? 'collapse' : ''}">
+                                            <td class="col-10 text-truncate" data-placement="right" data-html="true"
+                                                data-bind="text: displayName, click: $parent.editFile.bind($data, filetype, $index)">
+                                            </td>
+                                            <td class="col-2">
+                                                <span class="btn btn-xs btn-secondary"
+                                                    data-bind="click: hideFile, class: hideFileClass, tooltip: hideTooltipText()"
+                                                    aria-hidden="true"></span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div data-bind="hidden: files.sourceports().length>0 || sourceportsAllHidden()==false">
+                                    No Sourceports to display. It could be due to your search criteria, hidden
+                                    files
+                                    (you can click "show hidden files" to see them), or if you just copied files
+                                    into the idTech folder, click the File Database tab to reload.
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                <!--File Edit-->
-                <div class="col-md-8 border border-secondary">
-                    <form data-bind="with: chosenFile">
-                        <h5>
-                            File Type:
-                            <span data-bind="text: filetype"></span>
-                            &nbsp;&mdash;&nbsp;Filename:
-                            <span data-bind="text: filename"></span>
-                        </h5>
-                        <div class="form-group">
-                            <label class="control-label" for="inputFilename" data-placement="left" data-toggle="tooltip"
-                                title="A human readable name for your file.">
-                                Title
-                            </label>
-                            <div data-bind="hidden: nameValid" class="col alert alert-warning">
-                                <strong>Warning:</strong>
-                                You should provide a human-readable name for this file.
+                    <!--File Edit-->
+                    <div class="col-md-8 border border-secondary">
+                        <form data-bind="with: chosenFile">
+                            <h5>
+                                File Type:
+                                <span data-bind="text: filetype"></span>
+                                &nbsp;&mdash;&nbsp;Filename:
+                                <span data-bind="text: filename"></span>
+                            </h5>
+                            <div class="form-group">
+                                <label class="control-label" for="inputFilename" data-placement="left"
+                                    data-toggle="tooltip" title="A human readable name for your file.">
+                                    Title
+                                </label>
+                                <div data-bind="hidden: nameValid" class="col alert alert-warning">
+                                    <strong>Warning:</strong>
+                                    You should provide a human-readable name for this file.
+                                </div>
+                                <input type="text" id="inputFilename" class="form-control"
+                                    placeHolder="Human-readable name"
+                                    data-bind="textInput: name, event: {blur: $parent.updateFile}" />
                             </div>
-                            <input type="text" id="inputFilename" class="form-control" placeHolder="Human-readable name"
-                                data-bind="textInput: name, event: {blur: $parent.updateFile}" />
-                        </div>
-                        <div class="form-group" data-bind="visible: filetype()==='sourceport'">
-                            <label class="control-label" for="sourceportFileType" data-placement="left"
-                                data-toggle="tooltip"
-                                title="This launcher has special support depending on the sourceport.  Selecting the right sourceport type here will greatly assist you later in building configurations based on that sourceport type.  Currently, the sourceport types this launcher supports are Zandronum, Chocolate Doom, and all ZDoom-based sourceports (e.g. GZDoom, QZDoom, or even plain ZDoom itself).">
-                                Sourceport Type
-                            </label>
-                            <select id="sourceportFileType" class="form-control"
-                                data-bind="options: $parent.sourceportTypes, event: {blur: $parent.updateFile}, value: sourceportBasetype, optionsCaption: 'Choose...'"></select>
-                        </div>
-                        <div class="form-group" data-bind="visible: filetype()==='iwad'">
-                            <label class="control-label" for="iwadFileType" data-placement="left" data-toggle="tooltip"
-                                title="Selecting an IWad type from the known game types can help with some configuration options (such as selecting maps/levels)">
-                                IWad Type
-                            </label>
-                            <select class="form-control" id="iwadFileType"
-                                data-bind="options: $parent.iwadTypes, optionsText: 'description', event: {blur: $parent.updateFile}, value: iwadBasetype, optionsValue:'name', optionsCaption: 'Choose...'"></select>
-                        </div>
-                        <div class="form-group">
-                            <label class="control-label" data-placement="left" for="inputAuthor" data-toggle="tooltip"
-                                title="Comma-separated list of authors.">
-                                Authors
-                            </label>
-                            <div data-bind="hidden: authorsValid" class="col alert alert-danger">
-                                <strong>Required:</strong>
-                                If you wish to use this file, you'll need to give credit to the person(s)
-                                who
-                                made it.
+                            <div class="form-group" data-bind="visible: filetype()==='sourceport'">
+                                <label class="control-label" for="sourceportFileType" data-placement="left"
+                                    data-toggle="tooltip"
+                                    title="This launcher has special support depending on the sourceport.  Selecting the right sourceport type here will greatly assist you later in building configurations based on that sourceport type.  Currently, the sourceport types this launcher supports are Zandronum, Chocolate Doom, and all ZDoom-based sourceports (e.g. GZDoom, QZDoom, or even plain ZDoom itself).">
+                                    Sourceport Type
+                                </label>
+                                <select id="sourceportFileType" class="form-control"
+                                    data-bind="options: $parent.sourceportTypes, event: {blur: $parent.updateFile}, value: sourceportBasetype, optionsCaption: 'Choose...'"></select>
                             </div>
-                            <input type="text" class="form-control" id="inputAuthor"
-                                placeholder="Author1,Author2,Author3,..."
-                                data-bind="textInput: authorInput, event: {blur: $parent.updateFile}" />
-                        </div>
-                        <div class="form-group">
-                            <label class="control-label" data-placement="left" for="inputMeta" data-toggle="tooltip"
-                                title="Comma-separated list of meta tags (kinda like hash tags, they're ways to find this file).">
-                                Meta Tags
-                            </label>
-                            <div data-bind="hidden: metaTagsValid" class="col alert alert-warning">
-                                <strong>Warning:</strong>
-                                It's extremely helpful to have some tags to use so you can find this file
-                                more
-                                easily, both here and in the Configuration Builder.
+                            <div class="form-group" data-bind="visible: filetype()==='iwad'">
+                                <label class="control-label" for="iwadFileType" data-placement="left"
+                                    data-toggle="tooltip"
+                                    title="Selecting an IWad type from the known game types can help with some configuration options (such as selecting maps/levels)">
+                                    IWad Type
+                                </label>
+                                <select class="form-control" id="iwadFileType"
+                                    data-bind="options: $parent.iwadTypes, optionsText: 'description', event: {blur: $parent.updateFile}, value: iwadBasetype, optionsValue:'name', optionsCaption: 'Choose...'"></select>
                             </div>
-                            <input type="text" class="form-control" placeholder="Music,Levels,Textures,Gameplay,etc..."
-                                id="inputMeta" data-bind="textInput: metaInput, event: {blur: $parent.updateFile}" />
-                        </div>
-                        <div class="form-group">
-                            <label class="control-label" data-placement="left" for="inputSource" data-toggle="tooltip"
-                                title="Where did you find this file?">
-                                Source
-                            </label>
-                            <div data-bind="hidden: sourceValid" class="col alert alert-danger">
-                                <strong>Required:</strong>
-                                You'll need to post a link as to where you got this file, or where this file
-                                can
-                                be found.
+                            <div class="form-group">
+                                <label class="control-label" data-placement="left" for="inputAuthor"
+                                    data-toggle="tooltip" title="Comma-separated list of authors.">
+                                    Authors
+                                </label>
+                                <div data-bind="hidden: authorsValid" class="col alert alert-danger">
+                                    <strong>Required:</strong>
+                                    If you wish to use this file, you'll need to give credit to the person(s)
+                                    who
+                                    made it.
+                                </div>
+                                <input type="text" class="form-control" id="inputAuthor"
+                                    placeholder="Author1,Author2,Author3,..."
+                                    data-bind="textInput: authorInput, event: {blur: $parent.updateFile}" />
                             </div>
+                            <div class="form-group">
+                                <label class="control-label" data-placement="left" for="inputMeta" data-toggle="tooltip"
+                                    title="Comma-separated list of meta tags (kinda like hash tags, they're ways to find this file).">
+                                    Meta Tags
+                                </label>
+                                <div data-bind="hidden: metaTagsValid" class="col alert alert-warning">
+                                    <strong>Warning:</strong>
+                                    It's extremely helpful to have some tags to use so you can find this file
+                                    more
+                                    easily, both here and in the Configuration Builder.
+                                </div>
+                                <input type="text" class="form-control"
+                                    placeholder="Music,Levels,Textures,Gameplay,etc..." id="inputMeta"
+                                    data-bind="textInput: metaInput, event: {blur: $parent.updateFile}" />
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label" data-placement="left" for="inputSource"
+                                    data-toggle="tooltip" title="Where did you find this file?">
+                                    Source
+                                </label>
+                                <div data-bind="hidden: sourceValid" class="col alert alert-danger">
+                                    <strong>Required:</strong>
+                                    You'll need to post a link as to where you got this file, or where this file
+                                    can
+                                    be found.
+                                </div>
 
-                            <input type="text" class="form-control" id="inputSource"
-                                placeholder="http://somesite.com/someplace"
-                                data-bind="textInput: source, event: {blur: $parent.updateFile}" />
-                        </div>
-                        <div class="form-group">
-                            <label class="control-label" data-placement="left" for="inputQuickDescription"
-                                data-toggle="tooltip"
-                                title="Just a quick description of the file, not very long.  Just something that pops up real quick so you know more about it.">
-                                Quick Description
-                            </label>
-                            <div data-bind="hidden: quickDescriptionValid" class="col alert alert-warning">
-                                <strong>Warning:</strong>
-                                You really should provide a nice quick description. When you hover over the
-                                file, it'll pop up helping you remember what it does.
+                                <input type="text" class="form-control" id="inputSource"
+                                    placeholder="http://somesite.com/someplace"
+                                    data-bind="textInput: source, event: {blur: $parent.updateFile}" />
                             </div>
+                            <div class="form-group">
+                                <label class="control-label" data-placement="left" for="inputQuickDescription"
+                                    data-toggle="tooltip"
+                                    title="Just a quick description of the file, not very long.  Just something that pops up real quick so you know more about it.">
+                                    Quick Description
+                                </label>
+                                <div data-bind="hidden: quickDescriptionValid" class="col alert alert-warning">
+                                    <strong>Warning:</strong>
+                                    You really should provide a nice quick description. When you hover over the
+                                    file, it'll pop up helping you remember what it does.
+                                </div>
 
-                            <input type="text" class="form-control col"
-                                placeholder="This file adds levels, music, sounds, textures, gameplay, etc. changes."
-                                id="inputQuickDescription"
-                                data-bind="textInput: quickDescription, event: {blur: $parent.updateFile}" />
-                        </div>
-                        <div class="form-group">
-                            <label class="control-label" data-placement="left" for="inputLongDescription"
-                                data-toggle="tooltip"
-                                title="Here's where you can basically go nuts in long detail about the file.  Most files have a .txt packaged with them... this is a great place to paste that content (if your file comes with a .txt file of the same name, it'll get autoloaded into this field for you)">
-                                Long Description
-                            </label>
-                            <textarea class="form-control" rows="20" id="inputLongDescription" placeholder="====== Blahblahblah=====
+                                <input type="text" class="form-control col"
+                                    placeholder="This file adds levels, music, sounds, textures, gameplay, etc. changes."
+                                    id="inputQuickDescription"
+                                    data-bind="textInput: quickDescription, event: {blur: $parent.updateFile}" />
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label" data-placement="left" for="inputLongDescription"
+                                    data-toggle="tooltip"
+                                    title="Here's where you can basically go nuts in long detail about the file.  Most files have a .txt packaged with them... this is a great place to paste that content (if your file comes with a .txt file of the same name, it'll get autoloaded into this field for you)">
+                                    Long Description
+                                </label>
+                                <textarea class="form-control" rows="20" id="inputLongDescription" placeholder="====== Blahblahblah=====
         This is very long
         oh my yes, this is going to be long.
         
         Hello?  You still here?  yeah, long stuff in here..."
-                                data-bind="textInput: longDescription, event: {blur: $parent.updateFile}"></textarea>
-                        </div>
-                    </form>
+                                    data-bind="textInput: longDescription, event: {blur: $parent.updateFile}"></textarea>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <!--Info-->
+            <div class="col-md-12 tab-pane fade" id="info">
+                <h1>Hello World!</h1>
+                We are using node
+                <span data-bind="text: nodeVersion"></span>
+                <br />
+                Chrome
+                <span data-bind="text: chromeVersion"></span>
+                <br />
+                and Electron
+                <span data-bind="text: electronVersion"></span>
+                .
+                <br />
+                <br />
+                You'll find the idTech folder in
+                <span data-bind="text: idTechFolder"></span>
+                <br />
+                <a href="#" class="btn btn-secondary" data-bind="click: ()=>{ Allfiles([]); walk(idTechFolder)}">
+                    Click to list all files
+                </a>
+                <br />
+                Here's all the files:
+                <br />
+                <div data-bind="foreach:Allfiles">
+                    <div data-bind="text: $data"></div>
+                </div>
+                <br />
+                And just to reiterate, their directories are:
+                <br />
+                Sourceports:
+                <span data-bind="text: sourceportDirectory"></span>
+                <br />
+                Iwads:
+                <span data-bind="text: iwadDirectory"></span>
+                <br />
+                Pwads:
+                <span data-bind="text: pwadDirectory"></span> <br />
+                <div data-bind="visible: isDebug">
+                    <pre data-bind="text: ko.toJSON($root, null, 2)"></pre>
                 </div>
             </div>
         </div>
-        <!--Info-->
-        <div class="col-md-12 tab-pane fade" id="info">
-            <h1>Hello World!</h1>
-            We are using node
-            <span data-bind="text: nodeVersion"></span>
-            <br />
-            Chrome
-            <span data-bind="text: chromeVersion"></span>
-            <br />
-            and Electron
-            <span data-bind="text: electronVersion"></span>
-            .
-            <br />
-            <br />
-            You'll find the idTech folder in
-            <span data-bind="text: idTechFolder"></span>
-            <br />
-            <a href="#" class="btn btn-secondary" data-bind="click: ()=>{ Allfiles([]); walk(idTechFolder)}">
-                Click to list all files
-            </a>
-            <br />
-            Here's all the files:
-            <br />
-            <div data-bind="foreach:Allfiles">
-                <div data-bind="text: $data"></div>
-            </div>
-            <br />
-            And just to reiterate, their directories are:
-            <br />
-            Sourceports:
-            <span data-bind="text: sourceportDirectory"></span>
-            <br />
-            Iwads:
-            <span data-bind="text: iwadDirectory"></span>
-            <br />
-            Pwads:
-            <span data-bind="text: pwadDirectory"></span>
-        </div>
-    </div>
-    <!--debug view-->
-    <div class="row" data-bind="visible: isDebug">
-        <pre data-bind="text: ko.toJSON($root, null, 2)"></pre>
-    </div>
     </div>
 </body>
 

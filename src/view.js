@@ -82,7 +82,7 @@ fs.readFile(path.resolve(__dirname, '../../commandLineOptions.json'), 'utf8', (e
             console.log('reloadFiles: ' + reloadFiles);
         }*/
         _.forEach(commands, command => {
-            upsert(commandLineCollection, ['name', 'command', 'sourceports'], command);
+            upsert(commandLineCollection, 'uniqueCommandId', command);
         });
     }
 });
@@ -275,20 +275,35 @@ function ConfigChain(
     }
     self.sourceportConfigs = ko.observableArray();
     if (sourceportConfigs) {
-        _.foreach(sourceportConfigs, command => {
-            let newCommand = new CommandLineOption(
-                command.enabled,
-                command.name,
-                command.inputType,
-                command.description,
-                command.command,
-                command.value,
-                command.sourceports,
-                command.category,
-                command.valueExtra
-            );
-            self.sourceportConfigs.push(newCommand);
+        _.foreach(Object.keys(sourceportConfigs), category => {
+            _.foreach(sourceportConfigs[category], command => {
+                let newCommand = new CommandLineOption(
+                    command.enabled,
+                    command.name,
+                    command.inputType,
+                    command.description,
+                    command.command,
+                    command.value,
+                    command.sourceports,
+                    command.category,
+                    command.valueRange,
+                    command.valueset,
+                    command.uniqueCommandId
+                );
+                self.sourceportConfigs[category].push(newCommand);
+            });
         });
+    } else {
+        self.sourceportConfigs = {
+            config: ko.observableArray(),
+            multiplayer: ko.observableArray(),
+            networking: ko.observableArray(),
+            debug: ko.observableArray(),
+            display: ko.observableArray(),
+            gameplay: ko.observableArray(),
+            recording: ko.observableArray(),
+            advanced: ko.observableArray()
+        };
     }
 
     //this will be generated from the current config chain
@@ -323,7 +338,19 @@ function DMFlag(enabled, name, value, description, command, sourceport) {
     self.sourceport = sourceport;
 }
 
-function CommandLineOption(enabled, name, inputType, description, command, value, sourceports, category, valueExtra) {
+function CommandLineOption(
+    enabled,
+    name,
+    inputType,
+    description,
+    command,
+    value,
+    sourceports,
+    category,
+    valueRange,
+    valueset,
+    uniqueCommandId
+) {
     let self = this;
     self.name = name;
     self.inputType = inputType;
@@ -333,9 +360,9 @@ function CommandLineOption(enabled, name, inputType, description, command, value
     self.enabled = ko.observable(enabled);
     self.sourceports = sourceports;
     self.category = category;
-    if (Array.isArray(valueExtra)) {
-        self.valueset = valueExtra;
-    } else self.valueRange = valueExtra;
+    self.valueset = valueset;
+    self.valueRange = valueRange;
+    self.uniqueCommandId = uniqueCommandId;
 }
 
 function File(
@@ -684,7 +711,6 @@ function AppViewModel() {
     self.showHiddenFiles = ko.observable(false);
 
     self.levels = ko.observableArray();
-
     self.Allfiles = ko.observableArray();
     self.files = {
         iwads: ko.observableArray(),
@@ -927,6 +953,55 @@ function AppViewModel() {
         });
         if (newSkillLevels.length > 0) {
             self.skillLevels.push.apply(self.skillLevels, newSkillLevels);
+        }
+    };
+    self.loadAllCommandLineOptions = () => {
+        self.loadCommandLineOptions('config');
+        self.loadCommandLineOptions('multiplayer');
+        self.loadCommandLineOptions('networking');
+        self.loadCommandLineOptions('debug');
+        self.loadCommandLineOptions('display');
+        self.loadCommandLineOptions('gameplay');
+        self.loadCommandLineOptions('recording');
+        self.loadCommandLineOptions('advanced');
+    };
+
+    self.loadCommandLineOptions = category => {
+        self.currentConfig.sourceportConfigs[category].removeAll();
+        let query = null;
+        let sourceportType = null;
+        if (self.currentConfig.sourceport() != null) {
+            sourceportType = self.currentConfig.sourceport().sourceportBasetype();
+            if (sourceportType){
+                sourceportType=sourceportType.toLowerCase();
+            }
+        }
+        if (sourceportType != null) {
+            query = { category: category, sourceports: { $contains: sourceportType } };
+            let commandLineOptions = commandLineCollection.find(query);
+            let newOptions = [];
+            _.forEach(commandLineOptions, option => {
+                let newOption = new CommandLineOption(
+                    false,
+                    option.name,
+                    option.inputType,
+                    option.description,
+                    option.command,
+                    option.value,
+                    option.sourceports,
+                    option.category,
+                    option.valueRange,
+                    option.valueset,
+                    option.uniqueCommandId
+                );
+                newOptions.push(newOption);
+            });
+            if (newOptions.length > 0) {
+                self.currentConfig.sourceportConfigs[category].push.apply(
+                    self.currentConfig.sourceportConfigs[category],
+                    newOptions
+                );
+            }
         }
     };
 
@@ -1542,7 +1617,7 @@ ready(() => {
     /* eslint-enable no-new */
     $('[data-toggle="tooltip"]').tooltip();
 
-    // Activates knockout.js
+ 
     ko.bindingHandlers.uniqueId = {
         init: (element, valueAccessor) => {
             let value = valueAccessor();
@@ -1574,7 +1649,69 @@ ready(() => {
             $(element).tooltip();
         }
     };
-
+    ko.bindingHandlers.file = {
+        init: function(element, valueAccessor, allBindings) {
+          var fileContents, fileName, allowed, prohibited, reader;
+      
+          if ((typeof valueAccessor()) === "function") {
+            fileContents = valueAccessor();
+          } else {
+            fileContents = valueAccessor()['data'];
+            fileName = valueAccessor()['name'];
+      
+            allowed = valueAccessor()['allowed'];
+            if ((typeof allowed) === 'string') {
+              allowed = [allowed];
+            }
+      
+            prohibited = valueAccessor()['prohibited'];
+            if ((typeof prohibited) === 'string') {
+              prohibited = [prohibited];
+            }
+      
+            reader = (valueAccessor()['reader']);
+          }
+      
+          reader || (reader = new FileReader());
+          reader.onloadend = function() {
+            fileContents(reader.result);
+          }
+      
+          var handler = function() {
+            var file = element.files[0];
+      
+            // Opening the file picker then canceling will trigger a 'change'
+            // event without actually picking a file.
+            if (file === undefined) {
+              fileContents(null);
+              return;
+            }
+      
+            if (allowed) {
+              if (!allowed.some(function(type) { return type === file.type })) {
+                console.log("File "+file.name+" is not an allowed type, ignoring.");
+                fileContents(null);
+                return;
+              }
+            }
+      
+            if (prohibited) {
+              if (prohibited.some(function(type) { return type === file.type })) {
+                console.log("File "+file.name+" is a prohibited type, ignoring.");
+                fileContents(null);
+                return;
+              }
+            }
+      
+            reader.readAsDataURL(file); // A callback (above) will set fileContents
+            if (typeof fileName === "function") {
+              fileName(file.name);
+            }
+          }
+      
+          ko.utils.registerEventHandler(element, 'change', handler);
+        }
+      };
     ko.bindingHandlers.autoResize = {
         init: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
             ko.computed(function() {
@@ -1697,6 +1834,7 @@ ready(() => {
     let viewModel = new AppViewModel();
     viewModel.currentConfig.sourceport.subscribe(data => {
         viewModel.chooseSourceport(data);
+        viewModel.loadAllCommandLineOptions();
     });
     viewModel.currentConfig.iwad.subscribe(data => {
         viewModel.loadLevels();
