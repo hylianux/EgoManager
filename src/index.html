@@ -13,8 +13,8 @@
     </script>
     <link rel="stylesheet" href="node_modules/jquery-ui-dist/jquery-ui.min.css" />
     <link rel="stylesheet" href="bootstrap.css" />
-    <script src="node_modules/knockout-dragdrop/lib/knockout.dragdrop.js"></script>
     <script src="view.js"></script>
+    <script src="knockout-sortable.js"></script>
 </head>
 
 <body>
@@ -253,111 +253,24 @@
                         <div class="row">
                             <div class="col-md-12 border border-secondary">
                                 <div class="row">
+                                    <div class="col-md-6">
+                                        <h4>Available Pwads</h4>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h4>Chosen Pwads</h4>
+                                    </div>
+                                </div>
+                                <div class="row">
                                     <!--pwad selector-->
-                                    <div class="col-md-6 border border-secondary">
-                                        <div style="margin-top: 10px" class="form-group">
-                                            <input type="text" class="form-control" placeholder="Search for Pwads"
-                                                data-bind="textInput: configSearch, event: { keyup: findConfig()}" />
-                                            <div class="list-group">
-                                                <!--data-bind="foreach: configs"> -->
-                                                <div class="list-group-item list-group-item-action clearfix"
-                                                    data-placement="right" data-html="true">
-                                                    <!--
-                                                                            data-bind="tooltip: tooltipText(), class: displayClass, hidden: $parent.showHiddenFiles()===false && hidden()===true">-->
-                                                    <div class="text-truncate">
-                                                        <!-- data-bind="text: displayName">-->
-                                                        SomePwad
-                                                    </div>
-                                                    <div>
-                                                        <span style="width: 32%"
-                                                            class="btn btn-xs btn-secondary fa fa-arrow-circle-up">
-                                                            <!--
-                                                                                                data-bind="click: $parent.editFile.bind($data, type, $index)">-->
-
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                                <div class="list-group-item list-group-item-action clearfix"
-                                                    data-placement="right" data-html="true">
-                                                    <!--
-                                                                            data-bind="tooltip: tooltipText(), class: displayClass, hidden: $parent.showHiddenFiles()===false && hidden()===true">-->
-                                                    <div class="text-truncate">
-                                                        <!-- data-bind="text: displayName">-->
-                                                        SomeOtherReallyLongRidiculousPwadNameLOLOLOLOLOLOLOLOLOLOLOLOL
-                                                    </div>
-                                                    <div>
-                                                        <span style="width: 32%"
-                                                            class="btn btn-xs btn-secondary fa fa-arrow-circle-up">
-                                                            <!--
-                                                                                            data-bind="click: $parent.editFile.bind($data, type, $index)">-->
-
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6 border border-secondary">
-                                        <div style="margin-top: 10px" class="form-group">
-                                            <div class="list-group">
-                                                <!--data-bind="foreach: configs"> -->
-                                                <div class="list-group-item list-group-item-action clearfix"
-                                                    data-placement="right" data-html="true">
-                                                    <!--
-                                                                                data-bind="tooltip: tooltipText(), class: displayClass, hidden: $parent.showHiddenFiles()===false && hidden()===true">-->
-                                                    <div class="text-truncate">
-                                                        <!-- data-bind="text: displayName">-->
-                                                        ChosenPWad
-                                                    </div>
-                                                    <div>
-                                                        <span style="width: 32%"
-                                                            class="btn btn-xs btn-secondary fa fa-arrow-circle-up">
-                                                            <!--
-                                                                                    data-bind="click: $parent.editFile.bind($data, type, $index)">-->
-
-                                                        </span>
-                                                        <span style="width: 32%"
-                                                            class="btn btn-xs btn-secondary fa fa-copy">
-                                                            <!--data-bind="click: hideFile">-->
-
-                                                        </span>
-                                                        <span style="width: 32%"
-                                                            class="btn btn-xs btn-secondary fa fa-remove">
-                                                            <!--data-bind="click: hideFile">-->
-
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                                <div class="list-group-item list-group-item-action clearfix"
-                                                    data-placement="right" data-html="true">
-                                                    <!--
-                                                                                data-bind="tooltip: tooltipText(), class: displayClass, hidden: $parent.showHiddenFiles()===false && hidden()===true">-->
-                                                    <div class="text-truncate">
-                                                        <!-- data-bind="text: displayName">-->
-                                                        OtherChosenReallyLongRidiculousPWADNameLOLOLOLOLOLOLOLOLOLOLOLOL
-                                                    </div>
-                                                    <div>
-                                                        <span style="width: 32%"
-                                                            class="btn btn-xs btn-secondary fa fa-arrow-circle-up">
-                                                            <!--
-                                                                                    data-bind="click: $parent.editFile.bind($data, type, $index)">-->
-
-                                                        </span>
-                                                        <span style="width: 32%"
-                                                            class="btn btn-xs btn-secondary fa fa-copy">
-                                                            <!--data-bind="click: hideFile">-->
-
-                                                        </span>
-                                                        <span style="width: 32%"
-                                                            class="btn btn-xs btn-secondary fa fa-remove">
-                                                            <!--data-bind="click: hideFile">-->
-
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <div class="col-md-6 border border-secondary"
+                                        data-bind="sortable: { template: 'taskTmpl', data: availablePwads }"></div>
+                                    <div class="col-md-6 border border-secondary"
+                                        data-bind="sortable: { template: 'taskTmpl', data: currentConfig.pwads }"></div>
+                                    <script id="taskTmpl" type="text/html"><div class="item">
+                                            <span>
+                                               <a href="#" class="nav-link" data-bind="text: displayName"></a>
+                                           </span> 
+                                       </div></script>
                                 </div>
                             </div>
                         </div>
@@ -541,7 +454,7 @@
                         </div>
                         <!--Sourceport Configs-->
                         <div class="row">
-                            <div class="col-md-12 border border-secondary">
+                            <div data-bind="visible: currentConfig.sourceport()" class="col-md-12 border border-secondary">
                                 <!-- Configuration selection-->
                                 <ul class="nav nav-tabs">
                                     <li class="nav-item">
@@ -769,6 +682,9 @@
                                         </div>
                                     </div>
                                 </div>
+                            </div>
+                            <div data-bind="hidden: currentConfig.sourceport()">
+                                <h4>Choose a sourceport to see configuration options</h4>
                             </div>
                         </div>
                     </div>

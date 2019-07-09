@@ -324,6 +324,12 @@ function ConfigChain(
         if (self.skill()) {
             command += '-skill ' + self.skill() + ' ';
         }
+        if (self.pwads() && self.pwads().length>0){
+            command += '-file ';
+            _.forEach(self.pwads(), pwad => {
+                command+= '"'+pwad.filepath+'" '
+            });
+        }
         if (self.dmFlags()){
             let dmFlags = [];
             let dmFlags2 = [];
@@ -908,6 +914,7 @@ function AppViewModel() {
         pwads: ko.observableArray(),
         sourceports: ko.observableArray()
     };
+    self.availablePwads = ko.observableArray();
     self.iwadsAllHidden = ko.computed(() => {
         let counter = 0;
         _.forEach(self.files.iwads(), iwad => {
@@ -1056,6 +1063,7 @@ function AppViewModel() {
     self.loadPwadFiles = () => {
         let allPwads = pwadCollection.find();
         let newPwads = [];
+        let newAvailablePwads = [];
         _.forEach(allPwads, pwad => {
             let newPwad = new File(
                 pwad.filepath,
@@ -1070,9 +1078,20 @@ function AppViewModel() {
                 pwad.hidden
             );
             newPwads.push(newPwad);
+            let inchosen = false;
+            _.forEach(self.currentConfig.pwads, pwad => {
+                if (newPwad.filepath===pwad.filepath){
+                    inchosen = true;
+                }
+            });
+            if (!inchosen){
+                newAvailablePwads.push(newPwad);
+            }
         });
         self.files.pwads.removeAll();
+        self.availablePwads.removeAll();
         self.files.pwads.push.apply(self.files.pwads, newPwads);
+        self.availablePwads.push.apply(self.availablePwads, newAvailablePwads);
     };
     self.loadSourceportFiles = () => {
         let allSourceports = sourceportCollection.find();
@@ -2027,6 +2046,17 @@ ready(() => {
                 autoEl.autocomplete('search', ' ');
                 autoEl.focus();
             });
+        }
+    };
+
+    ko.bindingHandlers.visibleAndSelect = {
+        update:function (element, valueAccessor) {
+            ko.bindingHandlers.visible.update(element, valueAccessor);
+            if (valueAccessor()) {
+                setTimeout(function () {
+                    $(element).find("input").focus().select();
+                }, 0); //new tasks are not in DOM yet
+            }
         }
     };
 
