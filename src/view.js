@@ -324,6 +324,69 @@ function ConfigChain(
         if (self.skill()) {
             command += '-skill ' + self.skill() + ' ';
         }
+        if (self.dmFlags()){
+            let dmFlags = [];
+            let dmFlags2 = [];
+            let zadmflags = [];
+            let compatflags = [];
+            let zacompatflags = [];
+            _.forEach(self.dmFlags(), dmFlag => {
+                if (dmFlag.enabled()){
+                    switch (dmFlag.command) {
+                        case 'dmflags':
+                            dmFlags.push(dmFlag);
+                            break;
+                        case 'dmflags2':
+                            dmFlags2.push(dmFlag);
+                            break;
+                        case 'zadmflags':
+                            zadmflags.push(dmFlag);
+                            break;
+                        case 'compatflags':
+                            compatflags.push(dmFlag);
+                            break;
+                        case 'zacompatflags':
+                            zacompatflags.push(dmFlag);
+                            break;
+                    }
+                }
+            });
+            if (dmFlags.length>0){
+                let flagValue = 0;
+                _.forEach(dmFlags, flag => {
+                    flagValue+=flag.value;
+                });
+                command+='+set dmflags '+flagValue+ ' ';
+            }
+            if (dmFlags2.length>0){
+                let flagValue = 0;
+                _.forEach(dmFlags2, flag => {
+                    flagValue+=flag.value;
+                });
+                command+='+set dmflags2 '+flagValue+ ' ';
+            }
+            if (zadmflags.length>0){
+                let flagValue = 0;
+                _.forEach(zadmflags, flag => {
+                    flagValue+=flag.value;
+                });
+                command+='+set zadmflags '+flagValue+ ' ';
+            }
+            if (compatflags.length>0){
+                let flagValue = 0;
+                _.forEach(compatflags, flag => {
+                    flagValue+=flag.value;
+                });
+                command+='+set compatflags '+flagValue+ ' ';
+            }
+            if (zacompatflags.length>0){
+                let flagValue = 0;
+                _.forEach(zacompatflags, flag => {
+                    flagValue+=flag.value;
+                });
+                command+='+set zacompatflags '+flagValue+ ' ';
+            }
+        }
         if (self.sourceportConfigs) {
             if (self.sourceportConfigs.config()) {
                 _.forEach(self.sourceportConfigs.config(), config => {
@@ -1092,6 +1155,35 @@ function AppViewModel() {
         self.loadCommandLineOptions('gameplay');
         self.loadCommandLineOptions('recording');
         self.loadCommandLineOptions('advanced');
+    };
+
+    self.loadDMFlags = () => {
+        self.currentConfig.dmFlags.removeAll();
+        let sourceportType = null;
+        if (self.currentConfig.sourceport() != null) {
+            sourceportType = self.currentConfig.sourceport().sourceportBasetype();
+            if (sourceportType) {
+                sourceportType = sourceportType.toLowerCase();
+            }
+        }
+        if (sourceportType != null) {
+            let newDMFlags = [];
+            let dmFlags = DMFlagsCollection.find({ sourceport: sourceportType });
+            _.forEach(dmFlags, dmFlag => {
+                let newFlag = new DMFlag(
+                    false,
+                    dmFlag.name,
+                    dmFlag.value,
+                    dmFlag.description,
+                    dmFlag.command,
+                    dmFlag.sourceport
+                );
+                newDMFlags.push(newFlag);
+            });
+            if (newDMFlags.length>0){
+                self.currentConfig.dmFlags.push.apply(self.currentConfig.dmFlags, newDMFlags)
+            }
+        }
     };
 
     self.loadCommandLineOptions = category => {
@@ -1942,6 +2034,7 @@ ready(() => {
     viewModel.currentConfig.sourceport.subscribe(data => {
         viewModel.chooseSourceport(data);
         viewModel.loadAllCommandLineOptions();
+        viewModel.loadDMFlags();
     });
     viewModel.currentConfig.iwad.subscribe(data => {
         viewModel.loadLevels();

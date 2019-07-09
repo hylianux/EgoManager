@@ -249,6 +249,118 @@
                                 </div>
                             </div>
                         </div>
+                        <!--Pwad Selection-->
+                        <div class="row">
+                            <div class="col-md-12 border border-secondary">
+                                <div class="row">
+                                    <!--pwad selector-->
+                                    <div class="col-md-6 border border-secondary">
+                                        <div style="margin-top: 10px" class="form-group">
+                                            <input type="text" class="form-control" placeholder="Search for Pwads"
+                                                data-bind="textInput: configSearch, event: { keyup: findConfig()}" />
+                                            <div class="list-group">
+                                                <!--data-bind="foreach: configs"> -->
+                                                <div class="list-group-item list-group-item-action clearfix"
+                                                    data-placement="right" data-html="true">
+                                                    <!--
+                                                                            data-bind="tooltip: tooltipText(), class: displayClass, hidden: $parent.showHiddenFiles()===false && hidden()===true">-->
+                                                    <div class="text-truncate">
+                                                        <!-- data-bind="text: displayName">-->
+                                                        SomePwad
+                                                    </div>
+                                                    <div>
+                                                        <span style="width: 32%"
+                                                            class="btn btn-xs btn-secondary fa fa-arrow-circle-up">
+                                                            <!--
+                                                                                                data-bind="click: $parent.editFile.bind($data, type, $index)">-->
+
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div class="list-group-item list-group-item-action clearfix"
+                                                    data-placement="right" data-html="true">
+                                                    <!--
+                                                                            data-bind="tooltip: tooltipText(), class: displayClass, hidden: $parent.showHiddenFiles()===false && hidden()===true">-->
+                                                    <div class="text-truncate">
+                                                        <!-- data-bind="text: displayName">-->
+                                                        SomeOtherReallyLongRidiculousPwadNameLOLOLOLOLOLOLOLOLOLOLOLOL
+                                                    </div>
+                                                    <div>
+                                                        <span style="width: 32%"
+                                                            class="btn btn-xs btn-secondary fa fa-arrow-circle-up">
+                                                            <!--
+                                                                                            data-bind="click: $parent.editFile.bind($data, type, $index)">-->
+
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 border border-secondary">
+                                        <div style="margin-top: 10px" class="form-group">
+                                            <div class="list-group">
+                                                <!--data-bind="foreach: configs"> -->
+                                                <div class="list-group-item list-group-item-action clearfix"
+                                                    data-placement="right" data-html="true">
+                                                    <!--
+                                                                                data-bind="tooltip: tooltipText(), class: displayClass, hidden: $parent.showHiddenFiles()===false && hidden()===true">-->
+                                                    <div class="text-truncate">
+                                                        <!-- data-bind="text: displayName">-->
+                                                        ChosenPWad
+                                                    </div>
+                                                    <div>
+                                                        <span style="width: 32%"
+                                                            class="btn btn-xs btn-secondary fa fa-arrow-circle-up">
+                                                            <!--
+                                                                                    data-bind="click: $parent.editFile.bind($data, type, $index)">-->
+
+                                                        </span>
+                                                        <span style="width: 32%"
+                                                            class="btn btn-xs btn-secondary fa fa-copy">
+                                                            <!--data-bind="click: hideFile">-->
+
+                                                        </span>
+                                                        <span style="width: 32%"
+                                                            class="btn btn-xs btn-secondary fa fa-remove">
+                                                            <!--data-bind="click: hideFile">-->
+
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div class="list-group-item list-group-item-action clearfix"
+                                                    data-placement="right" data-html="true">
+                                                    <!--
+                                                                                data-bind="tooltip: tooltipText(), class: displayClass, hidden: $parent.showHiddenFiles()===false && hidden()===true">-->
+                                                    <div class="text-truncate">
+                                                        <!-- data-bind="text: displayName">-->
+                                                        OtherChosenReallyLongRidiculousPWADNameLOLOLOLOLOLOLOLOLOLOLOLOL
+                                                    </div>
+                                                    <div>
+                                                        <span style="width: 32%"
+                                                            class="btn btn-xs btn-secondary fa fa-arrow-circle-up">
+                                                            <!--
+                                                                                    data-bind="click: $parent.editFile.bind($data, type, $index)">-->
+
+                                                        </span>
+                                                        <span style="width: 32%"
+                                                            class="btn btn-xs btn-secondary fa fa-copy">
+                                                            <!--data-bind="click: hideFile">-->
+
+                                                        </span>
+                                                        <span style="width: 32%"
+                                                            class="btn btn-xs btn-secondary fa fa-remove">
+                                                            <!--data-bind="click: hideFile">-->
+
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         <!--multiplayer options (only available when gamemode not solo)-->
                         <div class="row" data-bind="hidden: currentConfig.gamemode()==='solo'">
                             <div class="col-md-12 border border-secondary">
@@ -304,9 +416,92 @@
                                         </div>
                                     </div>
                                     <div class="tab-pane fade" id="DMFlags">
-                                        <div class="form-group">
-                                            <input type="text" class="form-control"
-                                                placeholder="Placeholder Search..." />
+                                        <ul class="nav nav-tabs">
+                                            <li class="nav-item">
+                                                <a class="nav-link" data-toggle="tab" href="#flags1">
+                                                    DMFLags
+                                                </a>
+                                            </li>
+                                            <li class="nav-item">
+                                                <a class="nav-link" data-toggle="tab" href="#flags2">
+                                                    DMFlags2
+                                                </a>
+                                            </li>
+                                            <li class="nav-item"
+                                                data-bind="visible: (currentConfig.sourceport()&&currentConfig.sourceport().sourceportBasetype()==='Zandronum')">
+                                                <a class="nav-link" data-toggle="tab" href="#zadmflags">
+                                                    ZADMFlags
+                                                </a>
+                                            </li>
+                                            <li class="nav-item"
+                                                data-bind="visible: (currentConfig.sourceport()&&currentConfig.sourceport().sourceportBasetype()==='Zandronum')">
+                                                <a class="nav-link" data-toggle="tab" href="#compatflags">
+                                                    CompatFlags
+                                                </a>
+                                            </li>
+                                            <li class="nav-item"
+                                                data-bind="visible: (currentConfig.sourceport()&&currentConfig.sourceport().sourceportBasetype()==='Zandronum')">
+                                                <a class="nav-link" data-toggle="tab" href="#zacompatflags">
+                                                    ZACompatFlags
+                                                </a>
+                                            </li>
+                                        </ul>
+                                        <div class="tab-content">
+                                            <div class="tab-pane active" id="flags1"
+                                                data-bind="foreach: currentConfig.dmFlags">
+                                                <!-- ko if: command==='dmflags' -->
+                                                <div class="form-group">
+                                                    <input type="checkbox"
+                                                        data-bind="checked: enabled, uniqueId: enabled" />
+                                                    <label class="control-label" data-toggle="tooltip"
+                                                        data-bind="attr: {title: description}, uniqueFor:enabled, text:name"></label>
+                                                </div>
+                                                <!-- /ko -->
+                                            </div>
+                                            <div class="tab-pane fade" id="flags2"
+                                                data-bind="foreach: currentConfig.dmFlags">
+                                                <!-- ko if: command==='dmflags2' -->
+                                                <div class="form-group">
+                                                    <input type="checkbox"
+                                                        data-bind="checked: enabled, uniqueId: enabled" />
+                                                    <label class="control-label" data-toggle="tooltip"
+                                                        data-bind="attr: {title: description}, uniqueFor:enabled, text:name"></label>
+                                                </div>
+                                                <!-- /ko -->
+                                            </div>
+                                            <div class="tab-pane fade" id="zadmflags"
+                                                data-bind="foreach: currentConfig.dmFlags">
+                                                <!-- ko if: command==='zadmflags' -->
+                                                <div class="form-group">
+                                                    <input type="checkbox"
+                                                        data-bind="checked: enabled, uniqueId: enabled" />
+                                                    <label class="control-label" data-toggle="tooltip"
+                                                        data-bind="attr: {title: description}, uniqueFor:enabled, text:name"></label>
+                                                </div>
+                                                <!-- /ko -->
+                                            </div>
+                                            <div class="tab-pane fade" id="compatflags"
+                                                data-bind="foreach: currentConfig.dmFlags">
+                                                <!-- ko if: command==='compatflags' -->
+                                                <div class="form-group">
+                                                    <input type="checkbox"
+                                                        data-bind="checked: enabled, uniqueId: enabled" />
+                                                    <label class="control-label" data-toggle="tooltip"
+                                                        data-bind="attr: {title: description}, uniqueFor:enabled, text:name"></label>
+                                                </div>
+                                                <!-- /ko -->
+                                            </div>
+                                            <div class="tab-pane fade" id="zacompatflags"
+                                                data-bind="foreach: currentConfig.dmFlags">
+                                                <!-- ko if: command==='zacompatflags' -->
+                                                <div class="form-group">
+                                                    <input type="checkbox"
+                                                        data-bind="checked: enabled, uniqueId: enabled" />
+                                                    <label class="control-label" data-toggle="tooltip"
+                                                        data-bind="attr: {title: description}, uniqueFor:enabled, text:name"></label>
+                                                </div>
+                                                <!-- /ko -->
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="tab-pane fade" id="Networking"
@@ -339,119 +534,6 @@
                                             <!-- ko if: inputType==='files' -->
                                             <input type="file" class="form-control" data-bind="files: value" multiple />
                                             <!-- /ko -->
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <!--DMFlags (only available when gamemode not solo and sourceport not chocolate doom)-->
-                        <!--Pwad Selection-->
-                        <div class="row">
-                            <div class="col-md-12 border border-secondary">
-                                <div class="row">
-                                    <!--pwad selector-->
-                                    <div class="col-md-6 border border-secondary">
-                                        <div style="margin-top: 10px" class="form-group">
-                                            <input type="text" class="form-control" placeholder="Search for Pwads"
-                                                data-bind="textInput: configSearch, event: { keyup: findConfig()}" />
-                                            <div class="list-group">
-                                                <!--data-bind="foreach: configs"> -->
-                                                <div class="list-group-item list-group-item-action clearfix"
-                                                    data-placement="right" data-html="true">
-                                                    <!--
-                                                                        data-bind="tooltip: tooltipText(), class: displayClass, hidden: $parent.showHiddenFiles()===false && hidden()===true">-->
-                                                    <div class="text-truncate">
-                                                        <!-- data-bind="text: displayName">-->
-                                                        SomePwad
-                                                    </div>
-                                                    <div>
-                                                        <span style="width: 32%"
-                                                            class="btn btn-xs btn-secondary fa fa-arrow-circle-up">
-                                                            <!--
-                                                                                            data-bind="click: $parent.editFile.bind($data, type, $index)">-->
-
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                                <div class="list-group-item list-group-item-action clearfix"
-                                                    data-placement="right" data-html="true">
-                                                    <!--
-                                                                        data-bind="tooltip: tooltipText(), class: displayClass, hidden: $parent.showHiddenFiles()===false && hidden()===true">-->
-                                                    <div class="text-truncate">
-                                                        <!-- data-bind="text: displayName">-->
-                                                        SomeOtherReallyLongRidiculousPwadNameLOLOLOLOLOLOLOLOLOLOLOLOL
-                                                    </div>
-                                                    <div>
-                                                        <span style="width: 32%"
-                                                            class="btn btn-xs btn-secondary fa fa-arrow-circle-up">
-                                                            <!--
-                                                                                        data-bind="click: $parent.editFile.bind($data, type, $index)">-->
-
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6 border border-secondary">
-                                        <div style="margin-top: 10px" class="form-group">
-                                            <div class="list-group">
-                                                <!--data-bind="foreach: configs"> -->
-                                                <div class="list-group-item list-group-item-action clearfix"
-                                                    data-placement="right" data-html="true">
-                                                    <!--
-                                                                            data-bind="tooltip: tooltipText(), class: displayClass, hidden: $parent.showHiddenFiles()===false && hidden()===true">-->
-                                                    <div class="text-truncate">
-                                                        <!-- data-bind="text: displayName">-->
-                                                        ChosenPWad
-                                                    </div>
-                                                    <div>
-                                                        <span style="width: 32%"
-                                                            class="btn btn-xs btn-secondary fa fa-arrow-circle-up">
-                                                            <!--
-                                                                                data-bind="click: $parent.editFile.bind($data, type, $index)">-->
-
-                                                        </span>
-                                                        <span style="width: 32%"
-                                                            class="btn btn-xs btn-secondary fa fa-copy">
-                                                            <!--data-bind="click: hideFile">-->
-
-                                                        </span>
-                                                        <span style="width: 32%"
-                                                            class="btn btn-xs btn-secondary fa fa-remove">
-                                                            <!--data-bind="click: hideFile">-->
-
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                                <div class="list-group-item list-group-item-action clearfix"
-                                                    data-placement="right" data-html="true">
-                                                    <!--
-                                                                            data-bind="tooltip: tooltipText(), class: displayClass, hidden: $parent.showHiddenFiles()===false && hidden()===true">-->
-                                                    <div class="text-truncate">
-                                                        <!-- data-bind="text: displayName">-->
-                                                        OtherChosenReallyLongRidiculousPWADNameLOLOLOLOLOLOLOLOLOLOLOLOL
-                                                    </div>
-                                                    <div>
-                                                        <span style="width: 32%"
-                                                            class="btn btn-xs btn-secondary fa fa-arrow-circle-up">
-                                                            <!--
-                                                                                data-bind="click: $parent.editFile.bind($data, type, $index)">-->
-
-                                                        </span>
-                                                        <span style="width: 32%"
-                                                            class="btn btn-xs btn-secondary fa fa-copy">
-                                                            <!--data-bind="click: hideFile">-->
-
-                                                        </span>
-                                                        <span style="width: 32%"
-                                                            class="btn btn-xs btn-secondary fa fa-remove">
-                                                            <!--data-bind="click: hideFile">-->
-
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div>
                                         </div>
                                     </div>
                                 </div>
