@@ -148,7 +148,7 @@
         "enabled": false,
         "inputType": "file",
         "name": "Use Config",
-        "description": "Causes ZDoom to use an alternative configuration file. (Zdoom and Zandronum only: if configfile does not exist, it will be created.)",
+        "description": "Use an alternative configuration file. (Zdoom and Zandronum only: if configfile does not exist, it will be created.)",
         "command": "-config",
         "value": "",
         "sourceports": ["zdoom", "zandronum", "chocolate"],

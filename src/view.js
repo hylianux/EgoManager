@@ -242,7 +242,7 @@ function ConfigChain(
     self.skill = ko.observable(skill);
     self.dmFlags = ko.observableArray();
     if (dmFlags) {
-        _.foreach(dmFlags, dmflag => {
+        _.forEach(dmFlags, dmflag => {
             let newDMFlag = new DMFlag(
                 dmflag.enabled,
                 dmflag.name,
@@ -275,8 +275,8 @@ function ConfigChain(
     }
     self.sourceportConfigs = ko.observableArray();
     if (sourceportConfigs) {
-        _.foreach(Object.keys(sourceportConfigs), category => {
-            _.foreach(sourceportConfigs[category], command => {
+        _.forEach(Object.keys(sourceportConfigs), category => {
+            _.forEach(sourceportConfigs[category], command => {
                 let newCommand = new CommandLineOption(
                     command.enabled,
                     command.name,
@@ -323,6 +323,134 @@ function ConfigChain(
         }
         if (self.skill()) {
             command += '-skill ' + self.skill() + ' ';
+        }
+        if (self.sourceportConfigs) {
+            if (self.sourceportConfigs.config()) {
+                _.forEach(self.sourceportConfigs.config(), config => {
+                    if (config.enabled()) {
+                        let value = '';
+                        if (config.inputType === 'files' || config.inputType === 'directory') {
+                            if (config.value()) {
+                                _.forEach(config.value().split(';'), file => {
+                                    value += '"' + file + '" ';
+                                });
+                                value = value.substring(0, value.length - 1);
+                            }
+                        } else {
+                            value = config.value();
+                        }
+                        command += config.command + ' ' + (value ? value : '') + ' ';
+                    }
+                });
+            }
+            if (self.sourceportConfigs.multiplayer()) {
+                _.forEach(self.sourceportConfigs.multiplayer(), config => {
+                    if (config.enabled()) {
+                        let value = '';
+                        if (config.inputType === 'files' || config.inputType === 'directory') {
+                            if (config.value()) {
+                                _.forEach(config.value().split(';'), file => {
+                                    value += '"' + file + '" ';
+                                });
+                                value = value.substring(0, value.length - 1);
+                            }
+                        } else {
+                            value = config.value();
+                        }
+                        command += config.command + ' ' + (value ? value : '') + ' ';
+                    }
+                });
+            }
+            if (self.sourceportConfigs.networking()) {
+                _.forEach(self.sourceportConfigs.networking(), config => {
+                    if (config.enabled()) {
+                        let value = '';
+                        if (config.inputType === 'files' || config.inputType === 'directory') {
+                            if (config.value()) {
+                                _.forEach(config.value().split(';'), file => {
+                                    value += '"' + file + '" ';
+                                });
+                                value = value.substring(0, value.length - 1);
+                            }
+                        } else {
+                            value = config.value();
+                        }
+                        command += config.command + ' ' + (value ? value : '') + ' ';
+                    }
+                });
+            }
+            if (self.sourceportConfigs.debug()) {
+                _.forEach(self.sourceportConfigs.debug(), config => {
+                    if (config.enabled()) {
+                        let value = '';
+                        if (config.inputType === 'files' || config.inputType === 'directory') {
+                            if (config.value()) {
+                                _.forEach(config.value().split(';'), file => {
+                                    value += '"' + file + '" ';
+                                });
+                                value = value.substring(0, value.length - 1);
+                            }
+                        } else {
+                            value = config.value();
+                        }
+                        command += config.command + ' ' + (value ? value : '') + ' ';
+                    }
+                });
+            }
+            if (self.sourceportConfigs.display()) {
+                _.forEach(self.sourceportConfigs.display(), config => {
+                    if (config.enabled()) {
+                        let value = '';
+                        if (config.inputType === 'files' || config.inputType === 'directory') {
+                            if (config.value()) {
+                                _.forEach(config.value().split(';'), file => {
+                                    value += '"' + file + '" ';
+                                });
+                                value = value.substring(0, value.length - 1);
+                            }
+                        } else {
+                            value = config.value();
+                        }
+                        command += config.command + ' ' + (value ? value : '') + ' ';
+                    }
+                });
+            }
+            if (self.sourceportConfigs.recording()) {
+                _.forEach(self.sourceportConfigs.recording(), config => {
+                    if (config.enabled()) {
+                        let value = '';
+                        if (config.inputType === 'files' || config.inputType === 'directory') {
+                            if (config.value()) {
+                                _.forEach(config.value().split(';'), file => {
+                                    value += '"' + file + '" ';
+                                });
+                                value = value.substring(0, value.length - 1);
+                            }
+                        } else {
+                            value = config.value();
+                        }
+                        command += config.command + ' ' + (value ? value : '') + ' ';
+                    }
+                });
+            }
+            if (self.sourceportConfigs.advanced()) {
+                _.forEach(self.sourceportConfigs.advanced(), config => {
+                    if (config.enabled()) {
+                        let value = '';
+                        if (config.inputType === 'files' || config.inputType === 'directory') {
+                            if (config.value()) {
+                                _.forEach(config.value().split(';'), file => {
+                                    value += '"' + file + '" ';
+                                });
+                                value = value.substring(0, value.length - 1);
+                            }
+                        } else {
+                            value = config.value();
+                        }
+                        command += config.command + ' ' + (value ? value : '') + ' ';
+                    }
+                });
+            }
         }
         return command;
     });
@@ -972,8 +1100,8 @@ function AppViewModel() {
         let sourceportType = null;
         if (self.currentConfig.sourceport() != null) {
             sourceportType = self.currentConfig.sourceport().sourceportBasetype();
-            if (sourceportType){
-                sourceportType=sourceportType.toLowerCase();
+            if (sourceportType) {
+                sourceportType = sourceportType.toLowerCase();
             }
         }
         if (sourceportType != null) {
@@ -1617,7 +1745,6 @@ ready(() => {
     /* eslint-enable no-new */
     $('[data-toggle="tooltip"]').tooltip();
 
- 
     ko.bindingHandlers.uniqueId = {
         init: (element, valueAccessor) => {
             let value = valueAccessor();
@@ -1650,68 +1777,48 @@ ready(() => {
         }
     };
     ko.bindingHandlers.file = {
-        init: function(element, valueAccessor, allBindings) {
-          var fileContents, fileName, allowed, prohibited, reader;
-      
-          if ((typeof valueAccessor()) === "function") {
-            fileContents = valueAccessor();
-          } else {
-            fileContents = valueAccessor()['data'];
-            fileName = valueAccessor()['name'];
-      
-            allowed = valueAccessor()['allowed'];
-            if ((typeof allowed) === 'string') {
-              allowed = [allowed];
-            }
-      
-            prohibited = valueAccessor()['prohibited'];
-            if ((typeof prohibited) === 'string') {
-              prohibited = [prohibited];
-            }
-      
-            reader = (valueAccessor()['reader']);
-          }
-      
-          reader || (reader = new FileReader());
-          reader.onloadend = function() {
-            fileContents(reader.result);
-          }
-      
-          var handler = function() {
-            var file = element.files[0];
-      
-            // Opening the file picker then canceling will trigger a 'change'
-            // event without actually picking a file.
-            if (file === undefined) {
-              fileContents(null);
-              return;
-            }
-      
-            if (allowed) {
-              if (!allowed.some(function(type) { return type === file.type })) {
-                console.log("File "+file.name+" is not an allowed type, ignoring.");
-                fileContents(null);
-                return;
-              }
-            }
-      
-            if (prohibited) {
-              if (prohibited.some(function(type) { return type === file.type })) {
-                console.log("File "+file.name+" is a prohibited type, ignoring.");
-                fileContents(null);
-                return;
-              }
-            }
-      
-            reader.readAsDataURL(file); // A callback (above) will set fileContents
-            if (typeof fileName === "function") {
-              fileName(file.name);
-            }
-          }
-      
-          ko.utils.registerEventHandler(element, 'change', handler);
+        init: (element, valueAccessor) => {
+            let value = valueAccessor();
+            ko.utils.registerEventHandler(element, 'change', () => {
+                if (element.files.length > 0) {
+                    let filepath = element.files[0].path;
+                    value(filepath);
+                }
+            });
         }
-      };
+    };
+    ko.bindingHandlers.files = {
+        init: (element, valueAccessor) => {
+            let value = valueAccessor();
+            ko.utils.registerEventHandler(element, 'change', () => {
+                let files = element.files;
+                if (files.length > 0) {
+                    let filepaths = '';
+                    _.forEach(files, file => {
+                        filepaths += file.path + ';';
+                    });
+                    filepaths = filepaths.substring(0, filepaths.length - 1);
+                    value(filepaths);
+                }
+            });
+        }
+    };
+    ko.bindingHandlers.directory = {
+        init: (element, valueAccessor) => {
+            let value = valueAccessor();
+            ko.utils.registerEventHandler(element, 'change', () => {
+                let files = element.files;
+                if (files.length > 0) {
+                    let filepaths = '';
+                    _.forEach(files, file => {
+                        filepaths += file.path + ';';
+                    });
+                    filepaths = filepaths.substring(0, filepaths.length - 1);
+                    value(filepaths);
+                }
+            });
+        }
+    };
     ko.bindingHandlers.autoResize = {
         init: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
             ko.computed(function() {
