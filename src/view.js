@@ -184,139 +184,104 @@ function ConfigChain(
     let self = this;
     self.configName = ko.observable(configName);
     self.configDescription = ko.observable(configDescription);
-    self.sourceport = ko.observable();
-    if (sourceport) {
-        if (typeof sourceport === 'function') {
-            self.sourceport = sourceport;
-        } else if (typeof sourceport === 'object') {
-            self.sourceport(
-                new File(
-                    sourceport.filepath,
-                    sourceport.filename,
-                    sourceport.authors,
-                    sourceport.metaInput,
-                    sourceport.source,
-                    sourceport.name,
-                    sourceport.quickDescription,
-                    sourceport.longDescription,
-                    sourceport.filetype,
-                    sourceport.hidden,
-                    sourceport.basetype
-                )
-            );
-        }
-    }
-    self.chosenIniFile = ko.observable();
-    if (iniFile) {
-        if (typeof iniFile === 'function') {
-            self.chosenIniFile = iniFile;
-        } else if (typeof iniFile === 'object') {
-            self.chosenIniFile(new IniFile(inifile.filepath, inifile.filename));
-        }
-    }
+    self.sourceport = ko.observable(sourceport);
+    self.chosenIniFile = ko.observable(iniFile);
 
-    self.iwad = ko.observable();
-    if (iwad) {
-        if (typeof iwad === 'function') {
-            self.iwad = iwad;
-        } else if (typeof iwad === 'object') {
-            self.iwad(
-                new File(
-                    iwad.filepath,
-                    iwad.filename,
-                    iwad.authors,
-                    iwad.metaTags,
-                    iwad.source,
-                    iwad.name,
-                    iwad.quickDescription,
-                    iwad.longDescription,
-                    iwad.filetype,
-                    iwad.hidden,
-                    iwad.basetype
-                )
-            );
-        }
-    }
+    self.iwad = ko.observable(iwad);
+
     self.gamemode = ko.observable(gamemode);
     self.level = ko.observable(level);
     self.skill = ko.observable(skill);
     self.dmFlags = ko.observableArray();
-    if (dmFlags) {
-        _.forEach(dmFlags, dmflag => {
-            let newDMFlag = new DMFlag(
-                dmflag.enabled,
-                dmflag.name,
-                dmflag.value,
-                dmflag.description,
-                dmflag.command,
-                dmflag.sourceport
-            );
-            self.dmFlags.push(newDMFlag);
-        });
-    }
-    self.pwads = ko.observableArray();
-    if (pwads) {
-        _.forEach(pwads, pwad => {
-            let newPWad = new File(
-                pwad.filepath,
-                pwad.filename,
-                pwad.author,
-                pwad.metaTags,
-                pwad.source,
-                pwad.name,
-                pwad.quickDescription,
-                pwad.longDescription,
-                pwad.filetype,
-                pwad.hidden,
-                pwad.basetype
-            );
-            self.pwads.push(newPWad);
-        });
-    }
-    self.sourceportConfigs = ko.observableArray();
-    if (sourceportConfigs) {
-        _.forEach(Object.keys(sourceportConfigs), category => {
-            _.forEach(sourceportConfigs[category], command => {
-                let newCommand = new CommandLineOption(
-                    command.enabled,
-                    command.name,
-                    command.inputType,
-                    command.description,
-                    command.command,
-                    command.value,
-                    command.sourceports,
-                    command.category,
-                    command.valueRange,
-                    command.valueset,
-                    command.uniqueCommandId
+    self.setDMFlags = dmFlags => {
+        if (dmFlags) {
+            self.dmFlags.removeAll();
+            _.forEach(dmFlags, dmflag => {
+                let newDMFlag = new DMFlag(
+                    dmflag.enabled,
+                    dmflag.name,
+                    dmflag.value,
+                    dmflag.description,
+                    dmflag.command,
+                    dmflag.sourceport
                 );
-                self.sourceportConfigs[category].push(newCommand);
+                self.dmFlags.push(newDMFlag);
             });
-        });
-    } else {
-        self.sourceportConfigs = {
-            config: ko.observableArray(),
-            multiplayer: ko.observableArray(),
-            networking: ko.observableArray(),
-            debug: ko.observableArray(),
-            display: ko.observableArray(),
-            gameplay: ko.observableArray(),
-            recording: ko.observableArray(),
-            advanced: ko.observableArray()
-        };
-    }
+        }
+    };
+    self.setDMFlags(dmFlags);
+
+    self.pwads = ko.observableArray();
+    self.setPwads = pwads => {
+        if (pwads) {
+            self.pwads.removeAll();
+            _.forEach(pwads, pwad => {
+                let newPWad = new File(
+                    pwad.filepath,
+                    pwad.filename,
+                    pwad.author,
+                    pwad.metaTags,
+                    pwad.source,
+                    pwad.name,
+                    pwad.quickDescription,
+                    pwad.longDescription,
+                    pwad.filetype,
+                    pwad.hidden,
+                    pwad.basetype
+                );
+                self.pwads.push(newPWad);
+            });
+        }
+    };
+    self.setPwads(pwads);
+
+    self.setSourceportConfigs = sourceportConfigs => {
+        if (sourceportConfigs) {
+            _.forEach(Object.keys(sourceportConfigs), category => {
+                self.sourceportConfigs[category].removeAll();
+                _.forEach(sourceportConfigs[category], command => {
+                    let newCommand = new CommandLineOption(
+                        command.enabled,
+                        command.name,
+                        command.inputType,
+                        command.description,
+                        command.command,
+                        command.value,
+                        command.sourceports,
+                        command.category,
+                        command.valueRange,
+                        command.valueset,
+                        command.uniqueCommandId
+                    );
+                    self.sourceportConfigs[category].push(newCommand);
+                });
+            });
+        }
+    };
+
+    self.sourceportConfigs = {
+        config: ko.observableArray(),
+        multiplayer: ko.observableArray(),
+        networking: ko.observableArray(),
+        debug: ko.observableArray(),
+        display: ko.observableArray(),
+        gameplay: ko.observableArray(),
+        recording: ko.observableArray(),
+        advanced: ko.observableArray()
+    };
+    self.setSourceportConfigs(sourceportConfigs);
 
     //this will be generated from the current config chain
     self.generatedCommand = ko.computed(() => {
         let command = '';
         if (self.sourceport()) {
-            command += self.sourceport().filepath + ' ';
+            command += self.sourceport() + ' ';
         }
         if (self.iwad()) {
-            command += '-iwad ' + self.iwad().filepath + ' ';
+            command += '-iwad ' + self.iwad() + ' ';
         }
         if (self.chosenIniFile()) {
-            command += '-config ' + self.chosenIniFile().filepath + ' ';
+            command += '-config ' + self.chosenIniFile() + ' ';
         }
         if (self.level()) {
             command += '-warp ' + self.level() + ' ';
@@ -324,20 +289,20 @@ function ConfigChain(
         if (self.skill()) {
             command += '-skill ' + self.skill() + ' ';
         }
-        if (self.pwads() && self.pwads().length>0){
+        if (self.pwads() && self.pwads().length > 0) {
             command += '-file ';
             _.forEach(self.pwads(), pwad => {
-                command+= '"'+pwad.filepath+'" '
+                command += '"' + pwad.filepath + '" ';
             });
         }
-        if (self.dmFlags()){
+        if (self.dmFlags()) {
             let dmFlags = [];
             let dmFlags2 = [];
             let zadmflags = [];
             let compatflags = [];
             let zacompatflags = [];
             _.forEach(self.dmFlags(), dmFlag => {
-                if (dmFlag.enabled()){
+                if (dmFlag.enabled()) {
                     switch (dmFlag.command) {
                         case 'dmflags':
                             dmFlags.push(dmFlag);
@@ -357,40 +322,40 @@ function ConfigChain(
                     }
                 }
             });
-            if (dmFlags.length>0){
+            if (dmFlags.length > 0) {
                 let flagValue = 0;
                 _.forEach(dmFlags, flag => {
-                    flagValue+=flag.value;
+                    flagValue += flag.value;
                 });
-                command+='+set dmflags '+flagValue+ ' ';
+                command += '+dmflags ' + flagValue + ' ';
             }
-            if (dmFlags2.length>0){
+            if (dmFlags2.length > 0) {
                 let flagValue = 0;
                 _.forEach(dmFlags2, flag => {
-                    flagValue+=flag.value;
+                    flagValue += flag.value;
                 });
-                command+='+set dmflags2 '+flagValue+ ' ';
+                command += '+dmflags2 ' + flagValue + ' ';
             }
-            if (zadmflags.length>0){
+            if (zadmflags.length > 0) {
                 let flagValue = 0;
                 _.forEach(zadmflags, flag => {
-                    flagValue+=flag.value;
+                    flagValue += flag.value;
                 });
-                command+='+set zadmflags '+flagValue+ ' ';
+                command += '+zadmflags ' + flagValue + ' ';
             }
-            if (compatflags.length>0){
+            if (compatflags.length > 0) {
                 let flagValue = 0;
                 _.forEach(compatflags, flag => {
-                    flagValue+=flag.value;
+                    flagValue += flag.value;
                 });
-                command+='+set compatflags '+flagValue+ ' ';
+                command += '+compatflags ' + flagValue + ' ';
             }
-            if (zacompatflags.length>0){
+            if (zacompatflags.length > 0) {
                 let flagValue = 0;
                 _.forEach(zacompatflags, flag => {
-                    flagValue+=flag.value;
+                    flagValue += flag.value;
                 });
-                command+='+set zacompatflags '+flagValue+ ' ';
+                command += '+zacompatflags ' + flagValue + ' ';
             }
         }
         if (self.sourceportConfigs) {
@@ -948,6 +913,7 @@ function AppViewModel() {
         self.buildSourceportCollection(reloadFiles);
     };
     self.chosenFile = ko.observable();
+    self.chosenConfig = ko.observable();
     self.editFile = (filetype, index) => {
         let file = {};
         switch (filetype()) {
@@ -1079,12 +1045,12 @@ function AppViewModel() {
             );
             newPwads.push(newPwad);
             let inchosen = false;
-            _.forEach(self.currentConfig.pwads, pwad => {
-                if (newPwad.filepath===pwad.filepath){
+            _.forEach(self.currentConfig().pwads(), pwad => {
+                if (newPwad.filepath === pwad.filepath) {
                     inchosen = true;
                 }
             });
-            if (!inchosen){
+            if (!inchosen) {
                 newAvailablePwads.push(newPwad);
             }
         });
@@ -1115,6 +1081,31 @@ function AppViewModel() {
         self.files.sourceports.removeAll();
         self.files.sourceports.push.apply(self.files.sourceports, newSourceports);
     };
+
+    self.configChains = ko.observableArray();
+    self.loadConfigChains = () => {
+        let allConfigChains = configCollection.find();
+        let newConfigChains = [];
+        _.forEach(allConfigChains, configChain => {
+            let newConfigChain = new ConfigChain(
+                configChain.configName,
+                configChain.configDescription,
+                configChain.sourceport,
+                configChain.iniFile,
+                configChain.iwad,
+                configChain.gamemode,
+                configChain.level,
+                configChain.skill,
+                configChain.pwads,
+                configChain.dmFlags,
+                configChain.sourceportConfigs
+            );
+            newConfigChains.push(newConfigChain);
+        });
+        self.configChains.removeAll();
+        self.configChains.push.apply(self.configChains, newConfigChains);
+    };
+
     self.iniFiles = ko.observableArray();
 
     self.chooseSourceport = sourceport => {
@@ -1124,13 +1115,23 @@ function AppViewModel() {
             self.iniFiles.removeAll();
         }
     };
-
+    self.getIwad = filepath => {
+        let iwad = {};
+        for (let i = 0; i < self.files.iwads().length; ++i) {
+            if (self.files.iwads()[i].filepath === filepath) {
+                iwad = self.files.iwads()[i];
+                break;
+            }
+        }
+        return iwad;
+    };
     self.loadLevels = () => {
         self.levels.removeAll();
         let query = null;
         let basetype = null;
-        if (self.currentConfig.iwad() != null) {
-            basetype = self.currentConfig.iwad().iwadBasetype();
+        if (self.currentConfig().iwad() != null) {
+            let iwad = self.getIwad(self.currentConfig().iwad());
+            basetype = iwad.iwadBasetype();
             query = { [basetype]: { $exists: true, $ne: null } };
         }
         let allLevels = levelsCollection.find(query);
@@ -1147,8 +1148,9 @@ function AppViewModel() {
         self.skillLevels.removeAll();
         let query = null;
         let iwadType = null;
-        if (self.currentConfig.iwad() != null) {
-            iwadType = self.currentConfig.iwad().iwadBasetype();
+        if (self.currentConfig().iwad() != null) {
+            let iwad = self.getIwad(self.currentConfig().iwad());
+            iwadType = iwad.iwadBasetype();
         } else {
             iwadType = 'doom';
         }
@@ -1176,11 +1178,23 @@ function AppViewModel() {
         self.loadCommandLineOptions('advanced');
     };
 
+    self.getSourceport = filepath => {
+        let sourceport = {};
+        for (let i = 0; i < self.files.sourceports().length; ++i) {
+            if (self.files.sourceports()[i].filepath === filepath) {
+                sourceport = self.files.sourceports()[i];
+                break;
+            }
+        }
+        return sourceport;
+    };
+
     self.loadDMFlags = () => {
-        self.currentConfig.dmFlags.removeAll();
+        self.currentConfig().dmFlags.removeAll();
         let sourceportType = null;
-        if (self.currentConfig.sourceport() != null) {
-            sourceportType = self.currentConfig.sourceport().sourceportBasetype();
+        if (self.currentConfig().sourceport() != null) {
+            let sourceport = self.getSourceport(self.currentConfig().sourceport());
+            sourceportType = sourceport.sourceportBasetype();
             if (sourceportType) {
                 sourceportType = sourceportType.toLowerCase();
             }
@@ -1199,18 +1213,19 @@ function AppViewModel() {
                 );
                 newDMFlags.push(newFlag);
             });
-            if (newDMFlags.length>0){
-                self.currentConfig.dmFlags.push.apply(self.currentConfig.dmFlags, newDMFlags)
+            if (newDMFlags.length > 0) {
+                self.currentConfig().dmFlags.push.apply(self.currentConfig().dmFlags, newDMFlags);
             }
         }
     };
 
     self.loadCommandLineOptions = category => {
-        self.currentConfig.sourceportConfigs[category].removeAll();
+        self.currentConfig().sourceportConfigs[category].removeAll();
         let query = null;
         let sourceportType = null;
-        if (self.currentConfig.sourceport() != null) {
-            sourceportType = self.currentConfig.sourceport().sourceportBasetype();
+        if (self.currentConfig().sourceport() != null) {
+            let sourceport = self.getSourceport(self.currentConfig().sourceport());
+            sourceportType = sourceport.sourceportBasetype();
             if (sourceportType) {
                 sourceportType = sourceportType.toLowerCase();
             }
@@ -1236,8 +1251,8 @@ function AppViewModel() {
                 newOptions.push(newOption);
             });
             if (newOptions.length > 0) {
-                self.currentConfig.sourceportConfigs[category].push.apply(
-                    self.currentConfig.sourceportConfigs[category],
+                self.currentConfig().sourceportConfigs[category].push.apply(
+                    self.currentConfig().sourceportConfigs[category],
                     newOptions
                 );
             }
@@ -1245,7 +1260,7 @@ function AppViewModel() {
     };
 
     self.getIniFilesForGivenSourceport = sourceport => {
-        let directory = path.dirname(sourceport.filepath);
+        let directory = path.dirname(sourceport);
         self.iniFiles.removeAll();
         function walk(directory) {
             fs.readdir(directory, (e, files) => {
@@ -1782,21 +1797,23 @@ function AppViewModel() {
         });
     };
 
-    self.currentConfig = {};
+    self.currentConfig = ko.observable();
 
     self.loadDefaultConfig = () => {
-        self.currentConfig = new ConfigChain(
-            'Default',
-            'This is the Default Configuration',
-            null,
-            null,
-            null,
-            'solo',
-            null,
-            null,
-            null,
-            null,
-            null
+        self.currentConfig(
+            new ConfigChain(
+                'Default',
+                'This is the Default Configuration',
+                null,
+                null,
+                null,
+                'solo',
+                null,
+                null,
+                null,
+                null,
+                null
+            )
         );
     };
 
@@ -1806,7 +1823,29 @@ function AppViewModel() {
 
     self.exportCurrentConfig = () => {};
 
-    self.saveCurrentConfig = () => {};
+    self.saveCurrentConfig = () => {
+        let config = ko.mapping.toJS(self.currentConfig);
+        upsert(configCollection, 'configName', config);
+        self.loadConfigChains();
+    };
+
+    self.loadConfig = () => {
+        if (self.chosenConfig()) {
+            let newConfig = configCollection.find({ configName: self.chosenConfig() })[0];
+            self.currentConfig().configName(newConfig.configName);
+            self.currentConfig().configDescription(newConfig.configDescription);
+            self.currentConfig().sourceport(newConfig.sourceport);
+            self.currentConfig().iwad(newConfig.iwad);
+            self.currentConfig().gamemode(newConfig.gamemode);
+            self.currentConfig().level(newConfig.level);
+            self.currentConfig().skill(newConfig.skill);
+            self.currentConfig().setPwads(newConfig.pwads);
+            self.currentConfig().setDMFlags(newConfig.dmFlags);
+            self.currentConfig().setSourceportConfigs(newConfig.sourceportConfigs);
+            window.setTimeout(()=>{self.currentConfig().chosenIniFile(newConfig.chosenIniFile)}, 100);
+            self.loadPwadFiles();
+        }
+    };
 
     self.findConfig = () => {};
 
@@ -1816,7 +1855,7 @@ function AppViewModel() {
         //self.goToView(self.views[0]);
         console.log('loading files');
         self.loadCollections(true);
-
+        self.loadConfigChains();
         //TODO: remove this when you can start loading configs from files.
         self.loadDefaultConfig();
     };
@@ -2050,26 +2089,33 @@ ready(() => {
     };
 
     ko.bindingHandlers.visibleAndSelect = {
-        update:function (element, valueAccessor) {
+        update: function(element, valueAccessor) {
             ko.bindingHandlers.visible.update(element, valueAccessor);
             if (valueAccessor()) {
-                setTimeout(function () {
-                    $(element).find("input").focus().select();
+                setTimeout(function() {
+                    $(element)
+                        .find('input')
+                        .focus()
+                        .select();
                 }, 0); //new tasks are not in DOM yet
             }
         }
     };
 
     let viewModel = new AppViewModel();
-    viewModel.currentConfig.sourceport.subscribe(data => {
+    viewModel.currentConfig().sourceport.subscribe(data => {
         viewModel.chooseSourceport(data);
         viewModel.loadAllCommandLineOptions();
         viewModel.loadDMFlags();
     });
-    viewModel.currentConfig.iwad.subscribe(data => {
+    viewModel.currentConfig().iwad.subscribe(data => {
         viewModel.loadLevels();
         viewModel.loadSkillLevels();
     });
+    viewModel.chosenConfig.subscribe(data => {
+        viewModel.loadConfig();
+    });
+
     ko.applyBindings(viewModel);
 });
 // This is a simple *viewmodel* - JavaScript that defines the data and behavior of your UI

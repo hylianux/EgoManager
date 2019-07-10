@@ -11,6 +11,7 @@ After cloning or downloading the repository, simply run:
 
 * `npm start` to start the app (by default, it runs in "dev mode")
 * `npm run build-exe` to export the app as an executable
+  * you can run the app in dev mode by running EgoManager.exe with the -dev parameter
 * `npm run build-package` to build, export as an executable, AND archive the whole thing in a nice neat little .7z file.
 
 ## Still to do

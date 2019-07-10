@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="bootstrap.css" />
     <script src="view.js"></script>
     <script src="knockout-sortable.js"></script>
+    <script src="knockout-mapping-plugin.js"></script>
 </head>
 
 <body>
@@ -61,7 +62,7 @@
                         <textarea class="form-control"
                             style="height: 100%; overflow: hidden; resize: none; font-family: 'Ubuntu-Mono'; padding: 0px;"
                             readonly="true" placeholder="Generated Command Here"
-                            data-bind="textInput: currentConfig.generatedCommand, autoResize: currentConfig.generatedCommand"></textarea>
+                            data-bind="textInput: currentConfig().generatedCommand, autoResize: currentConfig().generatedCommand"></textarea>
 
                     </div>
                 </div>
@@ -77,9 +78,8 @@
                                         title="Previously-run configurations will appear here.">
                                         Previous Config Chains
                                     </label>
-                                    <select id="previousConfigs" class="form-control">
-                                        <option>Select from previous 50 configs</option>
-                                    </select>
+                                    <select id="previousConfigs" class="form-control"
+                                    data-bind="options: configChains, optionsText: 'configName', optionsValue:'configName', value: chosenConfig, optionsCaption: 'Select from previous 50 configs'"></select>
                                 </div>
                             </div>
                         </div>
@@ -92,7 +92,7 @@
                                         Config Chain Name
                                     </label>
                                     <input id="configName" type="text" class="form-control"
-                                        data-bind="textInput: currentConfig.configName" placeholder="Config Name" />
+                                        data-bind="textInput: currentConfig().configName" placeholder="Config Name" />
                                 </div>
                                 <div class="form-group">
                                     <label class="control-label" for="configDescription" data-toggle="tooltip"
@@ -101,7 +101,7 @@
                                     </label>
                                     <textarea id="configDescription" class="form-control" rows="2"
                                         placeholder="Config Description"
-                                        data-bind="textInput: currentConfig.configDescription">
+                                        data-bind="textInput: currentConfig().configDescription">
                                     </textarea>
                                 </div>
                                 <div class="form-group">
@@ -190,7 +190,7 @@
                                                 Select Your Sourceport/Engine
                                             </label>
                                             <select id="sourceportSelect" class="form-control"
-                                                data-bind="options: files.sourceports, optionsText: 'displayName', value: currentConfig.sourceport, optionsCaption: 'Choose Sourceport'"></select>
+                                                data-bind="options: files.sourceports, optionsText: 'displayName', value: currentConfig().sourceport, optionsValue: 'filepath', optionsCaption: 'Choose Sourceport'"></select>
 
                                         </div>
                                         <div class="form-group">
@@ -199,7 +199,7 @@
                                                 Select your Ini Config
                                             </label>
                                             <select id="iniSelect" class="form-control"
-                                                data-bind="options: iniFiles, optionsText: 'filename', value: currentConfig.chosenIniFile, optionsCaption: 'Choose Ini File'"></select>
+                                                data-bind="options: iniFiles, optionsText: 'filename', value: currentConfig().chosenIniFile, optionsValue: 'filepath', optionsCaption: 'Choose Ini File'"></select>
                                         </div>
                                     </div>
                                 </div>
@@ -213,14 +213,14 @@
                                                 Select your Iwad/Game
                                             </label>
                                             <select id="iwadSelect" class="form-control"
-                                                data-bind="options: files.iwads, optionsText: 'displayName', value: currentConfig.iwad, optionsCaption: 'Choose Iwad'"></select>
+                                                data-bind="options: files.iwads, optionsText: 'displayName', optionsValue: 'filepath', value: currentConfig().iwad, optionsCaption: 'Choose Iwad'"></select>
                                         </div>
                                         <div class="form-group">
                                             <label for="gamemodeSelect" class="control-label" data-toggle="tooltip"
                                                 title="Choose Solo for Singleplayer, Co-op for Online Co-op, or Deathmatch for Online competitive play.  Solo-net will create a singleplayer game inside a local offline co-op server, allowing you to play through the game alone as though you were playing in online co-op.">Select
                                                 Gamemode</label>
                                             <select id="gamemodeSelect" class="form-control"
-                                                data-bind="options: gamemodes, optionsText: 'displayText', optionsValue:'value', value: currentConfig.gamemode, optionsCaption: 'Choose Gamemode'"></select>
+                                                data-bind="options: gamemodes, optionsText: 'displayText', optionsValue:'value', value: currentConfig().gamemode, optionsCaption: 'Choose Gamemode'"></select>
                                         </div>
                                     </div>
                                 </div>
@@ -235,7 +235,7 @@
                                             </label>
                                             <input id="mapInput" type="text" class="form-control"
                                                 placeholder="Select Map"
-                                                data-bind="jqAuto: {autoFocus: true}, jqAutoSource: levels, jqAutoValue: currentConfig.level, jqAutoSourceLabel: 'displayName', jqAutoSourceInputValue: 'name', jqAutoSourceValue: 'warptext'" />
+                                                data-bind="jqAuto: {autoFocus: true}, jqAutoSource: levels, jqAutoValue: currentConfig().level, jqAutoSourceLabel: 'displayName', jqAutoSourceInputValue: 'name', jqAutoSourceValue: 'warptext'" />
                                         </div>
                                         <div class="form-group">
                                             <label class="control-label" for="skillSelect" data-toggle="tooltip"
@@ -243,7 +243,7 @@
                                                 Select your skill level/difficulty
                                             </label>
                                             <select id="skillSelect" class="form-control"
-                                                data-bind="options: skillLevels, optionsText: 'name', optionsValue:'skillLevel', value: currentConfig.skill, optionsCaption: 'Choose Skill Level'"></select>
+                                                data-bind="options: skillLevels, optionsText: 'name', optionsValue:'skillLevel', value: currentConfig().skill, optionsCaption: 'Choose Skill Level'"></select>
                                         </div>
                                     </div>
                                 </div>
@@ -265,7 +265,7 @@
                                     <div class="col-md-6 border border-secondary"
                                         data-bind="sortable: { template: 'taskTmpl', data: availablePwads }"></div>
                                     <div class="col-md-6 border border-secondary"
-                                        data-bind="sortable: { template: 'taskTmpl', data: currentConfig.pwads }"></div>
+                                        data-bind="sortable: { template: 'taskTmpl', data: currentConfig().pwads }"></div>
                                     <script id="taskTmpl" type="text/html"><div class="item">
                                             <span>
                                                <a href="#" class="nav-link" data-bind="text: displayName"></a>
@@ -275,7 +275,7 @@
                             </div>
                         </div>
                         <!--multiplayer options (only available when gamemode not solo)-->
-                        <div class="row" data-bind="hidden: currentConfig.gamemode()==='solo'">
+                        <div class="row" data-bind="hidden: currentConfig().gamemode()==='solo'">
                             <div class="col-md-12 border border-secondary">
                                 <ul class="nav nav-tabs">
                                     <li class="nav-item">
@@ -284,7 +284,7 @@
                                         </a>
                                     </li>
                                     <li class="nav-item"
-                                        data-bind="hidden: (currentConfig.gamemode()==='solo'||(currentConfig.sourceport()&&currentConfig.sourceport().sourceportBasetype()==='Chocolate'))">
+                                        data-bind="hidden: (currentConfig().gamemode()==='solo'||(currentConfig().sourceport()&&getSourceport(currentConfig().sourceport()).sourceportBasetype()==='Chocolate'))">
                                         <a class="nav-link" data-toggle="tab" href="#DMFlags">
                                             DMFlags
                                         </a>
@@ -297,7 +297,7 @@
                                 </ul>
                                 <div class="tab-content">
                                     <div class="tab-pane active" id="Multiplayer"
-                                        data-bind="foreach: currentConfig.sourceportConfigs.multiplayer">
+                                        data-bind="foreach: currentConfig().sourceportConfigs.multiplayer">
                                         <div class="form-group">
                                             <input type="checkbox" data-bind="checked: enabled, uniqueId: enabled" />
                                             <label class="control-label" data-toggle="tooltip"
@@ -332,7 +332,7 @@
                                         <ul class="nav nav-tabs">
                                             <li class="nav-item">
                                                 <a class="nav-link" data-toggle="tab" href="#flags1">
-                                                    DMFLags
+                                                    DMFlags
                                                 </a>
                                             </li>
                                             <li class="nav-item">
@@ -341,19 +341,19 @@
                                                 </a>
                                             </li>
                                             <li class="nav-item"
-                                                data-bind="visible: (currentConfig.sourceport()&&currentConfig.sourceport().sourceportBasetype()==='Zandronum')">
+                                                data-bind="visible: (currentConfig().sourceport()&&getSourceport(currentConfig().sourceport()).sourceportBasetype()==='Zandronum')">
                                                 <a class="nav-link" data-toggle="tab" href="#zadmflags">
                                                     ZADMFlags
                                                 </a>
                                             </li>
                                             <li class="nav-item"
-                                                data-bind="visible: (currentConfig.sourceport()&&currentConfig.sourceport().sourceportBasetype()==='Zandronum')">
+                                                data-bind="visible: (currentConfig().sourceport()&&getSourceport(currentConfig().sourceport()).sourceportBasetype()==='Zandronum')">
                                                 <a class="nav-link" data-toggle="tab" href="#compatflags">
                                                     CompatFlags
                                                 </a>
                                             </li>
                                             <li class="nav-item"
-                                                data-bind="visible: (currentConfig.sourceport()&&currentConfig.sourceport().sourceportBasetype()==='Zandronum')">
+                                                data-bind="visible: (currentConfig().sourceport()&&getSourceport(currentConfig().sourceport()).sourceportBasetype()==='Zandronum')">
                                                 <a class="nav-link" data-toggle="tab" href="#zacompatflags">
                                                     ZACompatFlags
                                                 </a>
@@ -361,7 +361,7 @@
                                         </ul>
                                         <div class="tab-content">
                                             <div class="tab-pane active" id="flags1"
-                                                data-bind="foreach: currentConfig.dmFlags">
+                                                data-bind="foreach: currentConfig().dmFlags">
                                                 <!-- ko if: command==='dmflags' -->
                                                 <div class="form-group">
                                                     <input type="checkbox"
@@ -372,7 +372,7 @@
                                                 <!-- /ko -->
                                             </div>
                                             <div class="tab-pane fade" id="flags2"
-                                                data-bind="foreach: currentConfig.dmFlags">
+                                                data-bind="foreach: currentConfig().dmFlags">
                                                 <!-- ko if: command==='dmflags2' -->
                                                 <div class="form-group">
                                                     <input type="checkbox"
@@ -383,7 +383,7 @@
                                                 <!-- /ko -->
                                             </div>
                                             <div class="tab-pane fade" id="zadmflags"
-                                                data-bind="foreach: currentConfig.dmFlags">
+                                                data-bind="foreach: currentConfig().dmFlags">
                                                 <!-- ko if: command==='zadmflags' -->
                                                 <div class="form-group">
                                                     <input type="checkbox"
@@ -394,7 +394,7 @@
                                                 <!-- /ko -->
                                             </div>
                                             <div class="tab-pane fade" id="compatflags"
-                                                data-bind="foreach: currentConfig.dmFlags">
+                                                data-bind="foreach: currentConfig().dmFlags">
                                                 <!-- ko if: command==='compatflags' -->
                                                 <div class="form-group">
                                                     <input type="checkbox"
@@ -405,7 +405,7 @@
                                                 <!-- /ko -->
                                             </div>
                                             <div class="tab-pane fade" id="zacompatflags"
-                                                data-bind="foreach: currentConfig.dmFlags">
+                                                data-bind="foreach: currentConfig().dmFlags">
                                                 <!-- ko if: command==='zacompatflags' -->
                                                 <div class="form-group">
                                                     <input type="checkbox"
@@ -418,7 +418,7 @@
                                         </div>
                                     </div>
                                     <div class="tab-pane fade" id="Networking"
-                                        data-bind="foreach: currentConfig.sourceportConfigs.networking">
+                                        data-bind="foreach: currentConfig().sourceportConfigs.networking">
                                         <div class="form-group">
                                             <input type="checkbox" data-bind="checked: enabled, uniqueId: enabled" />
                                             <label class="control-label" data-toggle="tooltip"
@@ -454,7 +454,7 @@
                         </div>
                         <!--Sourceport Configs-->
                         <div class="row">
-                            <div data-bind="visible: currentConfig.sourceport()" class="col-md-12 border border-secondary">
+                            <div data-bind="visible: currentConfig().sourceport()" class="col-md-12 border border-secondary">
                                 <!-- Configuration selection-->
                                 <ul class="nav nav-tabs">
                                     <li class="nav-item">
@@ -490,7 +490,7 @@
                                 </ul>
                                 <div class="tab-content">
                                     <div class="tab-pane active" id="Config"
-                                        data-bind="foreach: currentConfig.sourceportConfigs.config">
+                                        data-bind="foreach: currentConfig().sourceportConfigs.config">
                                         <div class="form-group">
                                             <input type="checkbox" data-bind="checked: enabled, uniqueId: enabled" />
                                             <label class="control-label" data-toggle="tooltip"
@@ -522,7 +522,7 @@
                                         </div>
                                     </div>
                                     <div class="tab-pane fade" id="Display"
-                                        data-bind="foreach: currentConfig.sourceportConfigs.display">
+                                        data-bind="foreach: currentConfig().sourceportConfigs.display">
                                         <div class="form-group">
                                             <input type="checkbox" data-bind="checked: enabled, uniqueId: enabled" />
                                             <label class="control-label" data-toggle="tooltip"
@@ -554,7 +554,7 @@
                                         </div>
                                     </div>
                                     <div class="tab-pane fade" id="Gameplay"
-                                        data-bind="foreach: currentConfig.sourceportConfigs.gameplay">
+                                        data-bind="foreach: currentConfig().sourceportConfigs.gameplay">
                                         <div class="form-group">
                                             <input type="checkbox" data-bind="checked: enabled, uniqueId: enabled" />
                                             <label class="control-label" data-toggle="tooltip"
@@ -586,7 +586,7 @@
                                         </div>
                                     </div>
                                     <div class="tab-pane fade" id="Recording"
-                                        data-bind="foreach: currentConfig.sourceportConfigs.recording">
+                                        data-bind="foreach: currentConfig().sourceportConfigs.recording">
                                         <div class="form-group">
                                             <input type="checkbox" data-bind="checked: enabled, uniqueId: enabled" />
                                             <label class="control-label" data-toggle="tooltip"
@@ -618,7 +618,7 @@
                                         </div>
                                     </div>
                                     <div class="tab-pane fade" id="Advanced"
-                                        data-bind="foreach: currentConfig.sourceportConfigs.advanced">
+                                        data-bind="foreach: currentConfig().sourceportConfigs.advanced">
                                         <div class="form-group">
                                             <input type="checkbox" data-bind="checked: enabled, uniqueId: enabled" />
                                             <label class="control-label" data-toggle="tooltip"
@@ -650,7 +650,7 @@
                                         </div>
                                     </div>
                                     <div class="tab-pane fade" id="Debug"
-                                        data-bind="foreach: currentConfig.sourceportConfigs.debug">
+                                        data-bind="foreach: currentConfig().sourceportConfigs.debug">
                                         <div class="form-group">
                                             <input type="checkbox" data-bind="checked: enabled, uniqueId: enabled" />
                                             <label class="control-label" data-toggle="tooltip"
@@ -683,8 +683,8 @@
                                     </div>
                                 </div>
                             </div>
-                            <div data-bind="hidden: currentConfig.sourceport()">
-                                <h4>Choose a sourceport to see configuration options</h4>
+                            <div data-bind="hidden: currentConfig().sourceport()">
+                                <h5>Choose a sourceport to see configuration options</h5>
                             </div>
                         </div>
                     </div>
