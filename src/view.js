@@ -66,6 +66,7 @@ let iwadCollection = getCollection('iwads');
 let pwadCollection = getCollection('pwads');
 let sourceportCollection = getCollection('sourceports');
 let configCollection = getCollection('configs');
+let previousConfigCollection = getCollection('previousConfigs');
 let commandLineCollection = getCollection('commands');
 let DMFlagsCollection = getCollection('DMFlags');
 let levelsCollection = getCollection('levels');
@@ -154,6 +155,9 @@ function upsert(collection, idQuery, record) {
     }
     let existingRecord = collection.findOne(query);
     if (existingRecord) {
+        if (record.$loki){
+            delete record.$loki;
+        }
         // The record exists. Do an update.
         let updatedRecord = existingRecord;
         // Only update the fields contained in `record`. All fields not contained
@@ -163,12 +167,16 @@ function upsert(collection, idQuery, record) {
         });
         collection.update(updatedRecord);
     } else {
+        if (record.$loki){
+            delete record.$loki;
+        }
         // The record doesn't exist. Do an insert.
         collection.insert(record);
     }
 }
 
 function ConfigChain(
+    id,
     configName,
     configDescription,
     sourceport,
@@ -182,6 +190,7 @@ function ConfigChain(
     sourceportConfigs
 ) {
     let self = this;
+    self.id = ko.observable(id);
     self.configName = ko.observable(configName);
     self.configDescription = ko.observable(configDescription);
     self.sourceport = ko.observable(sourceport);
@@ -270,6 +279,18 @@ function ConfigChain(
         advanced: ko.observableArray()
     };
     self.setSourceportConfigs(sourceportConfigs);
+
+    self.displayName = ko.computed(() => {
+        let sourceportName = '';
+        let iwadName = '';
+        if (self.sourceport()) {
+            sourceportName = path.basename(self.sourceport());
+        }
+        if (self.iwad()) {
+            iwadName = path.basename(self.iwad());
+        }
+        return self.configName() + ' - ' + iwadName + ' - ' + sourceportName;
+    });
 
     //this will be generated from the current config chain
     self.generatedCommand = ko.computed(() => {
@@ -913,7 +934,7 @@ function AppViewModel() {
         self.buildSourceportCollection(reloadFiles);
     };
     self.chosenFile = ko.observable();
-    self.chosenConfig = ko.observable();
+    self.chosenPreviousConfig = ko.observable();
     self.editFile = (filetype, index) => {
         let file = {};
         switch (filetype()) {
@@ -1081,13 +1102,19 @@ function AppViewModel() {
         self.files.sourceports.removeAll();
         self.files.sourceports.push.apply(self.files.sourceports, newSourceports);
     };
-
+    self.previousConfigChains = ko.observableArray();
     self.configChains = ko.observableArray();
     self.loadConfigChains = () => {
         let allConfigChains = configCollection.find();
+        if (allConfigChains.length<1){
+            self.currentConfig().id(1);
+            self.saveCurrentConfig();
+            allConfigChains = configCollection.find();
+        }
         let newConfigChains = [];
         _.forEach(allConfigChains, configChain => {
             let newConfigChain = new ConfigChain(
+                configChain.$loki,
                 configChain.configName,
                 configChain.configDescription,
                 configChain.sourceport,
@@ -1104,6 +1131,31 @@ function AppViewModel() {
         });
         self.configChains.removeAll();
         self.configChains.push.apply(self.configChains, newConfigChains);
+    };
+
+    self.loadPreviousConfigChains = () => {
+        let allConfigChains = previousConfigCollection.find();
+        let newConfigChains = [];
+        _.forEach(allConfigChains, configChain => {
+            let newConfigChain = new ConfigChain(
+                configChain.$loki,
+                configChain.configName,
+                configChain.configDescription,
+                configChain.sourceport,
+                configChain.iniFile,
+                configChain.iwad,
+                configChain.gamemode,
+                configChain.level,
+                configChain.skill,
+                configChain.pwads,
+                configChain.dmFlags,
+                configChain.sourceportConfigs
+            );
+            newConfigChains.push(newConfigChain);
+        });
+        self.previousConfigChains.removeAll();
+        newConfigChains.reverse();
+        self.previousConfigChains.push.apply(self.previousConfigChains, newConfigChains);
     };
 
     self.iniFiles = ko.observableArray();
@@ -1802,6 +1854,7 @@ function AppViewModel() {
     self.loadDefaultConfig = () => {
         self.currentConfig(
             new ConfigChain(
+                null,
                 'Default',
                 'This is the Default Configuration',
                 null,
@@ -1819,19 +1872,143 @@ function AppViewModel() {
 
     self.configSearch = ko.observable('');
 
-    self.runCurrentConfig = () => {};
+    self.findConfig = () => {
+        let result = [];
+        if (self.configSearch() && self.configSearch().trim() != '') {
+            let text = self.configSearch().toUpperCase();
+            result = configCollection.where(obj => {
+                let containsName = obj.configName && obj.configName.toUpperCase().indexOf(text) > -1;
+                let containsDescription =
+                    obj.configDescription && obj.configDescription.toUpperCase().indexOf(text) > -1;
+                let containsIniFile = obj.iniFile && obj.iniFile.toUpperCase().indexOf(text) > -1;
+                let containsIwad = obj.iwad && obj.iwad.toUpperCase().indexOf(text) > -1;
+                let containsGamemode = obj.gamemode && obj.gamemode.toUpperCase().indexOf(text) > -1;
+                let containsSkill =
+                    obj.skill &&
+                    obj.skill
+                        .toString()
+                        .toUpperCase()
+                        .indexOf(text) > -1;
+                let containsLevel = obj.level && obj.level.toUpperCase().indexOf(text) > -1;
+                let containsPwad = () => {
+                    let doesContain = false;
+                    if (obj.pwads) {
+                        _.forEach(obj.pwads, pwad => {
+                            if (!doesContain && pwad.filepath) {
+                                doesContain = pwad.filepath.toUpperCase().indexOf(text) > -1;
+                            }
+                        });
+                    }
+                    return doesContain;
+                };
+
+                return (
+                    containsName ||
+                    containsDescription ||
+                    containsPwad() ||
+                    containsIwad ||
+                    containsIniFile ||
+                    containsGamemode ||
+                    containsSkill ||
+                    containsLevel
+                );
+            });
+        } else {
+            result = configCollection.find();
+        }
+        let newConfigChains = [];
+        if (result && result.length > 0) {
+            _.forEach(result, configChain => {
+                let newConfigChain = new ConfigChain(
+                    configChain.$loki,
+                    configChain.configName,
+                    configChain.configDescription,
+                    configChain.sourceport,
+                    configChain.iniFile,
+                    configChain.iwad,
+                    configChain.gamemode,
+                    configChain.level,
+                    configChain.skill,
+                    configChain.pwads,
+                    configChain.dmFlags,
+                    configChain.sourceportConfigs
+                );
+                newConfigChains.push(newConfigChain);
+            });
+        }
+        self.configChains.removeAll();
+        if (newConfigChains.length > 0) {
+            self.configChains.push.apply(self.configChains, newConfigChains);
+        }
+    };
+
+    self.runCurrentConfig = () => {
+        let config = ko.mapping.toJS(self.currentConfig);
+        let configs = previousConfigCollection.find();
+        if (configs.length === 50) {
+            previousConfigCollection.remove({ $loki: configs[0].$loki });
+        }
+        previousConfigCollection.insert(config);
+        self.loadPreviousConfigChains();
+    };
 
     self.exportCurrentConfig = () => {};
 
     self.saveCurrentConfig = () => {
         let config = ko.mapping.toJS(self.currentConfig);
-        upsert(configCollection, 'configName', config);
+        config.$loki = config.id;
+        console.log('saveConfig... id: '+config.id+' loki: '+config.$loki);
+        console.log('saveConfig currentconfig... id: '+self.currentConfig().id());
+        upsert(configCollection, '$loki', config);
         self.loadConfigChains();
     };
 
-    self.loadConfig = () => {
-        if (self.chosenConfig()) {
-            let newConfig = configCollection.find({ configName: self.chosenConfig() })[0];
+    self.deleteConfig = config => {
+        if (config) {
+            let toJS = ko.mapping.toJS(config);
+            configCollection.remove({ $loki: toJS.id });
+            self.loadConfigChains();
+        }
+    };
+
+    self.cloneConfig = config => {
+        if (config) {
+            console.log('cloneConfig... id: '+config.id()+' loki: '+config.$loki);
+            console.log('cloneConfig currentconfig... id: '+self.currentConfig().id());
+            let newConfig = ko.mapping.toJS(config);
+            newConfig.configName = newConfig.configName + ' - copy';
+            configCollection.insert(newConfig);
+            let someNewConfigs = configCollection.find();
+            let someNewConfig = someNewConfigs[someNewConfigs.length-1];
+            someNewConfig.id = someNewConfig.$loki;
+            configCollection.update(someNewConfig);
+            self.loadConfigChains();
+            let newObservableConfig = new ConfigChain(
+                someNewConfig.id,
+                someNewConfig.configName,
+                someNewConfig.configDescription,
+                someNewConfig.sourceport,
+                someNewConfig.iniFile,
+                someNewConfig.iwad,
+                someNewConfig.gamemode,
+                someNewConfig.level,
+                someNewConfig.skill,
+                someNewConfig.pwads,
+                someNewConfig.dmFlags,
+                someNewConfig.sourceportConfigs
+            );
+            self.loadConfig(newObservableConfig);
+        }
+    };
+
+    self.loadConfig = config => {
+        if (config) {
+            console.log('loadConfig... id: '+config.id()+' loki: '+config.$loki);
+            console.log('loadConfig current before load... id: '+self.currentConfig().id());
+            let query = {};
+            query = { $loki: config.id() };
+            let newConfigs = configCollection.find(query);
+            let newConfig = newConfigs[0];
             self.currentConfig().configName(newConfig.configName);
             self.currentConfig().configDescription(newConfig.configDescription);
             self.currentConfig().sourceport(newConfig.sourceport);
@@ -1842,22 +2019,44 @@ function AppViewModel() {
             self.currentConfig().setPwads(newConfig.pwads);
             self.currentConfig().setDMFlags(newConfig.dmFlags);
             self.currentConfig().setSourceportConfigs(newConfig.sourceportConfigs);
-            window.setTimeout(()=>{self.currentConfig().chosenIniFile(newConfig.chosenIniFile)}, 100);
+            self.currentConfig().id(newConfig.id);
+            console.log('loadConfig current after load... id: '+self.currentConfig().id());
+            window.setTimeout(() => {
+                self.currentConfig().chosenIniFile(newConfig.chosenIniFile);
+            }, 100);
             self.loadPwadFiles();
         }
     };
 
-    self.findConfig = () => {};
-
-    self.clearCurrentConfig = () => {};
+    self.loadPreviousConfig = () => {
+        if (self.chosenPreviousConfig()) {
+            let newConfig = previousConfigCollection.find({ $loki: self.chosenPreviousConfig() })[0];
+            self.currentConfig().configName(newConfig.configName);
+            self.currentConfig().configDescription(newConfig.configDescription);
+            self.currentConfig().sourceport(newConfig.sourceport);
+            self.currentConfig().iwad(newConfig.iwad);
+            self.currentConfig().gamemode(newConfig.gamemode);
+            self.currentConfig().level(newConfig.level);
+            self.currentConfig().skill(newConfig.skill);
+            self.currentConfig().setPwads(newConfig.pwads);
+            self.currentConfig().setDMFlags(newConfig.dmFlags);
+            self.currentConfig().setSourceportConfigs(newConfig.sourceportConfigs);
+            window.setTimeout(() => {
+                self.currentConfig().chosenIniFile(newConfig.chosenIniFile);
+            }, 100);
+            self.loadPwadFiles();
+        }
+    };
 
     self.init = () => {
         //self.goToView(self.views[0]);
         console.log('loading files');
         self.loadCollections(true);
+        self.loadDefaultConfig();
+        self.loadPreviousConfigChains();
         self.loadConfigChains();
         //TODO: remove this when you can start loading configs from files.
-        self.loadDefaultConfig();
+        
     };
     self.init();
 }
@@ -2112,8 +2311,8 @@ ready(() => {
         viewModel.loadLevels();
         viewModel.loadSkillLevels();
     });
-    viewModel.chosenConfig.subscribe(data => {
-        viewModel.loadConfig();
+    viewModel.chosenPreviousConfig.subscribe(data => {
+        viewModel.loadPreviousConfig();
     });
 
     ko.applyBindings(viewModel);

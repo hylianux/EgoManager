@@ -79,7 +79,7 @@
                                         Previous Config Chains
                                     </label>
                                     <select id="previousConfigs" class="form-control"
-                                    data-bind="options: configChains, optionsText: 'configName', optionsValue:'configName', value: chosenConfig, optionsCaption: 'Select from previous 50 configs'"></select>
+                                        data-bind="options: previousConfigChains, optionsText: 'displayName', optionsValue:'id', value: chosenPreviousConfig, optionsCaption: 'Select from previous 50 configs'"></select>
                                 </div>
                             </div>
                         </div>
@@ -109,7 +109,7 @@
                                         data-bind="click: saveCurrentConfig" data-toggle="tooltip"
                                         title="Save current configuration"></span>
                                     <span style="width: 24%" class="btn btn-xs btn-danger fa fa-trash"
-                                        data-bind="click: clearCurrentConfig" data-toggle="tooltip"
+                                        data-bind="click: loadDefaultConfig" data-toggle="tooltip"
                                         title="Clear current configuration and reset to default"></span>
                                 </div>
                             </div>
@@ -118,58 +118,21 @@
                         <div class="row">
                             <div class="col-md-12 border border-secondary">
                                 <div style="margin-top: 10px" class="form-group">
-                                    <input type="text" class="form-control" placeholder="Search..."
+                                    <input type="text" class="form-control" placeholder="Search Config Chains"
                                         data-bind="textInput: configSearch, event: { keyup: findConfig()}" />
-                                    <div class="list-group">
-                                        <!--data-bind="foreach: configs"> -->
+                                    <div class="list-group" data-bind="foreach: configChains">
                                         <div class="list-group-item list-group-item-action clearfix"
                                             data-placement="right" data-html="true">
-                                            <!--
-                                    data-bind="tooltip: tooltipText(), class: displayClass, hidden: $parent.showHiddenFiles()===false && hidden()===true">-->
-                                            <div class="text-truncate">
-                                                <!-- data-bind="text: displayName">-->
-                                                SomeConfig
-                                            </div>
+                                            <div class="text-truncate" data-bind="text: configName"></div>
                                             <div>
                                                 <span style="width: 32%"
-                                                    class="btn btn-xs btn-secondary fa fa-arrow-circle-up">
-                                                    <!--
-                                                        data-bind="click: $parent.editFile.bind($data, type, $index)">-->
-
+                                                    class="btn btn-xs btn-secondary fa fa-arrow-circle-up"
+                                                    data-bind="click: $parent.loadConfig">
                                                 </span>
-                                                <span style="width: 32%" class="btn btn-xs btn-secondary fa fa-copy">
-                                                    <!--data-bind="click: hideFile">-->
-
-                                                </span>
-                                                <span style="width: 32%" class="btn btn-xs btn-secondary fa fa-remove">
-                                                    <!--data-bind="click: hideFile">-->
-
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div class="list-group-item list-group-item-action clearfix"
-                                            data-placement="right" data-html="true">
-                                            <!--
-                                    data-bind="tooltip: tooltipText(), class: displayClass, hidden: $parent.showHiddenFiles()===false && hidden()===true">-->
-                                            <div class="text-truncate">
-                                                <!-- data-bind="text: displayName">-->
-                                                SomeOtherReallyLongRidiculousConfigNameLOLOLOLOLOLOLOLOLOLOLOLOL
-                                            </div>
-                                            <div>
-                                                <span style="width: 32%"
-                                                    class="btn btn-xs btn-secondary fa fa-arrow-circle-up">
-                                                    <!--
-                                                    data-bind="click: $parent.editFile.bind($data, type, $index)">-->
-
-                                                </span>
-                                                <span style="width: 32%" class="btn btn-xs btn-secondary fa fa-copy">
-                                                    <!--data-bind="click: hideFile">-->
-
-                                                </span>
-                                                <span style="width: 32%" class="btn btn-xs btn-secondary fa fa-remove">
-                                                    <!--data-bind="click: hideFile">-->
-
-                                                </span>
+                                                <span style="width: 32%" class="btn btn-xs btn-secondary fa fa-copy"
+                                                    data-bind="click: $parent.cloneConfig"></span>
+                                                <span style="width: 32%" class="btn btn-xs btn-secondary fa fa-remove"
+                                                    data-bind="click: $parent.deleteConfig"></span>
                                             </div>
                                         </div>
                                     </div>
@@ -265,7 +228,8 @@
                                     <div class="col-md-6 border border-secondary"
                                         data-bind="sortable: { template: 'taskTmpl', data: availablePwads }"></div>
                                     <div class="col-md-6 border border-secondary"
-                                        data-bind="sortable: { template: 'taskTmpl', data: currentConfig().pwads }"></div>
+                                        data-bind="sortable: { template: 'taskTmpl', data: currentConfig().pwads }">
+                                    </div>
                                     <script id="taskTmpl" type="text/html"><div class="item">
                                             <span>
                                                <a href="#" class="nav-link" data-bind="text: displayName"></a>
@@ -454,7 +418,8 @@
                         </div>
                         <!--Sourceport Configs-->
                         <div class="row">
-                            <div data-bind="visible: currentConfig().sourceport()" class="col-md-12 border border-secondary">
+                            <div data-bind="visible: currentConfig().sourceport()"
+                                class="col-md-12 border border-secondary">
                                 <!-- Configuration selection-->
                                 <ul class="nav nav-tabs">
                                     <li class="nav-item">
