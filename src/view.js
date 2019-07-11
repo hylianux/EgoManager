@@ -1957,8 +1957,6 @@ function AppViewModel() {
     self.saveCurrentConfig = () => {
         let config = ko.mapping.toJS(self.currentConfig);
         config.$loki = config.id;
-        console.log('saveConfig... id: '+config.id+' loki: '+config.$loki);
-        console.log('saveConfig currentconfig... id: '+self.currentConfig().id());
         upsert(configCollection, '$loki', config);
         self.loadConfigChains();
     };
@@ -1973,8 +1971,6 @@ function AppViewModel() {
 
     self.cloneConfig = config => {
         if (config) {
-            console.log('cloneConfig... id: '+config.id()+' loki: '+config.$loki);
-            console.log('cloneConfig currentconfig... id: '+self.currentConfig().id());
             let newConfig = ko.mapping.toJS(config);
             newConfig.configName = newConfig.configName + ' - copy';
             configCollection.insert(newConfig);
@@ -2003,8 +1999,6 @@ function AppViewModel() {
 
     self.loadConfig = config => {
         if (config) {
-            console.log('loadConfig... id: '+config.id()+' loki: '+config.$loki);
-            console.log('loadConfig current before load... id: '+self.currentConfig().id());
             let query = {};
             query = { $loki: config.id() };
             let newConfigs = configCollection.find(query);
@@ -2020,7 +2014,6 @@ function AppViewModel() {
             self.currentConfig().setDMFlags(newConfig.dmFlags);
             self.currentConfig().setSourceportConfigs(newConfig.sourceportConfigs);
             self.currentConfig().id(newConfig.id);
-            console.log('loadConfig current after load... id: '+self.currentConfig().id());
             window.setTimeout(() => {
                 self.currentConfig().chosenIniFile(newConfig.chosenIniFile);
             }, 100);
