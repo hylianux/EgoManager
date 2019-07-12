@@ -3,13 +3,14 @@ const ko = require('knockout');
 const path = require('path');
 const fs = require('fs');
 const titlebar = require('custom-electron-titlebar');
-const Datastore = require('nestdb');
+const Datastore = require('nedb');
 const _ = require('lodash');
 const pwadTypes = ['wad', 'pk3', 'deh', 'bex'];
 const iwadFileTypes = ['wad', 'pk3'];
 // Importing this adds a right-click menu with 'Inspect Element' option
 const { remote } = require('electron');
 const { Menu, MenuItem } = remote;
+const { exec } = require('child_process');
 let args = require('minimist')(remote.process.argv);
 let dev = args.dev || args.d;
 let rightClickPosition = null;
@@ -1059,7 +1060,7 @@ function AppViewModel() {
     self.loadPreviousConfigChains = () => {
         previousConfigCollection
             .find({})
-            .sort({ _id: -1 })
+            .sort({ index: -1 })
             .exec((err, allConfigChains) => {
                 if (err) {
                     console.log('loadPreviousConfigChains error: ', err);
@@ -1191,7 +1192,7 @@ function AppViewModel() {
         }
         if (sourceportType != null) {
             let newDMFlags = [];
-            DMFlagsCollection.find({ sourceport: sourceportType }, (err, dmFlags) => {
+            DMFlagsCollection.find({ sourceport: sourceportType }).sort({value: 1}).exec((err, dmFlags) => {
                 if (err) {
                     console.log('load DMFlags error: ', err);
                 } else {
@@ -2145,12 +2146,20 @@ function AppViewModel() {
                 if (configs.length === 50) {
                     previousConfigCollection.remove({ _id: configs[0]._id });
                 }
+                config.index=configs.length;
                 previousConfigCollection.insert(config, (insertErr, newDoc) => {
                     if (insertErr) {
                         console.log('runCurrentConfig insert error: ', insertErr);
                     } else {
                         previousConfigCollection.persistence.compactDatafile();
                         self.loadPreviousConfigChains();
+                        exec(self.currentConfig().generatedCommand(), (execErr, stdout, stderr)=>{
+                            if (execErr){
+                                console.log("couldn't execute the command: ", execErr);   
+                            }
+                            console.log(`stdout: ${stdout}`);
+                            console.log(`stdout: ${stderr}`);
+                        });
                     }
                 });
             }
@@ -2162,6 +2171,9 @@ function AppViewModel() {
     self.saveCurrentConfig = () => {
         let config = ko.mapping.toJS(self.currentConfig);
         config._id = config.id;
+        if (!config.configName){
+            config.configName='[no name]';
+        }
         configCollection.update({ _id: config._id }, config, { upsert: true }, (err, numReplaced) => {
             if (err) {
                 console.log('saveCurrentConfig error: ', err);
@@ -2221,6 +2233,7 @@ function AppViewModel() {
 
     self.loadConfig = config => {
         if (config) {
+            self.chosenPreviousConfig('');
             let query = {};
             query = { _id: config.id() };
             configCollection.findOne(query, (err, newConfig) => {
