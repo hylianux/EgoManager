@@ -191,13 +191,13 @@ function ConfigChain(
     self.generatedCommand = ko.computed(() => {
         let command = '';
         if (self.sourceport()) {
-            command += self.sourceport() + ' ';
+            command += '"'+self.sourceport() + '" ';
         }
         if (self.iwad()) {
-            command += '-iwad ' + self.iwad() + ' ';
+            command += '-iwad "' + self.iwad() + '" ';
         }
         if (self.chosenIniFile()) {
-            command += '-config ' + self.chosenIniFile() + ' ';
+            command += '-config "' + self.chosenIniFile() + '" ';
         }
         if (self.level()) {
             command += '-warp ' + self.level() + ' ';
