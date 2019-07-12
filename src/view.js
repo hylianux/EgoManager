@@ -723,16 +723,8 @@ function AppViewModel() {
             displayText: 'Solo'
         },
         {
-            value: 'solonet',
-            displayText: 'Solo-Net'
-        },
-        {
-            value: 'coop',
-            displayText: 'Co-op'
-        },
-        {
-            value: 'dm',
-            displayText: 'Deathmatch'
+            value: 'multiplayer',
+            displayText: 'Multiplayer'
         }
     ]);
     self.iwadTypes = ko.observableArray([
@@ -1127,7 +1119,7 @@ function AppViewModel() {
             basetype = iwad.iwadBasetype();
             query = { [basetype]: { $exists: true, $ne: null } };
         }
-        levelsCollection.find(query, (err, allLevels) => {
+        levelsCollection.find(query).sort({name: 1}).exec((err, allLevels) => {
             if (err) {
                 console.log('levelsCollection error: ', err);
             } else {
@@ -1329,7 +1321,7 @@ function AppViewModel() {
                             } else {
                                 let fileExt = file.substring(file.lastIndexOf('.') + 1);
 
-                                if (iwadFileTypes.indexOf(fileExt) > -1) {
+                                if (iwadFileTypes.indexOf(fileExt.toLowerCase()) > -1) {
                                     let iwad = {
                                         filename: file,
                                         filepath: fullPath
@@ -1483,7 +1475,7 @@ function AppViewModel() {
                             } else {
                                 let fileExt = file.substring(file.lastIndexOf('.') + 1);
 
-                                if (pwadTypes.indexOf(fileExt) > -1) {
+                                if (pwadTypes.indexOf(fileExt.toLowerCase()) > -1) {
                                     let pwad = {
                                         filename: file,
                                         filepath: fullPath
