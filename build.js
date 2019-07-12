@@ -8,7 +8,4 @@ shell.cp('-r', './src/*', exportDir);
 shell.echo('copying package.json files into build directory');
 shell.cp('./package*.json', exportDir);
 shell.cp('-Rf', './testData/*', './dist/idTech/');
-shell.cp('./commandLineOptions.json', './dist/');
-shell.cp('./DMFlags.json', './dist/');
-shell.cp('./Levels.json', './dist/');
-shell.cp('./SkillLevels.json', './dist/');
+shell.cp('./*.db', './dist/');
