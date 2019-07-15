@@ -25,7 +25,10 @@
             <div class="col-md-12">
                 <ul class="nav nav-tabs justify-content-center">
                     <li class="nav-item">
-                        <a class="nav-link active" data-toggle="tab" href="#configBuilder">Configuration Builder</a>
+                        <a class="nav-link active" data-toggle="tab" href="#configBuilder">Configuration Builder &nbsp;&nbsp;
+                                <i data-toggle="tooltip" data-bind="click: absolutePaths.bind($data, !absolutePaths()), class: absolutePathsClass"
+                                title="Click to switch between absolute and relative paths"></i>
+                        </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" data-toggle="tab" href="#fileDB">
@@ -59,8 +62,7 @@
                         <textarea class="form-control"
                             style="height: 100%; overflow: hidden; resize: none; font-family: 'Ubuntu-Mono'; padding: 0px;"
                             readonly="true" placeholder="Generated Command Here"
-                            data-bind="textInput: currentConfig().generatedCommand, autoResize: currentConfig().generatedCommand"></textarea>
-
+                            data-bind="textInput: generatedCommand, autoResize: generatedCommand"></textarea>
                     </div>
                 </div>
                 <!--All ConfigChain options-->

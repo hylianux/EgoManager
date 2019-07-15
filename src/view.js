@@ -16,7 +16,6 @@ let args = require('minimist')(remote.process.argv);
 let dev = args.dev || args.d;
 let rightClickPosition = null;
 
-
 // this only shows up in dev mode
 // it was designed for debugging so i could easily jump to an element on the page in the developer console.
 const menu = new Menu();
@@ -40,11 +39,8 @@ if (dev) {
     );
 }
 
-
 //TODO: CHOCOLATE DOOM multi-screen command
 //chocolate-doom -server -window & chocolate-doom -autojoin -left -window & chocolate-doom -autojoin -right -window
-
-
 
 //TODO: create custom commands for WAD merging in chocolate doom
 
@@ -67,7 +63,6 @@ let skillLevelsCollection = new Datastore({
     filename: path.resolve(__dirname, '../../gameSkillLevels.db'),
     autoload: true
 });
-
 
 // a config chain is the chain of commands and options needed to run a game.
 // it has a sourceport, it has an iwad, it has pwads, added options...
@@ -192,232 +187,14 @@ function ConfigChain(
     // gets the multiplayer address from the loaded port multiplayer option
     self.usePort = ko.computed(() => {
         let port = 5029;
-        if (self.sourceportConfigs){
+        if (self.sourceportConfigs) {
             _.forEach(self.sourceportConfigs.multiplayer(), config => {
-                if (config.command === '-port'){
+                if (config.command === '-port') {
                     port = config.value();
                 }
             });
         }
         return port;
-    });
-
-    //this will be generated from the current config chain
-    self.generatedCommand = ko.computed(() => {
-        let command = '';
-        if (self.sourceport()) {
-            command += '"' + self.sourceport() + '" ';
-        }
-        if (self.iwad()) {
-            command += '-iwad "' + self.iwad() + '" ';
-        }
-        if (self.chosenIniFile()) {
-            command += '-config "' + self.chosenIniFile() + '" ';
-        }
-        if (self.level()) {
-            command += '-warp ' + self.level() + ' ';
-        }
-        if (self.skill()) {
-            command += '-skill ' + self.skill() + ' ';
-        }
-        if (self.pwads() && self.pwads().length > 0) {
-            command += '-file ';
-            _.forEach(self.pwads(), pwad => {
-                command += '"' + pwad.filepath + '" ';
-            });
-        }
-        if (self.dmFlags()) {
-            let dmFlags = [];
-            let dmFlags2 = [];
-            let zadmflags = [];
-            let compatflags = [];
-            let zacompatflags = [];
-            _.forEach(self.dmFlags(), dmFlag => {
-                if (dmFlag.enabled()) {
-                    switch (dmFlag.command) {
-                        case 'dmflags':
-                            dmFlags.push(dmFlag);
-                            break;
-                        case 'dmflags2':
-                            dmFlags2.push(dmFlag);
-                            break;
-                        case 'zadmflags':
-                            zadmflags.push(dmFlag);
-                            break;
-                        case 'compatflags':
-                            compatflags.push(dmFlag);
-                            break;
-                        case 'zacompatflags':
-                            zacompatflags.push(dmFlag);
-                            break;
-                    }
-                }
-            });
-            if (dmFlags.length > 0) {
-                let flagValue = 0;
-                _.forEach(dmFlags, flag => {
-                    flagValue += flag.value;
-                });
-                command += '+dmflags ' + flagValue + ' ';
-            }
-            if (dmFlags2.length > 0) {
-                let flagValue = 0;
-                _.forEach(dmFlags2, flag => {
-                    flagValue += flag.value;
-                });
-                command += '+dmflags2 ' + flagValue + ' ';
-            }
-            if (zadmflags.length > 0) {
-                let flagValue = 0;
-                _.forEach(zadmflags, flag => {
-                    flagValue += flag.value;
-                });
-                command += '+zadmflags ' + flagValue + ' ';
-            }
-            if (compatflags.length > 0) {
-                let flagValue = 0;
-                _.forEach(compatflags, flag => {
-                    flagValue += flag.value;
-                });
-                command += '+compatflags ' + flagValue + ' ';
-            }
-            if (zacompatflags.length > 0) {
-                let flagValue = 0;
-                _.forEach(zacompatflags, flag => {
-                    flagValue += flag.value;
-                });
-                command += '+zacompatflags ' + flagValue + ' ';
-            }
-        }
-        if (self.sourceportConfigs) {
-            if (self.sourceportConfigs.config()) {
-                _.forEach(self.sourceportConfigs.config(), config => {
-                    if (config.enabled()) {
-                        let value = '';
-                        if (config.inputType === 'files' || config.inputType === 'directory') {
-                            if (config.value()) {
-                                _.forEach(config.value().split(';'), file => {
-                                    value += '"' + file + '" ';
-                                });
-                                value = value.substring(0, value.length - 1);
-                            }
-                        } else {
-                            value = config.value();
-                        }
-                        command += config.command + ' ' + (value ? value : '') + ' ';
-                    }
-                });
-            }
-            if (self.sourceportConfigs.multiplayer()) {
-                _.forEach(self.sourceportConfigs.multiplayer(), config => {
-                    if (config.enabled()) {
-                        let value = '';
-                        if (config.inputType === 'files' || config.inputType === 'directory') {
-                            if (config.value()) {
-                                _.forEach(config.value().split(';'), file => {
-                                    value += '"' + file + '" ';
-                                });
-                                value = value.substring(0, value.length - 1);
-                            }
-                        } else {
-                            value = config.value();
-                        }
-                        command += config.command + ' ' + (value ? value : '') + ' ';
-                    }
-                });
-            }
-            if (self.sourceportConfigs.networking()) {
-                _.forEach(self.sourceportConfigs.networking(), config => {
-                    if (config.enabled()) {
-                        let value = '';
-                        if (config.inputType === 'files' || config.inputType === 'directory') {
-                            if (config.value()) {
-                                _.forEach(config.value().split(';'), file => {
-                                    value += '"' + file + '" ';
-                                });
-                                value = value.substring(0, value.length - 1);
-                            }
-                        } else {
-                            value = config.value();
-                        }
-                        command += config.command + ' ' + (value ? value : '') + ' ';
-                    }
-                });
-            }
-            if (self.sourceportConfigs.debug()) {
-                _.forEach(self.sourceportConfigs.debug(), config => {
-                    if (config.enabled()) {
-                        let value = '';
-                        if (config.inputType === 'files' || config.inputType === 'directory') {
-                            if (config.value()) {
-                                _.forEach(config.value().split(';'), file => {
-                                    value += '"' + file + '" ';
-                                });
-                                value = value.substring(0, value.length - 1);
-                            }
-                        } else {
-                            value = config.value();
-                        }
-                        command += config.command + ' ' + (value ? value : '') + ' ';
-                    }
-                });
-            }
-            if (self.sourceportConfigs.display()) {
-                _.forEach(self.sourceportConfigs.display(), config => {
-                    if (config.enabled()) {
-                        let value = '';
-                        if (config.inputType === 'files' || config.inputType === 'directory') {
-                            if (config.value()) {
-                                _.forEach(config.value().split(';'), file => {
-                                    value += '"' + file + '" ';
-                                });
-                                value = value.substring(0, value.length - 1);
-                            }
-                        } else {
-                            value = config.value();
-                        }
-                        command += config.command + ' ' + (value ? value : '') + ' ';
-                    }
-                });
-            }
-            if (self.sourceportConfigs.recording()) {
-                _.forEach(self.sourceportConfigs.recording(), config => {
-                    if (config.enabled()) {
-                        let value = '';
-                        if (config.inputType === 'files' || config.inputType === 'directory') {
-                            if (config.value()) {
-                                _.forEach(config.value().split(';'), file => {
-                                    value += '"' + file + '" ';
-                                });
-                                value = value.substring(0, value.length - 1);
-                            }
-                        } else {
-                            value = config.value();
-                        }
-                        command += config.command + ' ' + (value ? value : '') + ' ';
-                    }
-                });
-            }
-            if (self.sourceportConfigs.advanced()) {
-                _.forEach(self.sourceportConfigs.advanced(), config => {
-                    if (config.enabled()) {
-                        let value = '';
-                        if (config.inputType === 'files' || config.inputType === 'directory') {
-                            if (config.value()) {
-                                _.forEach(config.value().split(';'), file => {
-                                    value += '"' + file + '" ';
-                                });
-                                value = value.substring(0, value.length - 1);
-                            }
-                        } else {
-                            value = config.value();
-                        }
-                        command += config.command + ' ' + (value ? value : '') + ' ';
-                    }
-                });
-            }
-        }
-        return command;
     });
 }
 
@@ -640,7 +417,7 @@ function IniFile(filepath, filename) {
     self.filename = filename;
 }
 
-// level 1, level 2?  
+// level 1, level 2?
 // ok, javascript doesn't like the word "map".  it's a reserved word
 // the problem is doom games refer to levels as maps
 // so any time you want to go to a "map", the word "level" will be used here.
@@ -724,14 +501,16 @@ function AppViewModel() {
     self.pwadDirectory = self.idTechFolder + path.sep + 'pwads';
     self.sourceportDirectory = self.idTechFolder + path.sep + 'sourceports';
     self.ip = ko.observable();
-    self.chosenFile = ko.observable();
-    self.chosenPreviousConfig = ko.observable();
+
+    self.absolutePaths = ko.observable(false);
     self.showHiddenFiles = ko.observable(false);
     self.iwadSearch = ko.observable();
     self.pwadSearch = ko.observable();
     self.sourceportSearch = ko.observable();
     self.currentConfig = ko.observable();
     self.configSearch = ko.observable('');
+    self.chosenFile = ko.observable();
+    self.chosenPreviousConfig = ko.observable();
 
     self.skillLevels = ko.observableArray();
     self.levels = ko.observableArray();
@@ -808,8 +587,8 @@ function AppViewModel() {
     ]);
     // gets the address for anyone hosting a game
     self.multiplayerAddress = ko.computed(() => {
-        if (self.currentConfig()){
-            return self.ip()+':'+self.currentConfig().usePort();
+        if (self.currentConfig()) {
+            return self.ip() + ':' + self.currentConfig().usePort();
         } else {
             return '';
         }
@@ -847,6 +626,253 @@ function AppViewModel() {
         });
         return counter === self.files.sourceports.length;
     });
+    // controls class of button used for absolute paths
+    self.absolutePathsClass = ko.computed(() => {
+        if (self.absolutePaths()) {
+            return 'fa fa-expand';
+        } else {
+            return 'fa fa-compress';
+        }
+    });
+    // the generated command the app will attempt to use.
+    //this will be generated from the current config chain
+    self.generatedCommand = ko.computed(() => {
+        let command = '';
+        if (self.currentConfig()) {
+            if (self.currentConfig().sourceport()) {
+                command +=
+                    '"' +
+                    (self.absolutePaths()
+                        ? path.resolve(__dirname, self.currentConfig().sourceport())
+                        : self.currentConfig().sourceport()) +
+                    '" ';
+            }
+            if (self.currentConfig().iwad()) {
+                command +=
+                    '-iwad ' +
+                    '"' +
+                    (self.absolutePaths()
+                        ? path.resolve(__dirname, self.currentConfig().iwad())
+                        : self.currentConfig().iwad()) +
+                    '" ';
+            }
+            if (self.currentConfig().chosenIniFile()) {
+                command += '-config ' + '"' +
+                (self.absolutePaths()
+                    ? path.resolve(__dirname, self.currentConfig().chosenIniFile())
+                    : self.currentConfig().chosenIniFile()) +
+                '" ';
+            }
+            if (self.currentConfig().level()) {
+                command += '-warp ' + self.currentConfig().level() + ' ';
+            }
+            if (self.currentConfig().skill()) {
+                command += '-skill ' + self.currentConfig().skill() + ' ';
+            }
+            if (self.currentConfig().pwads() && self.currentConfig().pwads().length > 0) {
+                command += '-file ';
+                _.forEach(self.currentConfig().pwads(), pwad => {
+                    command += '"' +
+                    (self.absolutePaths()
+                        ? path.resolve(__dirname, pwad.filepath)
+                        : pwad.filepath) +
+                    '" ';
+                });
+            }
+            if (self.currentConfig().dmFlags()) {
+                let dmFlags = [];
+                let dmFlags2 = [];
+                let zadmflags = [];
+                let compatflags = [];
+                let zacompatflags = [];
+                _.forEach(self.currentConfig().dmFlags(), dmFlag => {
+                    if (dmFlag.enabled()) {
+                        switch (dmFlag.command) {
+                            case 'dmflags':
+                                dmFlags.push(dmFlag);
+                                break;
+                            case 'dmflags2':
+                                dmFlags2.push(dmFlag);
+                                break;
+                            case 'zadmflags':
+                                zadmflags.push(dmFlag);
+                                break;
+                            case 'compatflags':
+                                compatflags.push(dmFlag);
+                                break;
+                            case 'zacompatflags':
+                                zacompatflags.push(dmFlag);
+                                break;
+                        }
+                    }
+                });
+                if (dmFlags.length > 0) {
+                    let flagValue = 0;
+                    _.forEach(dmFlags, flag => {
+                        flagValue += flag.value;
+                    });
+                    command += '+dmflags ' + flagValue + ' ';
+                }
+                if (dmFlags2.length > 0) {
+                    let flagValue = 0;
+                    _.forEach(dmFlags2, flag => {
+                        flagValue += flag.value;
+                    });
+                    command += '+dmflags2 ' + flagValue + ' ';
+                }
+                if (zadmflags.length > 0) {
+                    let flagValue = 0;
+                    _.forEach(zadmflags, flag => {
+                        flagValue += flag.value;
+                    });
+                    command += '+zadmflags ' + flagValue + ' ';
+                }
+                if (compatflags.length > 0) {
+                    let flagValue = 0;
+                    _.forEach(compatflags, flag => {
+                        flagValue += flag.value;
+                    });
+                    command += '+compatflags ' + flagValue + ' ';
+                }
+                if (zacompatflags.length > 0) {
+                    let flagValue = 0;
+                    _.forEach(zacompatflags, flag => {
+                        flagValue += flag.value;
+                    });
+                    command += '+zacompatflags ' + flagValue + ' ';
+                }
+            }
+            if (self.currentConfig().sourceportConfigs) {
+                if (self.currentConfig().sourceportConfigs.config()) {
+                    _.forEach(self.currentConfig().sourceportConfigs.config(), config => {
+                        if (config.enabled()) {
+                            let value = '';
+                            if (config.inputType === 'files' || config.inputType === 'directory') {
+                                if (config.value()) {
+                                    _.forEach(config.value().split(';'), file => {
+                                        value += '"' + file + '" ';
+                                    });
+                                    value = value.substring(0, value.length - 1);
+                                }
+                            } else {
+                                value = config.value();
+                            }
+                            command += config.command + ' ' + (value ? value : '') + ' ';
+                        }
+                    });
+                }
+                if (self.currentConfig().sourceportConfigs.multiplayer()) {
+                    _.forEach(self.currentConfig().sourceportConfigs.multiplayer(), config => {
+                        if (config.enabled()) {
+                            let value = '';
+                            if (config.inputType === 'files' || config.inputType === 'directory') {
+                                if (config.value()) {
+                                    _.forEach(config.value().split(';'), file => {
+                                        value += '"' + file + '" ';
+                                    });
+                                    value = value.substring(0, value.length - 1);
+                                }
+                            } else {
+                                value = config.value();
+                            }
+                            command += config.command + ' ' + (value ? value : '') + ' ';
+                        }
+                    });
+                }
+                if (self.currentConfig().sourceportConfigs.networking()) {
+                    _.forEach(self.currentConfig().sourceportConfigs.networking(), config => {
+                        if (config.enabled()) {
+                            let value = '';
+                            if (config.inputType === 'files' || config.inputType === 'directory') {
+                                if (config.value()) {
+                                    _.forEach(config.value().split(';'), file => {
+                                        value += '"' + file + '" ';
+                                    });
+                                    value = value.substring(0, value.length - 1);
+                                }
+                            } else {
+                                value = config.value();
+                            }
+                            command += config.command + ' ' + (value ? value : '') + ' ';
+                        }
+                    });
+                }
+                if (self.currentConfig().sourceportConfigs.debug()) {
+                    _.forEach(self.currentConfig().sourceportConfigs.debug(), config => {
+                        if (config.enabled()) {
+                            let value = '';
+                            if (config.inputType === 'files' || config.inputType === 'directory') {
+                                if (config.value()) {
+                                    _.forEach(config.value().split(';'), file => {
+                                        value += '"' + file + '" ';
+                                    });
+                                    value = value.substring(0, value.length - 1);
+                                }
+                            } else {
+                                value = config.value();
+                            }
+                            command += config.command + ' ' + (value ? value : '') + ' ';
+                        }
+                    });
+                }
+                if (self.currentConfig().sourceportConfigs.display()) {
+                    _.forEach(self.currentConfig().sourceportConfigs.display(), config => {
+                        if (config.enabled()) {
+                            let value = '';
+                            if (config.inputType === 'files' || config.inputType === 'directory') {
+                                if (config.value()) {
+                                    _.forEach(config.value().split(';'), file => {
+                                        value += '"' + file + '" ';
+                                    });
+                                    value = value.substring(0, value.length - 1);
+                                }
+                            } else {
+                                value = config.value();
+                            }
+                            command += config.command + ' ' + (value ? value : '') + ' ';
+                        }
+                    });
+                }
+                if (self.currentConfig().sourceportConfigs.recording()) {
+                    _.forEach(self.currentConfig().sourceportConfigs.recording(), config => {
+                        if (config.enabled()) {
+                            let value = '';
+                            if (config.inputType === 'files' || config.inputType === 'directory') {
+                                if (config.value()) {
+                                    _.forEach(config.value().split(';'), file => {
+                                        value += '"' + file + '" ';
+                                    });
+                                    value = value.substring(0, value.length - 1);
+                                }
+                            } else {
+                                value = config.value();
+                            }
+                            command += config.command + ' ' + (value ? value : '') + ' ';
+                        }
+                    });
+                }
+                if (self.currentConfig().sourceportConfigs.advanced()) {
+                    _.forEach(self.currentConfig().sourceportConfigs.advanced(), config => {
+                        if (config.enabled()) {
+                            let value = '';
+                            if (config.inputType === 'files' || config.inputType === 'directory') {
+                                if (config.value()) {
+                                    _.forEach(config.value().split(';'), file => {
+                                        value += '"' + file + '" ';
+                                    });
+                                    value = value.substring(0, value.length - 1);
+                                }
+                            } else {
+                                value = config.value();
+                            }
+                            command += config.command + ' ' + (value ? value : '') + ' ';
+                        }
+                    });
+                }
+            }
+        }
+        return command;
+    });
     //-------------------------------------------------------------------------
     // all the loading functions for loading stuff from the database
     //-------------------------------------------------------------------------
@@ -860,65 +886,38 @@ function AppViewModel() {
     // loads the iwad database by checking all the iwad files in the idTech/iwads directory
     self.buildIwadCollection = reloadFiles => {
         let directoryName = self.iwadDirectory;
-        function walk(directory) {
-            fs.readdir(directory, (e, files) => {
-                if (e) {
-                    console.log('buildIwadCollection error: ', e);
-                    return;
-                }
-                files.forEach(
-                    file => {
-                        let fullPath = path.join(directory, file);
-                        fs.stat(fullPath, (foreachErr, f) => {
-                            if (foreachErr) {
-                                console.log('buildIwadCollection foreach error: ', foreachErr);
-                                return;
-                            }
-                            if (f.isDirectory()) {
-                                if (dev) {
-                                    console.log('buildIwad:: ' + file + ' and is directory: ' + fullPath);
-                                }
-                                walk(fullPath);
-                            } else {
-                                let fileExt = file.substring(file.lastIndexOf('.') + 1);
-
-                                if (iwadFileTypes.indexOf(fileExt.toLowerCase()) > -1) {
-                                    let iwad = {
-                                        filename: file,
-                                        filepath: fullPath
-                                    };
-                                    if (dev) {
-                                        console.log('buildIwad:: adding ' + fullPath);
-                                        console.log('reloadFiles: ' + reloadFiles);
+        iwadCollection.remove({}, { multi: true }, (removeErr, numRemoved) => {
+            if (removeErr) {
+                console.log('buildIwadCollection removal error: ', removeErr);
+            } else {
+                function walk(directory) {
+                    fs.readdir(directory, (e, files) => {
+                        if (e) {
+                            console.log('buildIwadCollection error: ', e);
+                            return;
+                        }
+                        files.forEach(
+                            file => {
+                                let fullPath = path.join(directory, file);
+                                fs.stat(fullPath, (foreachErr, f) => {
+                                    if (foreachErr) {
+                                        console.log('buildIwadCollection foreach error: ', foreachErr);
+                                        return;
                                     }
-                                    iwadCollection.update(
-                                        { filename: iwad.filename },
-                                        {
-                                            $set: {
-                                                filepath: iwad.filepath
-                                            }
-                                        },
-                                        { upsert: true },
-                                        (updateErr, numReplaced) => {
-                                            if (updateErr) {
-                                                console.log(
-                                                    'buildIwadCollection updatingCollection error: ',
-                                                    updateErr
-                                                );
-                                            } else {
-                                                iwadCollection.persistence.compactDatafile();
-                                                if (reloadFiles) {
-                                                    self.loadIwadFiles();
-                                                }
-                                            }
+                                    if (f.isDirectory()) {
+                                        if (dev) {
+                                            console.log('buildIwad:: ' + file + ' and is directory: ' + fullPath);
                                         }
-                                    );
-                                } else if (fileExt === 'json') {
-                                    fs.readFile(fullPath, 'utf8', (err, data) => {
-                                        if (err) {
-                                            console.log('buildIwadCollection json file read error!', err);
-                                        } else {
-                                            let iwad = JSON.parse(data);
+                                        walk(fullPath);
+                                    } else {
+                                        let fileExt = file.substring(file.lastIndexOf('.') + 1);
+                                        let relativePath = path.relative(__dirname, fullPath);
+
+                                        if (iwadFileTypes.indexOf(fileExt.toLowerCase()) > -1) {
+                                            let iwad = {
+                                                filename: file,
+                                                filepath: relativePath
+                                            };
                                             if (dev) {
                                                 console.log('buildIwad:: adding ' + fullPath);
                                                 console.log('reloadFiles: ' + reloadFiles);
@@ -927,21 +926,14 @@ function AppViewModel() {
                                                 { filename: iwad.filename },
                                                 {
                                                     $set: {
-                                                        authors: iwad.authors,
-                                                        metaTags: iwad.metaTags,
-                                                        source: iwad.source,
-                                                        name: iwad.name,
-                                                        quickDescription: iwad.quickDescription,
-                                                        longDescription: iwad.longDescription,
-                                                        hidden: iwad.hidden,
-                                                        basetype: iwad.basetype
+                                                        filepath: iwad.filepath
                                                     }
                                                 },
                                                 { upsert: true },
                                                 (updateErr, numReplaced) => {
                                                     if (updateErr) {
                                                         console.log(
-                                                            'buildIwadCollection updatingCollection with json file error: ',
+                                                            'buildIwadCollection updatingCollection error: ',
                                                             updateErr
                                                         );
                                                     } else {
@@ -952,142 +944,158 @@ function AppViewModel() {
                                                     }
                                                 }
                                             );
-                                        }
-                                    });
-                                } else if (fileExt === 'txt') {
-                                    iwadCollection.findOne({ filename: f }, (findErr, iwad) => {
-                                        if (findErr) {
-                                            console.log('buildIwadCollection txt collection.find error: ', findErr);
-                                        } else {
+                                        } else if (fileExt === 'json') {
                                             fs.readFile(fullPath, 'utf8', (err, data) => {
                                                 if (err) {
-                                                    console.log('buildIwadCollection txt file read error!', err);
+                                                    console.log('buildIwadCollection json file read error!', err);
                                                 } else {
-                                                    let longDescription = data;
-                                                    if (iwad && longDescription !== iwad.longDescription) {
-                                                        if (dev) {
-                                                            console.log(
-                                                                'buildIwad:: adding ' +
-                                                                    longDescription +
-                                                                    ' to ' +
-                                                                    fullPath
-                                                            );
-                                                            console.log('reloadFiles: ' + reloadFiles);
-                                                        }
-                                                        iwadCollection.update(
-                                                            { filename: f },
-                                                            { $set: { longDescription: longDescription } },
-                                                            {},
-                                                            (updateErr, numReplaced) => {
-                                                                if (updateErr) {
-                                                                    console.log(
-                                                                        'buildIwadCollection txt updatingCollection error: ',
-                                                                        updateErr
-                                                                    );
-                                                                } else {
-                                                                    iwadCollection.persistence.compactDatafile();
-                                                                    if (reloadFiles) {
-                                                                        self.loadIwadFiles();
-                                                                    }
+                                                    let iwad = JSON.parse(data);
+                                                    if (dev) {
+                                                        console.log('buildIwad:: adding ' + fullPath);
+                                                        console.log('reloadFiles: ' + reloadFiles);
+                                                    }
+                                                    iwadCollection.update(
+                                                        { filename: iwad.filename },
+                                                        {
+                                                            $set: {
+                                                                authors: iwad.authors,
+                                                                metaTags: iwad.metaTags,
+                                                                source: iwad.source,
+                                                                name: iwad.name,
+                                                                quickDescription: iwad.quickDescription,
+                                                                longDescription: iwad.longDescription,
+                                                                hidden: iwad.hidden,
+                                                                basetype: iwad.basetype
+                                                            }
+                                                        },
+                                                        { upsert: true },
+                                                        (updateErr, numReplaced) => {
+                                                            if (updateErr) {
+                                                                console.log(
+                                                                    'buildIwadCollection updatingCollection with json file error: ',
+                                                                    updateErr
+                                                                );
+                                                            } else {
+                                                                iwadCollection.persistence.compactDatafile();
+                                                                if (reloadFiles) {
+                                                                    self.loadIwadFiles();
                                                                 }
                                                             }
-                                                        );
-                                                    }
+                                                        }
+                                                    );
+                                                }
+                                            });
+                                        } else if (fileExt === 'txt') {
+                                            iwadCollection.findOne({ filename: f }, (findErr, iwad) => {
+                                                if (findErr) {
+                                                    console.log(
+                                                        'buildIwadCollection txt collection.find error: ',
+                                                        findErr
+                                                    );
+                                                } else {
+                                                    fs.readFile(fullPath, 'utf8', (err, data) => {
+                                                        if (err) {
+                                                            console.log(
+                                                                'buildIwadCollection txt file read error!',
+                                                                err
+                                                            );
+                                                        } else {
+                                                            let longDescription = data;
+                                                            if (iwad && longDescription !== iwad.longDescription) {
+                                                                if (dev) {
+                                                                    console.log(
+                                                                        'buildIwad:: adding ' +
+                                                                            longDescription +
+                                                                            ' to ' +
+                                                                            fullPath
+                                                                    );
+                                                                    console.log('reloadFiles: ' + reloadFiles);
+                                                                }
+                                                                iwadCollection.update(
+                                                                    { filename: f },
+                                                                    { $set: { longDescription: longDescription } },
+                                                                    {},
+                                                                    (updateErr, numReplaced) => {
+                                                                        if (updateErr) {
+                                                                            console.log(
+                                                                                'buildIwadCollection txt updatingCollection error: ',
+                                                                                updateErr
+                                                                            );
+                                                                        } else {
+                                                                            iwadCollection.persistence.compactDatafile();
+                                                                            if (reloadFiles) {
+                                                                                self.loadIwadFiles();
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                );
+                                                            }
+                                                        }
+                                                    });
                                                 }
                                             });
                                         }
-                                    });
+                                    }
+                                });
+                            },
+                            forErr => {
+                                if (forErr) {
+                                    throw forErr;
                                 }
                             }
-                        });
-                    },
-                    forErr => {
-                        if (forErr) {
-                            throw forErr;
-                        }
-                    }
-                );
-            });
-        }
-        walk(directoryName);
+                        );
+                    });
+                }
+                walk(directoryName);
+            }
+        });
     };
     // loads the pwads database by checking all the pwad files in the idTech/pwads directory
     self.buildPwadCollection = reloadFiles => {
         let directoryName = self.pwadDirectory;
-        function walk(directory) {
-            fs.readdir(directory, (e, files) => {
-                if (e) {
-                    console.log('buildPwadCollection error:', e);
-                    return;
-                }
-                files.forEach(
-                    file => {
-                        let fullPath = path.join(directory, file);
-                        fs.stat(fullPath, (statErr, f) => {
-                            if (statErr) {
-                                console.log('buildPwadCollection statError error', statErr);
-                                return;
-                            }
-                            if (f.isDirectory()) {
-                                if (dev) {
-                                    console.log('buildPwad:: ' + file + ' and is directory: ' + fullPath);
-                                }
-                                walk(fullPath);
-                            } else {
-                                let fileExt = file.substring(file.lastIndexOf('.') + 1);
-
-                                if (pwadTypes.indexOf(fileExt.toLowerCase()) > -1) {
-                                    let pwad = {
-                                        filename: file,
-                                        filepath: fullPath
-                                    };
-                                    if (dev) {
-                                        console.log('buildPwad:: adding ' + fullPath);
-                                        console.log('reloadFiles: ' + reloadFiles);
+        pwadCollection.remove({}, { multi: true }, (removeErr, numRemoved) => {
+            if (removeErr) {
+                console.log('buildIwadCollection removal error: ', removeErr);
+            } else {
+                function walk(directory) {
+                    fs.readdir(directory, (e, files) => {
+                        if (e) {
+                            console.log('buildPwadCollection error:', e);
+                            return;
+                        }
+                        files.forEach(
+                            file => {
+                                let fullPath = path.join(directory, file);
+                                fs.stat(fullPath, (statErr, f) => {
+                                    if (statErr) {
+                                        console.log('buildPwadCollection statError error', statErr);
+                                        return;
                                     }
-                                    pwadCollection.update(
-                                        { filename: pwad.filename },
-                                        { $set: { filepath: pwad.filepath } },
-                                        { upsert: true },
-                                        (updateErr, numReplaced) => {
-                                            if (updateErr) {
-                                                console.log('buildPwadCollection updatingCollection error', updateErr);
-                                            } else {
-                                                pwadCollection.persistence.compactDatafile();
-                                                if (reloadFiles) {
-                                                    self.loadPwadFiles();
-                                                }
-                                            }
+                                    if (f.isDirectory()) {
+                                        if (dev) {
+                                            console.log('buildPwad:: ' + file + ' and is directory: ' + fullPath);
                                         }
-                                    );
-                                } else if (fileExt === 'json') {
-                                    fs.readFile(fullPath, 'utf8', (err, data) => {
-                                        if (err) {
-                                            console.log('buildPWadCollection json file read error!', err);
-                                        } else {
-                                            let pwad = JSON.parse(data);
+                                        walk(fullPath);
+                                    } else {
+                                        let fileExt = file.substring(file.lastIndexOf('.') + 1);
+                                        if (pwadTypes.indexOf(fileExt.toLowerCase()) > -1) {
+                                            let relativePath = path.relative(__dirname, fullPath);
+                                            let pwad = {
+                                                filename: file,
+                                                filepath: relativePath
+                                            };
                                             if (dev) {
-                                                console.log('buildPwad:: adding json' + fullPath);
+                                                console.log('buildPwad:: adding ' + fullPath);
                                                 console.log('reloadFiles: ' + reloadFiles);
                                             }
                                             pwadCollection.update(
                                                 { filename: pwad.filename },
-                                                {
-                                                    $set: {
-                                                        authors: pwad.authors,
-                                                        metaTags: pwad.metaTags,
-                                                        source: pwad.source,
-                                                        name: pwad.name,
-                                                        quickDescription: pwad.quickDescription,
-                                                        longDescription: pwad.longDescription,
-                                                        hidden: pwad.hidden
-                                                    }
-                                                },
+                                                { $set: { filepath: pwad.filepath } },
                                                 { upsert: true },
                                                 (updateErr, numReplaced) => {
                                                     if (updateErr) {
                                                         console.log(
-                                                            'buildPwadCollection updatingCollection json error: ',
+                                                            'buildPwadCollection updatingCollection error',
                                                             updateErr
                                                         );
                                                     } else {
@@ -1098,128 +1106,149 @@ function AppViewModel() {
                                                     }
                                                 }
                                             );
-                                        }
-                                    });
-                                } else if (fileExt === 'txt') {
-                                    pwadCollection.findOne({ filename: f }, (findErr, pwad) => {
-                                        if (findErr) {
-                                            console.log('buildPwadCollection findingCollection txt error: ', findErr);
-                                        } else {
+                                        } else if (fileExt === 'json') {
                                             fs.readFile(fullPath, 'utf8', (err, data) => {
                                                 if (err) {
-                                                    console.log('buildPwadCollection txt file read error!', err);
+                                                    console.log('buildPWadCollection json file read error!', err);
                                                 } else {
-                                                    let longDescription = data;
-                                                    if (pwad && longDescription !== pwad.longDescription) {
-                                                        if (dev) {
-                                                            console.log(
-                                                                'buildPwad:: adding ' +
-                                                                    longDescription +
-                                                                    ' to ' +
-                                                                    fullPath
-                                                            );
-                                                            console.log('reloadFiles: ' + reloadFiles);
-                                                        }
-                                                        pwadCollection.update(
-                                                            { filename: f },
-                                                            {
-                                                                $set: {
-                                                                    longDescription: longDescription
-                                                                }
-                                                            },
-                                                            {},
-                                                            (updateErr, numReplaced) => {
-                                                                if (updateErr) {
-                                                                    console.log(
-                                                                        'buildPwadCollection updatingCollection txt error: ',
-                                                                        updateErr
-                                                                    );
-                                                                } else {
-                                                                    pwadCollection.persistence.compactDatafile();
-                                                                    if (reloadFiles) {
-                                                                        self.loadPwadFiles();
-                                                                    }
+                                                    let pwad = JSON.parse(data);
+                                                    if (dev) {
+                                                        console.log('buildPwad:: adding json' + fullPath);
+                                                        console.log('reloadFiles: ' + reloadFiles);
+                                                    }
+                                                    pwadCollection.update(
+                                                        { filename: pwad.filename },
+                                                        {
+                                                            $set: {
+                                                                authors: pwad.authors,
+                                                                metaTags: pwad.metaTags,
+                                                                source: pwad.source,
+                                                                name: pwad.name,
+                                                                quickDescription: pwad.quickDescription,
+                                                                longDescription: pwad.longDescription,
+                                                                hidden: pwad.hidden
+                                                            }
+                                                        },
+                                                        { upsert: true },
+                                                        (updateErr, numReplaced) => {
+                                                            if (updateErr) {
+                                                                console.log(
+                                                                    'buildPwadCollection updatingCollection json error: ',
+                                                                    updateErr
+                                                                );
+                                                            } else {
+                                                                pwadCollection.persistence.compactDatafile();
+                                                                if (reloadFiles) {
+                                                                    self.loadPwadFiles();
                                                                 }
                                                             }
-                                                        );
-                                                    }
+                                                        }
+                                                    );
+                                                }
+                                            });
+                                        } else if (fileExt === 'txt') {
+                                            pwadCollection.findOne({ filename: f }, (findErr, pwad) => {
+                                                if (findErr) {
+                                                    console.log(
+                                                        'buildPwadCollection findingCollection txt error: ',
+                                                        findErr
+                                                    );
+                                                } else {
+                                                    fs.readFile(fullPath, 'utf8', (err, data) => {
+                                                        if (err) {
+                                                            console.log(
+                                                                'buildPwadCollection txt file read error!',
+                                                                err
+                                                            );
+                                                        } else {
+                                                            let longDescription = data;
+                                                            if (pwad && longDescription !== pwad.longDescription) {
+                                                                if (dev) {
+                                                                    console.log(
+                                                                        'buildPwad:: adding ' +
+                                                                            longDescription +
+                                                                            ' to ' +
+                                                                            fullPath
+                                                                    );
+                                                                    console.log('reloadFiles: ' + reloadFiles);
+                                                                }
+                                                                pwadCollection.update(
+                                                                    { filename: f },
+                                                                    {
+                                                                        $set: {
+                                                                            longDescription: longDescription
+                                                                        }
+                                                                    },
+                                                                    {},
+                                                                    (updateErr, numReplaced) => {
+                                                                        if (updateErr) {
+                                                                            console.log(
+                                                                                'buildPwadCollection updatingCollection txt error: ',
+                                                                                updateErr
+                                                                            );
+                                                                        } else {
+                                                                            pwadCollection.persistence.compactDatafile();
+                                                                            if (reloadFiles) {
+                                                                                self.loadPwadFiles();
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                );
+                                                            }
+                                                        }
+                                                    });
                                                 }
                                             });
                                         }
-                                    });
+                                    }
+                                });
+                            },
+                            forErr => {
+                                if (forErr) {
+                                    throw forErr;
                                 }
                             }
-                        });
-                    },
-                    forErr => {
-                        if (forErr) {
-                            throw forErr;
-                        }
-                    }
-                );
-            });
-        }
-        walk(directoryName);
+                        );
+                    });
+                }
+                walk(directoryName);
+            }
+        });
     };
     // loads the sourceports by checking all the sourceports in the idTech/sourceports directory
     self.buildSourceportCollection = reloadFiles => {
         let directoryName = self.sourceportDirectory;
-        function walk(directory) {
-            fs.readdir(directory, (e, files) => {
-                if (e) {
-                    console.log('Error: ', e);
-                    return;
-                }
-                files.forEach(
-                    file => {
-                        let fullPath = path.join(directory, file);
-                        fs.stat(fullPath, (forEachErr, f) => {
-                            if (forEachErr) {
-                                console.log('buildSourceportCollection stat error: ', forEachErr);
-                                return;
-                            }
-                            if (f.isDirectory()) {
-                                if (dev) {
-                                    console.log('buildSourceport:: ' + file + ' and is directory: ' + fullPath);
-                                }
-                                walk(fullPath);
-                            } else {
-                                let fileExt = file.substring(file.lastIndexOf('.') + 1);
-
-                                if (fileExt === 'exe') {
-                                    let sourceport = {
-                                        filename: file,
-                                        filepath: fullPath
-                                    };
-                                    if (dev) {
-                                        console.log('buildSourceport:: adding ' + fullPath);
-                                        console.log('reloadFiles: ' + reloadFiles);
+        sourceportCollection.remove({}, { multi: true }, (removeErr, numRemoved) => {
+            if (removeErr) {
+                console.log('buildIwadCollection removal error: ', removeErr);
+            } else {
+                function walk(directory) {
+                    fs.readdir(directory, (e, files) => {
+                        if (e) {
+                            console.log('Error: ', e);
+                            return;
+                        }
+                        files.forEach(
+                            file => {
+                                let fullPath = path.join(directory, file);
+                                fs.stat(fullPath, (forEachErr, f) => {
+                                    if (forEachErr) {
+                                        console.log('buildSourceportCollection stat error: ', forEachErr);
+                                        return;
                                     }
-                                    sourceportCollection.update(
-                                        { filename: sourceport.filename },
-                                        {
-                                            $set: {
-                                                filepath: sourceport.filepath
-                                            }
-                                        },
-                                        { upsert: true },
-                                        (updateErr, numReplaced) => {
-                                            if (updateErr) {
-                                                console.log('buildSourceportCollection update error: ', updateErr);
-                                            } else {
-                                                sourceportCollection.persistence.compactDatafile();
-                                                if (reloadFiles) {
-                                                    self.loadSourceportFiles();
-                                                }
-                                            }
+                                    if (f.isDirectory()) {
+                                        if (dev) {
+                                            console.log('buildSourceport:: ' + file + ' and is directory: ' + fullPath);
                                         }
-                                    );
-                                } else if (fileExt === 'json') {
-                                    fs.readFile(fullPath, 'utf8', (err, data) => {
-                                        if (err) {
-                                            console.log('buildSourceportCollection json file read error!', err);
-                                        } else {
-                                            let sourceport = JSON.parse(data);
+                                        walk(fullPath);
+                                    } else {
+                                        let fileExt = file.substring(file.lastIndexOf('.') + 1);
+                                        if (fileExt === 'exe') {
+                                            let relativePath = path.relative(__dirname, fullPath);
+                                            let sourceport = {
+                                                filename: file,
+                                                filepath: relativePath
+                                            };
                                             if (dev) {
                                                 console.log('buildSourceport:: adding ' + fullPath);
                                                 console.log('reloadFiles: ' + reloadFiles);
@@ -1228,21 +1257,14 @@ function AppViewModel() {
                                                 { filename: sourceport.filename },
                                                 {
                                                     $set: {
-                                                        authors: sourceport.authors,
-                                                        metaTags: sourceport.metaTags,
-                                                        source: sourceport.source,
-                                                        name: sourceport.name,
-                                                        quickDescription: sourceport.quickDescription,
-                                                        longDescription: sourceport.longDescription,
-                                                        hidden: sourceport.hidden,
-                                                        basetype: sourceport.basetype
+                                                        filepath: sourceport.filepath
                                                     }
                                                 },
                                                 { upsert: true },
                                                 (updateErr, numReplaced) => {
                                                     if (updateErr) {
                                                         console.log(
-                                                            'buildSourceportCollection update json error: ',
+                                                            'buildSourceportCollection update error: ',
                                                             updateErr
                                                         );
                                                     } else {
@@ -1253,21 +1275,62 @@ function AppViewModel() {
                                                     }
                                                 }
                                             );
+                                        } else if (fileExt === 'json') {
+                                            fs.readFile(fullPath, 'utf8', (err, data) => {
+                                                if (err) {
+                                                    console.log('buildSourceportCollection json file read error!', err);
+                                                } else {
+                                                    let sourceport = JSON.parse(data);
+                                                    if (dev) {
+                                                        console.log('buildSourceport:: adding ' + fullPath);
+                                                        console.log('reloadFiles: ' + reloadFiles);
+                                                    }
+                                                    sourceportCollection.update(
+                                                        { filename: sourceport.filename },
+                                                        {
+                                                            $set: {
+                                                                authors: sourceport.authors,
+                                                                metaTags: sourceport.metaTags,
+                                                                source: sourceport.source,
+                                                                name: sourceport.name,
+                                                                quickDescription: sourceport.quickDescription,
+                                                                longDescription: sourceport.longDescription,
+                                                                hidden: sourceport.hidden,
+                                                                basetype: sourceport.basetype
+                                                            }
+                                                        },
+                                                        { upsert: true },
+                                                        (updateErr, numReplaced) => {
+                                                            if (updateErr) {
+                                                                console.log(
+                                                                    'buildSourceportCollection update json error: ',
+                                                                    updateErr
+                                                                );
+                                                            } else {
+                                                                sourceportCollection.persistence.compactDatafile();
+                                                                if (reloadFiles) {
+                                                                    self.loadSourceportFiles();
+                                                                }
+                                                            }
+                                                        }
+                                                    );
+                                                }
+                                            });
                                         }
-                                    });
+                                    }
+                                });
+                            },
+                            forErr => {
+                                if (forErr) {
+                                    throw forErr;
                                 }
                             }
-                        });
-                    },
-                    forErr => {
-                        if (forErr) {
-                            throw forErr;
-                        }
-                    }
-                );
-            });
-        }
-        walk(directoryName);
+                        );
+                    });
+                }
+                walk(directoryName);
+            }
+        });
     };
     // loads iwads from the database into the app's viewmodel, then loads the maps and difficulty's
     self.loadIwadFiles = () => {
@@ -1293,7 +1356,9 @@ function AppViewModel() {
                             iwad.hidden,
                             iwad.basetype
                         );
-                        newIwads.push(newIwad);
+                        if (newIwad.filepath) {
+                            newIwads.push(newIwad);
+                        }
                     });
                     self.files.iwads.removeAll();
                     self.files.iwads.push.apply(self.files.iwads, newIwads);
@@ -1327,15 +1392,17 @@ function AppViewModel() {
                             'pwad',
                             pwad.hidden
                         );
-                        newPwads.push(newPwad);
-                        let inchosen = false;
-                        _.forEach(self.currentConfig().pwads(), pwad => {
-                            if (newPwad.filepath === pwad.filepath) {
-                                inchosen = true;
+                        if (newPwad.filepath) {
+                            newPwads.push(newPwad);
+                            let inchosen = false;
+                            _.forEach(self.currentConfig().pwads(), pwad => {
+                                if (newPwad.filepath === pwad.filepath) {
+                                    inchosen = true;
+                                }
+                            });
+                            if (!inchosen) {
+                                newAvailablePwads.push(newPwad);
                             }
-                        });
-                        if (!inchosen) {
-                            newAvailablePwads.push(newPwad);
                         }
                     });
                     self.files.pwads.removeAll();
@@ -1369,7 +1436,9 @@ function AppViewModel() {
                             sourceport.hidden,
                             sourceport.basetype
                         );
-                        newSourceports.push(newSourceport);
+                        if (newSourceport.filepath) {
+                            newSourceports.push(newSourceport);
+                        }
                     });
                     self.files.sourceports.removeAll();
                     self.files.sourceports.push.apply(self.files.sourceports, newSourceports);
@@ -1554,7 +1623,7 @@ function AppViewModel() {
         self.loadCommandLineOptions('recording');
         self.loadCommandLineOptions('advanced');
     };
-    // loads command line options from the database into the app's viewmodel from a given category 
+    // loads command line options from the database into the app's viewmodel from a given category
     // (e.g. display, debug, etc.)
     // will take current sourceport into account, otherwise it won't load anything
     // this is a convenience function to load all the command line options from one function call.
@@ -1734,11 +1803,12 @@ function AppViewModel() {
     };
     // uses the sourceport's filepath to look for any ini files contained within the same directory.
     // note: it will not dig into other directories within the sourceport's directory.
-    // if you want this app to load your ini file, then you need to put that ini file in the same place as your 
+    // if you want this app to load your ini file, then you need to put that ini file in the same place as your
     // sourceport's executable
     // this function will then populate the ini file dropdown on the fly
     self.getIniFilesForGivenSourceport = sourceport => {
-        let directory = path.dirname(sourceport);
+        let directory = path.resolve(__dirname, path.dirname(sourceport));
+        console.log(directory);
         self.iniFiles.removeAll();
         function walk(directory) {
             fs.readdir(directory, (e, files) => {
@@ -1764,9 +1834,9 @@ function AppViewModel() {
                                 //the same directory as the exe, then I don't care about it.
                             } else {
                                 let fileExt = file.substring(file.lastIndexOf('.') + 1);
-
+                                let relativePath = path.relative(__dirname, fullPath);
                                 if (fileExt === 'ini') {
-                                    let iniFile = new IniFile(fullPath, file);
+                                    let iniFile = new IniFile(relativePath, file);
                                     self.iniFiles.push(iniFile);
                                     self.iniFiles.sort();
                                 }
@@ -2332,7 +2402,6 @@ function AppViewModel() {
     };
     // the initialization function that starts the whole app going.
     self.init = () => {
-        //self.goToView(self.views[0]);
         console.log('init: loading files');
         self.loadCollections(true);
         self.loadDefaultConfig();
@@ -2370,7 +2439,7 @@ function AppViewModel() {
             });
         });
     };
-    // here at the end, calling the initialization function.  
+    // here at the end, calling the initialization function.
     self.init();
 }
 
