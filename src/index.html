@@ -49,12 +49,9 @@
             <div class="col-md-12 tab-pane fade active show" id="configBuilder">
                 <!--Run Button-->
                 <div class="row">
-                    <div class="col-md-11 border border-primary btn btn-xs btn-primary fa fa-play text-responsive"
+                    <div class="col-md-12 border border-primary btn btn-xs btn-primary fa fa-play text-responsive"
                         data-bind="click: runCurrentConfig" data-toggle="tooltip" title="Run Current Configuration">
                     </div>
-                    <div style="font-size: 2rem" class="col-md-1 border border-info btn btn-xs btn-info fa fa-terminal"
-                        data-bind="click: exportCurrentConfig" data-toggle="tooltip"
-                        title="Export current configuration to a file."></div>
                 </div>
                 <!--Generated Command-->
                 <div class="row">
@@ -127,12 +124,15 @@
                                             <div>
                                                 <span style="width: 32%"
                                                     class="btn btn-xs btn-secondary fa fa-arrow-circle-up"
-                                                    data-toggle="tooltip" title="Load Config" data-bind="click: $parent.loadConfig">
+                                                    data-toggle="tooltip" title="Load Config"
+                                                    data-bind="click: $parent.loadConfig">
                                                 </span>
                                                 <span style="width: 32%" class="btn btn-xs btn-secondary fa fa-copy"
-                                                    data-toggle="tooltip" title="Clone Config" data-bind="click: $parent.cloneConfig"></span>
+                                                    data-toggle="tooltip" title="Clone Config"
+                                                    data-bind="click: $parent.cloneConfig"></span>
                                                 <span style="width: 32%" class="btn btn-xs btn-danger fa fa-remove"
-                                                    data-toggle="tooltip" title="Delete Config" data-bind="click: $parent.deleteConfig"></span>
+                                                    data-toggle="tooltip" title="Delete Config"
+                                                    data-bind="click: $parent.deleteConfig"></span>
                                             </div>
                                         </div>
                                     </div>
@@ -239,417 +239,479 @@
                             </div>
                         </div>
                         <!--multiplayer options (only available when gamemode not solo)-->
-                        <div class="row" data-bind="hidden: currentConfig().gamemode()==='solo'">
-                            <div class="col-md-12 border border-secondary">
-                                <ul class="nav nav-tabs">
-                                    <li class="nav-item">
-                                        <a class="nav-link" data-toggle="tab" href="#Multiplayer">
-                                            Multiplayer
-                                        </a>
-                                    </li>
-                                    <li class="nav-item"
-                                        data-bind="hidden: (currentConfig().gamemode()==='solo'||(currentConfig().sourceport()&&getSourceport(currentConfig().sourceport()).sourceportBasetype()==='Chocolate'))">
-                                        <a class="nav-link" data-toggle="tab" href="#DMFlags">
-                                            DMFlags
-                                        </a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link" data-toggle="tab" href="#Networking">
-                                            Networking
-                                        </a>
-                                    </li>
-                                </ul>
-                                <div class="tab-content">
-                                    <div class="tab-pane active" id="Multiplayer"
-                                        data-bind="foreach: currentConfig().sourceportConfigs.multiplayer">
-                                        <div class="form-group">
-                                            <input type="checkbox" data-bind="checked: enabled, uniqueId: enabled" />
-                                            <label class="control-label" data-toggle="tooltip"
-                                                data-bind="tooltip: description, uniqueFor:enabled, text:name"></label>
-                                            <!-- ko if: inputType==='text' -->
-                                            <input type="text" class="form-control" data-bind="textInput: value" />
-                                            <!-- /ko -->
-                                            <!-- ko if: inputType==='number' -->
-                                            <input type="number" class="form-control" data-bind="textInput: value" />
-                                            <!-- /ko -->
-                                            <!-- ko if: inputType==='range' -->
-                                            <input type="number" class="form-control"
-                                                data-bind="textInput: value, attr: {min: valueRange.min, max: valueRange.max}" />
-                                            <!-- /ko -->
-                                            <!-- ko if: inputType==='select' -->
-                                            <select class="form-control"
-                                                data-bind="options: valueset, optionsText: 'text', optionsValue:'value', value: value, optionsCaption: 'Choose...'"></select>
-                                            <!-- /ko -->
-                                            <!-- ko if: inputType==='file' -->
-                                            <input type="file" class="form-control" data-bind="file: value" />
-                                            <!-- /ko -->
-                                            <!-- ko if: inputType==='directory' -->
-                                            <input type="file" class="form-control" data-bind="directory: value"
-                                                webkitdirectory directory multiple />
-                                            <!-- /ko -->
-                                            <!-- ko if: inputType==='files' -->
-                                            <input type="file" class="form-control" data-bind="files: value" multiple />
-                                            <!-- /ko -->
-                                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <h5>
+                                            <a href="#" data-toggle="collapse"
+                                                data-target="#multiplayerStuff">Multiplayer Options</a>
+                                        </h5>
                                     </div>
-                                    <div class="tab-pane fade" id="DMFlags">
+                                </div>
+                                <div class="row collapse show" id="multiplayerStuff">
+                                    <div data-bind="hidden: (currentConfig().gamemode()==='solo')||(!currentConfig().sourceport())"
+                                        class="col-md-12 border border-secondary">
                                         <ul class="nav nav-tabs">
                                             <li class="nav-item">
-                                                <a class="nav-link" data-toggle="tab" href="#flags1">
+                                                <a class="nav-link" data-toggle="tab" href="#Multiplayer">
+                                                    Multiplayer
+                                                </a>
+                                            </li>
+                                            <li class="nav-item"
+                                                data-bind="hidden: (currentConfig().gamemode()==='solo'||(currentConfig().sourceport()&&getSourceport(currentConfig().sourceport()).sourceportBasetype()==='Chocolate'))">
+                                                <a class="nav-link" data-toggle="tab" href="#DMFlags">
                                                     DMFlags
                                                 </a>
                                             </li>
                                             <li class="nav-item">
-                                                <a class="nav-link" data-toggle="tab" href="#flags2">
-                                                    DMFlags2
-                                                </a>
-                                            </li>
-                                            <li class="nav-item"
-                                                data-bind="visible: (currentConfig().sourceport()&&getSourceport(currentConfig().sourceport()).sourceportBasetype()==='Zandronum')">
-                                                <a class="nav-link" data-toggle="tab" href="#zadmflags">
-                                                    ZADMFlags
-                                                </a>
-                                            </li>
-                                            <li class="nav-item"
-                                                data-bind="visible: (currentConfig().sourceport()&&getSourceport(currentConfig().sourceport()).sourceportBasetype()==='Zandronum')">
-                                                <a class="nav-link" data-toggle="tab" href="#compatflags">
-                                                    CompatFlags
-                                                </a>
-                                            </li>
-                                            <li class="nav-item"
-                                                data-bind="visible: (currentConfig().sourceport()&&getSourceport(currentConfig().sourceport()).sourceportBasetype()==='Zandronum')">
-                                                <a class="nav-link" data-toggle="tab" href="#zacompatflags">
-                                                    ZACompatFlags
+                                                <a class="nav-link" data-toggle="tab" href="#Networking">
+                                                    Networking
                                                 </a>
                                             </li>
                                         </ul>
                                         <div class="tab-content">
-                                            <div class="tab-pane active" id="flags1"
-                                                data-bind="foreach: currentConfig().dmFlags">
-                                                <!-- ko if: command==='dmflags' -->
+                                            <div class="tab-pane active" id="Multiplayer"
+                                                data-bind="foreach: currentConfig().sourceportConfigs.multiplayer">
                                                 <div class="form-group">
                                                     <input type="checkbox"
                                                         data-bind="checked: enabled, uniqueId: enabled" />
                                                     <label class="control-label" data-toggle="tooltip"
-                                                        data-bind="tooltip: description, uniqueFor:enabled, text:name"></label>
+                                                        data-bind="tooltip: description, uniqueFor:enabled, text:command==='-host'||command==='-server'?name+'. Send your players this address to connect to: '+$parent.multiplayerAddress():name"></label>
+                                                    <!-- ko if: inputType==='text' -->
+                                                    <input type="text" class="form-control"
+                                                        data-bind="textInput: value" />
+                                                    <!-- /ko -->
+                                                    <!-- ko if: inputType==='number' -->
+                                                    <input type="number" class="form-control"
+                                                        data-bind="textInput: value" />
+                                                    <!-- /ko -->
+                                                    <!-- ko if: inputType==='range' -->
+                                                    <input type="number" class="form-control"
+                                                        data-bind="textInput: value, attr: {min: valueRange.min, max: valueRange.max}" />
+                                                    <!-- /ko -->
+                                                    <!-- ko if: inputType==='select' -->
+                                                    <select class="form-control"
+                                                        data-bind="options: valueset, optionsText: 'text', optionsValue:'value', value: value, optionsCaption: 'Choose...'"></select>
+                                                    <!-- /ko -->
+                                                    <!-- ko if: inputType==='file' -->
+                                                    <input type="file" class="form-control" data-bind="file: value" />
+                                                    <!-- /ko -->
+                                                    <!-- ko if: inputType==='directory' -->
+                                                    <input type="file" class="form-control" data-bind="directory: value"
+                                                        webkitdirectory directory multiple />
+                                                    <!-- /ko -->
+                                                    <!-- ko if: inputType==='files' -->
+                                                    <input type="file" class="form-control" data-bind="files: value"
+                                                        multiple />
+                                                    <!-- /ko -->
                                                 </div>
-                                                <!-- /ko -->
                                             </div>
-                                            <div class="tab-pane fade" id="flags2"
-                                                data-bind="foreach: currentConfig().dmFlags">
-                                                <!-- ko if: command==='dmflags2' -->
-                                                <div class="form-group">
-                                                    <input type="checkbox"
-                                                        data-bind="checked: enabled, uniqueId: enabled" />
-                                                    <label class="control-label" data-toggle="tooltip"
-                                                        data-bind="tooltip: description, uniqueFor:enabled, text:name"></label>
+                                            <div class="tab-pane fade" id="DMFlags">
+                                                <ul class="nav nav-tabs">
+                                                    <li class="nav-item">
+                                                        <a class="nav-link" data-toggle="tab" href="#flags1">
+                                                            DMFlags
+                                                        </a>
+                                                    </li>
+                                                    <li class="nav-item">
+                                                        <a class="nav-link" data-toggle="tab" href="#flags2">
+                                                            DMFlags2
+                                                        </a>
+                                                    </li>
+                                                    <li class="nav-item"
+                                                        data-bind="visible: (currentConfig().sourceport()&&getSourceport(currentConfig().sourceport()).sourceportBasetype()==='Zandronum')">
+                                                        <a class="nav-link" data-toggle="tab" href="#zadmflags">
+                                                            ZADMFlags
+                                                        </a>
+                                                    </li>
+                                                    <li class="nav-item"
+                                                        data-bind="visible: (currentConfig().sourceport()&&getSourceport(currentConfig().sourceport()).sourceportBasetype()==='Zandronum')">
+                                                        <a class="nav-link" data-toggle="tab" href="#compatflags">
+                                                            CompatFlags
+                                                        </a>
+                                                    </li>
+                                                    <li class="nav-item"
+                                                        data-bind="visible: (currentConfig().sourceport()&&getSourceport(currentConfig().sourceport()).sourceportBasetype()==='Zandronum')">
+                                                        <a class="nav-link" data-toggle="tab" href="#zacompatflags">
+                                                            ZACompatFlags
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                                <div class="tab-content">
+                                                    <div class="tab-pane active" id="flags1"
+                                                        data-bind="foreach: currentConfig().dmFlags">
+                                                        <!-- ko if: command==='dmflags' -->
+                                                        <div class="form-group">
+                                                            <input type="checkbox"
+                                                                data-bind="checked: enabled, uniqueId: enabled" />
+                                                            <label class="control-label" data-toggle="tooltip"
+                                                                data-bind="tooltip: description, uniqueFor:enabled, text:name"></label>
+                                                        </div>
+                                                        <!-- /ko -->
+                                                    </div>
+                                                    <div class="tab-pane fade" id="flags2"
+                                                        data-bind="foreach: currentConfig().dmFlags">
+                                                        <!-- ko if: command==='dmflags2' -->
+                                                        <div class="form-group">
+                                                            <input type="checkbox"
+                                                                data-bind="checked: enabled, uniqueId: enabled" />
+                                                            <label class="control-label" data-toggle="tooltip"
+                                                                data-bind="tooltip: description, uniqueFor:enabled, text:name"></label>
+                                                        </div>
+                                                        <!-- /ko -->
+                                                    </div>
+                                                    <div class="tab-pane fade" id="zadmflags"
+                                                        data-bind="foreach: currentConfig().dmFlags">
+                                                        <!-- ko if: command==='zadmflags' -->
+                                                        <div class="form-group">
+                                                            <input type="checkbox"
+                                                                data-bind="checked: enabled, uniqueId: enabled" />
+                                                            <label class="control-label" data-toggle="tooltip"
+                                                                data-bind="tooltip: description, uniqueFor:enabled, text:name"></label>
+                                                        </div>
+                                                        <!-- /ko -->
+                                                    </div>
+                                                    <div class="tab-pane fade" id="compatflags"
+                                                        data-bind="foreach: currentConfig().dmFlags">
+                                                        <!-- ko if: command==='compatflags' -->
+                                                        <div class="form-group">
+                                                            <input type="checkbox"
+                                                                data-bind="checked: enabled, uniqueId: enabled" />
+                                                            <label class="control-label" data-toggle="tooltip"
+                                                                data-bind="tooltip: description, uniqueFor:enabled, text:name"></label>
+                                                        </div>
+                                                        <!-- /ko -->
+                                                    </div>
+                                                    <div class="tab-pane fade" id="zacompatflags"
+                                                        data-bind="foreach: currentConfig().dmFlags">
+                                                        <!-- ko if: command==='zacompatflags' -->
+                                                        <div class="form-group">
+                                                            <input type="checkbox"
+                                                                data-bind="checked: enabled, uniqueId: enabled" />
+                                                            <label class="control-label" data-toggle="tooltip"
+                                                                data-bind="tooltip: description, uniqueFor:enabled, text:name"></label>
+                                                        </div>
+                                                        <!-- /ko -->
+                                                    </div>
                                                 </div>
-                                                <!-- /ko -->
                                             </div>
-                                            <div class="tab-pane fade" id="zadmflags"
-                                                data-bind="foreach: currentConfig().dmFlags">
-                                                <!-- ko if: command==='zadmflags' -->
+                                            <div class="tab-pane fade" id="Networking"
+                                                data-bind="foreach: currentConfig().sourceportConfigs.networking">
                                                 <div class="form-group">
                                                     <input type="checkbox"
                                                         data-bind="checked: enabled, uniqueId: enabled" />
                                                     <label class="control-label" data-toggle="tooltip"
                                                         data-bind="tooltip: description, uniqueFor:enabled, text:name"></label>
+                                                    <!-- ko if: inputType==='text' -->
+                                                    <input type="text" class="form-control"
+                                                        data-bind="textInput: value" />
+                                                    <!-- /ko -->
+                                                    <!-- ko if: inputType==='number' -->
+                                                    <input type="number" class="form-control"
+                                                        data-bind="textInput: value" />
+                                                    <!-- /ko -->
+                                                    <!-- ko if: inputType==='range' -->
+                                                    <input type="number" class="form-control"
+                                                        data-bind="textInput: value, attr: {min: valueRange.min, max: valueRange.max}" />
+                                                    <!-- /ko -->
+                                                    <!-- ko if: inputType==='select' -->
+                                                    <select class="form-control"
+                                                        data-bind="options: valueset, optionsText: 'text', optionsValue:'value', value: value, optionsCaption: 'Choose...'"></select>
+                                                    <!-- /ko -->
+                                                    <!-- ko if: inputType==='file' -->
+                                                    <input type="file" class="form-control" data-bind="file: value" />
+                                                    <!-- /ko -->
+                                                    <!-- ko if: inputType==='directory' -->
+                                                    <input type="file" class="form-control" data-bind="directory: value"
+                                                        webkitdirectory directory multiple />
+                                                    <!-- /ko -->
+                                                    <!-- ko if: inputType==='files' -->
+                                                    <input type="file" class="form-control" data-bind="files: value"
+                                                        multiple />
+                                                    <!-- /ko -->
                                                 </div>
-                                                <!-- /ko -->
-                                            </div>
-                                            <div class="tab-pane fade" id="compatflags"
-                                                data-bind="foreach: currentConfig().dmFlags">
-                                                <!-- ko if: command==='compatflags' -->
-                                                <div class="form-group">
-                                                    <input type="checkbox"
-                                                        data-bind="checked: enabled, uniqueId: enabled" />
-                                                    <label class="control-label" data-toggle="tooltip"
-                                                        data-bind="tooltip: description, uniqueFor:enabled, text:name"></label>
-                                                </div>
-                                                <!-- /ko -->
-                                            </div>
-                                            <div class="tab-pane fade" id="zacompatflags"
-                                                data-bind="foreach: currentConfig().dmFlags">
-                                                <!-- ko if: command==='zacompatflags' -->
-                                                <div class="form-group">
-                                                    <input type="checkbox"
-                                                        data-bind="checked: enabled, uniqueId: enabled" />
-                                                    <label class="control-label" data-toggle="tooltip"
-                                                        data-bind="tooltip: description, uniqueFor:enabled, text:name"></label>
-                                                </div>
-                                                <!-- /ko -->
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="tab-pane fade" id="Networking"
-                                        data-bind="foreach: currentConfig().sourceportConfigs.networking">
-                                        <div class="form-group">
-                                            <input type="checkbox" data-bind="checked: enabled, uniqueId: enabled" />
-                                            <label class="control-label" data-toggle="tooltip"
-                                                data-bind="tooltip: description, uniqueFor:enabled, text:name"></label>
-                                            <!-- ko if: inputType==='text' -->
-                                            <input type="text" class="form-control" data-bind="textInput: value" />
-                                            <!-- /ko -->
-                                            <!-- ko if: inputType==='number' -->
-                                            <input type="number" class="form-control" data-bind="textInput: value" />
-                                            <!-- /ko -->
-                                            <!-- ko if: inputType==='range' -->
-                                            <input type="number" class="form-control"
-                                                data-bind="textInput: value, attr: {min: valueRange.min, max: valueRange.max}" />
-                                            <!-- /ko -->
-                                            <!-- ko if: inputType==='select' -->
-                                            <select class="form-control"
-                                                data-bind="options: valueset, optionsText: 'text', optionsValue:'value', value: value, optionsCaption: 'Choose...'"></select>
-                                            <!-- /ko -->
-                                            <!-- ko if: inputType==='file' -->
-                                            <input type="file" class="form-control" data-bind="file: value" />
-                                            <!-- /ko -->
-                                            <!-- ko if: inputType==='directory' -->
-                                            <input type="file" class="form-control" data-bind="directory: value"
-                                                webkitdirectory directory multiple />
-                                            <!-- /ko -->
-                                            <!-- ko if: inputType==='files' -->
-                                            <input type="file" class="form-control" data-bind="files: value" multiple />
-                                            <!-- /ko -->
-                                        </div>
+                                    <div class="col-md-12 border border-secondary"
+                                        data-bind="hidden: currentConfig().gamemode()!='solo' && currentConfig().sourceport()">
+                                        Choose a sourceport and set gamemode to multiplayer to see multiplayer
+                                        configuration options.
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <!--Sourceport Configs-->
                         <div class="row">
-                            <div data-bind="visible: currentConfig().sourceport()"
-                                class="col-md-12 border border-secondary">
-                                <!-- Configuration selection-->
-                                <ul class="nav nav-tabs">
-                                    <li class="nav-item">
-                                        <a class="nav-link" data-toggle="tab" href="#Config">
-                                            Config
-                                        </a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link" data-toggle="tab" href="#Display">
-                                            Display
-                                        </a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link" data-toggle="tab" href="#Gameplay">
-                                            Gameplay
-                                        </a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link" data-toggle="tab" href="#Recording">
-                                            Recording
-                                        </a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link" data-toggle="tab" href="#Advanced">
-                                            Advanced
-                                        </a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link" data-toggle="tab" href="#Debug">
-                                            Debug
-                                        </a>
-                                    </li>
-                                </ul>
-                                <div class="tab-content">
-                                    <div class="tab-pane active" id="Config"
-                                        data-bind="foreach: currentConfig().sourceportConfigs.config">
-                                        <div class="form-group">
-                                            <input type="checkbox" data-bind="checked: enabled, uniqueId: enabled" />
-                                            <label class="control-label" data-toggle="tooltip"
-                                                data-bind="tooltip: description, uniqueFor:enabled, text:name"></label>
-                                            <!-- ko if: inputType==='text' -->
-                                            <input type="text" class="form-control" data-bind="textInput: value" />
-                                            <!-- /ko -->
-                                            <!-- ko if: inputType==='number' -->
-                                            <input type="number" class="form-control" data-bind="textInput: value" />
-                                            <!-- /ko -->
-                                            <!-- ko if: inputType==='range' -->
-                                            <input type="number" class="form-control"
-                                                data-bind="textInput: value, attr: {min: valueRange.min, max: valueRange.max}" />
-                                            <!-- /ko -->
-                                            <!-- ko if: inputType==='select' -->
-                                            <select class="form-control"
-                                                data-bind="options: valueset, optionsText: 'text', optionsValue:'value', value: value, optionsCaption: 'Choose...'"></select>
-                                            <!-- /ko -->
-                                            <!-- ko if: inputType==='file' -->
-                                            <input type="file" class="form-control" data-bind="file: value" />
-                                            <!-- /ko -->
-                                            <!-- ko if: inputType==='directory' -->
-                                            <input type="file" class="form-control" data-bind="directory: value"
-                                                webkitdirectory directory multiple />
-                                            <!-- /ko -->
-                                            <!-- ko if: inputType==='files' -->
-                                            <input type="file" class="form-control" data-bind="files: value" multiple />
-                                            <!-- /ko -->
-                                        </div>
-                                    </div>
-                                    <div class="tab-pane fade" id="Display"
-                                        data-bind="foreach: currentConfig().sourceportConfigs.display">
-                                        <div class="form-group">
-                                            <input type="checkbox" data-bind="checked: enabled, uniqueId: enabled" />
-                                            <label class="control-label" data-toggle="tooltip"
-                                                data-bind="tooltip: description, uniqueFor:enabled, text:name"></label>
-                                            <!-- ko if: inputType==='text' -->
-                                            <input type="text" class="form-control" data-bind="textInput: value" />
-                                            <!-- /ko -->
-                                            <!-- ko if: inputType==='number' -->
-                                            <input type="number" class="form-control" data-bind="textInput: value" />
-                                            <!-- /ko -->
-                                            <!-- ko if: inputType==='range' -->
-                                            <input type="number" class="form-control"
-                                                data-bind="textInput: value, attr: {min: valueRange.min, max: valueRange.max}" />
-                                            <!-- /ko -->
-                                            <!-- ko if: inputType==='select' -->
-                                            <select class="form-control"
-                                                data-bind="options: valueset, optionsText: 'text', optionsValue:'value', value: value, optionsCaption: 'Choose...'"></select>
-                                            <!-- /ko -->
-                                            <!-- ko if: inputType==='file' -->
-                                            <input type="file" class="form-control" data-bind="file: value" />
-                                            <!-- /ko -->
-                                            <!-- ko if: inputType==='directory' -->
-                                            <input type="file" class="form-control" data-bind="directory: value"
-                                                webkitdirectory directory multiple />
-                                            <!-- /ko -->
-                                            <!-- ko if: inputType==='files' -->
-                                            <input type="file" class="form-control" data-bind="files: value" multiple />
-                                            <!-- /ko -->
-                                        </div>
-                                    </div>
-                                    <div class="tab-pane fade" id="Gameplay"
-                                        data-bind="foreach: currentConfig().sourceportConfigs.gameplay">
-                                        <div class="form-group">
-                                            <input type="checkbox" data-bind="checked: enabled, uniqueId: enabled" />
-                                            <label class="control-label" data-toggle="tooltip"
-                                                data-bind="tooltip: description, uniqueFor:enabled, text:name"></label>
-                                            <!-- ko if: inputType==='text' -->
-                                            <input type="text" class="form-control" data-bind="textInput: value" />
-                                            <!-- /ko -->
-                                            <!-- ko if: inputType==='number' -->
-                                            <input type="number" class="form-control" data-bind="textInput: value" />
-                                            <!-- /ko -->
-                                            <!-- ko if: inputType==='range' -->
-                                            <input type="number" class="form-control"
-                                                data-bind="textInput: value, attr: {min: valueRange.min, max: valueRange.max}" />
-                                            <!-- /ko -->
-                                            <!-- ko if: inputType==='select' -->
-                                            <select class="form-control"
-                                                data-bind="options: valueset, optionsText: 'text', optionsValue:'value', value: value, optionsCaption: 'Choose...'"></select>
-                                            <!-- /ko -->
-                                            <!-- ko if: inputType==='file' -->
-                                            <input type="file" class="form-control" data-bind="file: value" />
-                                            <!-- /ko -->
-                                            <!-- ko if: inputType==='directory' -->
-                                            <input type="file" class="form-control" data-bind="directory: value"
-                                                webkitdirectory directory multiple />
-                                            <!-- /ko -->
-                                            <!-- ko if: inputType==='files' -->
-                                            <input type="file" class="form-control" data-bind="files: value" multiple />
-                                            <!-- /ko -->
-                                        </div>
-                                    </div>
-                                    <div class="tab-pane fade" id="Recording"
-                                        data-bind="foreach: currentConfig().sourceportConfigs.recording">
-                                        <div class="form-group">
-                                            <input type="checkbox" data-bind="checked: enabled, uniqueId: enabled" />
-                                            <label class="control-label" data-toggle="tooltip"
-                                                data-bind="tooltip: description, uniqueFor:enabled, text:name"></label>
-                                            <!-- ko if: inputType==='text' -->
-                                            <input type="text" class="form-control" data-bind="textInput: value" />
-                                            <!-- /ko -->
-                                            <!-- ko if: inputType==='number' -->
-                                            <input type="number" class="form-control" data-bind="textInput: value" />
-                                            <!-- /ko -->
-                                            <!-- ko if: inputType==='range' -->
-                                            <input type="number" class="form-control"
-                                                data-bind="textInput: value, attr: {min: valueRange.min, max: valueRange.max}" />
-                                            <!-- /ko -->
-                                            <!-- ko if: inputType==='select' -->
-                                            <select class="form-control"
-                                                data-bind="options: valueset, optionsText: 'text', optionsValue:'value', value: value, optionsCaption: 'Choose...'"></select>
-                                            <!-- /ko -->
-                                            <!-- ko if: inputType==='file' -->
-                                            <input type="file" class="form-control" data-bind="file: value" />
-                                            <!-- /ko -->
-                                            <!-- ko if: inputType==='directory' -->
-                                            <input type="file" class="form-control" data-bind="directory: value"
-                                                webkitdirectory directory multiple />
-                                            <!-- /ko -->
-                                            <!-- ko if: inputType==='files' -->
-                                            <input type="file" class="form-control" data-bind="files: value" multiple />
-                                            <!-- /ko -->
-                                        </div>
-                                    </div>
-                                    <div class="tab-pane fade" id="Advanced"
-                                        data-bind="foreach: currentConfig().sourceportConfigs.advanced">
-                                        <div class="form-group">
-                                            <input type="checkbox" data-bind="checked: enabled, uniqueId: enabled" />
-                                            <label class="control-label" data-toggle="tooltip"
-                                                data-bind="tooltip: description, uniqueFor:enabled, text:name"></label>
-                                            <!-- ko if: inputType==='text' -->
-                                            <input type="text" class="form-control" data-bind="textInput: value" />
-                                            <!-- /ko -->
-                                            <!-- ko if: inputType==='number' -->
-                                            <input type="number" class="form-control" data-bind="textInput: value" />
-                                            <!-- /ko -->
-                                            <!-- ko if: inputType==='range' -->
-                                            <input type="number" class="form-control"
-                                                data-bind="textInput: value, attr: {min: valueRange.min, max: valueRange.max}" />
-                                            <!-- /ko -->
-                                            <!-- ko if: inputType==='select' -->
-                                            <select class="form-control"
-                                                data-bind="options: valueset, optionsText: 'text', optionsValue:'value', value: value, optionsCaption: 'Choose...'"></select>
-                                            <!-- /ko -->
-                                            <!-- ko if: inputType==='file' -->
-                                            <input type="file" class="form-control" data-bind="file: value" />
-                                            <!-- /ko -->
-                                            <!-- ko if: inputType==='directory' -->
-                                            <input type="file" class="form-control" data-bind="directory: value"
-                                                webkitdirectory directory multiple />
-                                            <!-- /ko -->
-                                            <!-- ko if: inputType==='files' -->
-                                            <input type="file" class="form-control" data-bind="files: value" multiple />
-                                            <!-- /ko -->
-                                        </div>
-                                    </div>
-                                    <div class="tab-pane fade" id="Debug"
-                                        data-bind="foreach: currentConfig().sourceportConfigs.debug">
-                                        <div class="form-group">
-                                            <input type="checkbox" data-bind="checked: enabled, uniqueId: enabled" />
-                                            <label class="control-label" data-toggle="tooltip"
-                                                data-bind="tooltip: description, uniqueFor:enabled, text:name"></label>
-                                            <!-- ko if: inputType==='text' -->
-                                            <input type="text" class="form-control" data-bind="textInput: value" />
-                                            <!-- /ko -->
-                                            <!-- ko if: inputType==='number' -->
-                                            <input type="number" class="form-control" data-bind="textInput: value" />
-                                            <!-- /ko -->
-                                            <!-- ko if: inputType==='range' -->
-                                            <input type="number" class="form-control"
-                                                data-bind="textInput: value, attr: {min: valueRange.min, max: valueRange.max}" />
-                                            <!-- /ko -->
-                                            <!-- ko if: inputType==='select' -->
-                                            <select class="form-control"
-                                                data-bind="options: valueset, optionsText: 'text', optionsValue:'value', value: value, optionsCaption: 'Choose...'"></select>
-                                            <!-- /ko -->
-                                            <!-- ko if: inputType==='file' -->
-                                            <input type="file" class="form-control" data-bind="file: value" />
-                                            <!-- /ko -->
-                                            <!-- ko if: inputType==='directory' -->
-                                            <input type="file" class="form-control" data-bind="directory: value"
-                                                webkitdirectory directory multiple />
-                                            <!-- /ko -->
-                                            <!-- ko if: inputType==='files' -->
-                                            <input type="file" class="form-control" data-bind="files: value" multiple />
-                                            <!-- /ko -->
-                                        </div>
+                            <div class="col-md-12">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <h5>
+                                            <a href="#" data-toggle="collapse" data-target="#configStuff">Configuration Options</a>
+                                        </h5>
                                     </div>
                                 </div>
-                            </div>
-                            <div data-bind="hidden: currentConfig().sourceport()">
-                                <h5>Choose a sourceport to see configuration options</h5>
+                                <div class="row collapse show" id="configStuff">
+                                    <div data-bind="visible: currentConfig().sourceport()"
+                                        class="col-md-12 border border-secondary">
+                                        <!-- Configuration selection-->
+                                        <ul class="nav nav-tabs">
+                                            <li class="nav-item">
+                                                <a class="nav-link" data-toggle="tab" href="#Config">
+                                                    Config
+                                                </a>
+                                            </li>
+                                            <li class="nav-item">
+                                                <a class="nav-link" data-toggle="tab" href="#Display">
+                                                    Display
+                                                </a>
+                                            </li>
+                                            <li class="nav-item">
+                                                <a class="nav-link" data-toggle="tab" href="#Gameplay">
+                                                    Gameplay
+                                                </a>
+                                            </li>
+                                            <li class="nav-item">
+                                                <a class="nav-link" data-toggle="tab" href="#Recording">
+                                                    Recording
+                                                </a>
+                                            </li>
+                                            <li class="nav-item">
+                                                <a class="nav-link" data-toggle="tab" href="#Advanced">
+                                                    Advanced
+                                                </a>
+                                            </li>
+                                            <li class="nav-item">
+                                                <a class="nav-link" data-toggle="tab" href="#Debug">
+                                                    Debug
+                                                </a>
+                                            </li>
+                                        </ul>
+                                        <div class="tab-content">
+                                            <div class="tab-pane active" id="Config"
+                                                data-bind="foreach: currentConfig().sourceportConfigs.config">
+                                                <div class="form-group">
+                                                    <input type="checkbox"
+                                                        data-bind="checked: enabled, uniqueId: enabled" />
+                                                    <label class="control-label" data-toggle="tooltip"
+                                                        data-bind="tooltip: description, uniqueFor:enabled, text:name"></label>
+                                                    <!-- ko if: inputType==='text' -->
+                                                    <input type="text" class="form-control"
+                                                        data-bind="textInput: value" />
+                                                    <!-- /ko -->
+                                                    <!-- ko if: inputType==='number' -->
+                                                    <input type="number" class="form-control"
+                                                        data-bind="textInput: value" />
+                                                    <!-- /ko -->
+                                                    <!-- ko if: inputType==='range' -->
+                                                    <input type="number" class="form-control"
+                                                        data-bind="textInput: value, attr: {min: valueRange.min, max: valueRange.max}" />
+                                                    <!-- /ko -->
+                                                    <!-- ko if: inputType==='select' -->
+                                                    <select class="form-control"
+                                                        data-bind="options: valueset, optionsText: 'text', optionsValue:'value', value: value, optionsCaption: 'Choose...'"></select>
+                                                    <!-- /ko -->
+                                                    <!-- ko if: inputType==='file' -->
+                                                    <input type="file" class="form-control" data-bind="file: value" />
+                                                    <!-- /ko -->
+                                                    <!-- ko if: inputType==='directory' -->
+                                                    <input type="file" class="form-control" data-bind="directory: value"
+                                                        webkitdirectory directory multiple />
+                                                    <!-- /ko -->
+                                                    <!-- ko if: inputType==='files' -->
+                                                    <input type="file" class="form-control" data-bind="files: value"
+                                                        multiple />
+                                                    <!-- /ko -->
+                                                </div>
+                                            </div>
+                                            <div class="tab-pane fade" id="Display"
+                                                data-bind="foreach: currentConfig().sourceportConfigs.display">
+                                                <div class="form-group">
+                                                    <input type="checkbox"
+                                                        data-bind="checked: enabled, uniqueId: enabled" />
+                                                    <label class="control-label" data-toggle="tooltip"
+                                                        data-bind="tooltip: description, uniqueFor:enabled, text:name"></label>
+                                                    <!-- ko if: inputType==='text' -->
+                                                    <input type="text" class="form-control"
+                                                        data-bind="textInput: value" />
+                                                    <!-- /ko -->
+                                                    <!-- ko if: inputType==='number' -->
+                                                    <input type="number" class="form-control"
+                                                        data-bind="textInput: value" />
+                                                    <!-- /ko -->
+                                                    <!-- ko if: inputType==='range' -->
+                                                    <input type="number" class="form-control"
+                                                        data-bind="textInput: value, attr: {min: valueRange.min, max: valueRange.max}" />
+                                                    <!-- /ko -->
+                                                    <!-- ko if: inputType==='select' -->
+                                                    <select class="form-control"
+                                                        data-bind="options: valueset, optionsText: 'text', optionsValue:'value', value: value, optionsCaption: 'Choose...'"></select>
+                                                    <!-- /ko -->
+                                                    <!-- ko if: inputType==='file' -->
+                                                    <input type="file" class="form-control" data-bind="file: value" />
+                                                    <!-- /ko -->
+                                                    <!-- ko if: inputType==='directory' -->
+                                                    <input type="file" class="form-control" data-bind="directory: value"
+                                                        webkitdirectory directory multiple />
+                                                    <!-- /ko -->
+                                                    <!-- ko if: inputType==='files' -->
+                                                    <input type="file" class="form-control" data-bind="files: value"
+                                                        multiple />
+                                                    <!-- /ko -->
+                                                </div>
+                                            </div>
+                                            <div class="tab-pane fade" id="Gameplay"
+                                                data-bind="foreach: currentConfig().sourceportConfigs.gameplay">
+                                                <div class="form-group">
+                                                    <input type="checkbox"
+                                                        data-bind="checked: enabled, uniqueId: enabled" />
+                                                    <label class="control-label" data-toggle="tooltip"
+                                                        data-bind="tooltip: description, uniqueFor:enabled, text:name"></label>
+                                                    <!-- ko if: inputType==='text' -->
+                                                    <input type="text" class="form-control"
+                                                        data-bind="textInput: value" />
+                                                    <!-- /ko -->
+                                                    <!-- ko if: inputType==='number' -->
+                                                    <input type="number" class="form-control"
+                                                        data-bind="textInput: value" />
+                                                    <!-- /ko -->
+                                                    <!-- ko if: inputType==='range' -->
+                                                    <input type="number" class="form-control"
+                                                        data-bind="textInput: value, attr: {min: valueRange.min, max: valueRange.max}" />
+                                                    <!-- /ko -->
+                                                    <!-- ko if: inputType==='select' -->
+                                                    <select class="form-control"
+                                                        data-bind="options: valueset, optionsText: 'text', optionsValue:'value', value: value, optionsCaption: 'Choose...'"></select>
+                                                    <!-- /ko -->
+                                                    <!-- ko if: inputType==='file' -->
+                                                    <input type="file" class="form-control" data-bind="file: value" />
+                                                    <!-- /ko -->
+                                                    <!-- ko if: inputType==='directory' -->
+                                                    <input type="file" class="form-control" data-bind="directory: value"
+                                                        webkitdirectory directory multiple />
+                                                    <!-- /ko -->
+                                                    <!-- ko if: inputType==='files' -->
+                                                    <input type="file" class="form-control" data-bind="files: value"
+                                                        multiple />
+                                                    <!-- /ko -->
+                                                </div>
+                                            </div>
+                                            <div class="tab-pane fade" id="Recording"
+                                                data-bind="foreach: currentConfig().sourceportConfigs.recording">
+                                                <div class="form-group">
+                                                    <input type="checkbox"
+                                                        data-bind="checked: enabled, uniqueId: enabled" />
+                                                    <label class="control-label" data-toggle="tooltip"
+                                                        data-bind="tooltip: description, uniqueFor:enabled, text:name"></label>
+                                                    <!-- ko if: inputType==='text' -->
+                                                    <input type="text" class="form-control"
+                                                        data-bind="textInput: value" />
+                                                    <!-- /ko -->
+                                                    <!-- ko if: inputType==='number' -->
+                                                    <input type="number" class="form-control"
+                                                        data-bind="textInput: value" />
+                                                    <!-- /ko -->
+                                                    <!-- ko if: inputType==='range' -->
+                                                    <input type="number" class="form-control"
+                                                        data-bind="textInput: value, attr: {min: valueRange.min, max: valueRange.max}" />
+                                                    <!-- /ko -->
+                                                    <!-- ko if: inputType==='select' -->
+                                                    <select class="form-control"
+                                                        data-bind="options: valueset, optionsText: 'text', optionsValue:'value', value: value, optionsCaption: 'Choose...'"></select>
+                                                    <!-- /ko -->
+                                                    <!-- ko if: inputType==='file' -->
+                                                    <input type="file" class="form-control" data-bind="file: value" />
+                                                    <!-- /ko -->
+                                                    <!-- ko if: inputType==='directory' -->
+                                                    <input type="file" class="form-control" data-bind="directory: value"
+                                                        webkitdirectory directory multiple />
+                                                    <!-- /ko -->
+                                                    <!-- ko if: inputType==='files' -->
+                                                    <input type="file" class="form-control" data-bind="files: value"
+                                                        multiple />
+                                                    <!-- /ko -->
+                                                </div>
+                                            </div>
+                                            <div class="tab-pane fade" id="Advanced"
+                                                data-bind="foreach: currentConfig().sourceportConfigs.advanced">
+                                                <div class="form-group">
+                                                    <input type="checkbox"
+                                                        data-bind="checked: enabled, uniqueId: enabled" />
+                                                    <label class="control-label" data-toggle="tooltip"
+                                                        data-bind="tooltip: description, uniqueFor:enabled, text:name"></label>
+                                                    <!-- ko if: inputType==='text' -->
+                                                    <input type="text" class="form-control"
+                                                        data-bind="textInput: value" />
+                                                    <!-- /ko -->
+                                                    <!-- ko if: inputType==='number' -->
+                                                    <input type="number" class="form-control"
+                                                        data-bind="textInput: value" />
+                                                    <!-- /ko -->
+                                                    <!-- ko if: inputType==='range' -->
+                                                    <input type="number" class="form-control"
+                                                        data-bind="textInput: value, attr: {min: valueRange.min, max: valueRange.max}" />
+                                                    <!-- /ko -->
+                                                    <!-- ko if: inputType==='select' -->
+                                                    <select class="form-control"
+                                                        data-bind="options: valueset, optionsText: 'text', optionsValue:'value', value: value, optionsCaption: 'Choose...'"></select>
+                                                    <!-- /ko -->
+                                                    <!-- ko if: inputType==='file' -->
+                                                    <input type="file" class="form-control" data-bind="file: value" />
+                                                    <!-- /ko -->
+                                                    <!-- ko if: inputType==='directory' -->
+                                                    <input type="file" class="form-control" data-bind="directory: value"
+                                                        webkitdirectory directory multiple />
+                                                    <!-- /ko -->
+                                                    <!-- ko if: inputType==='files' -->
+                                                    <input type="file" class="form-control" data-bind="files: value"
+                                                        multiple />
+                                                    <!-- /ko -->
+                                                </div>
+                                            </div>
+                                            <div class="tab-pane fade" id="Debug"
+                                                data-bind="foreach: currentConfig().sourceportConfigs.debug">
+                                                <div class="form-group">
+                                                    <input type="checkbox"
+                                                        data-bind="checked: enabled, uniqueId: enabled" />
+                                                    <label class="control-label" data-toggle="tooltip"
+                                                        data-bind="tooltip: description, uniqueFor:enabled, text:name"></label>
+                                                    <!-- ko if: inputType==='text' -->
+                                                    <input type="text" class="form-control"
+                                                        data-bind="textInput: value" />
+                                                    <!-- /ko -->
+                                                    <!-- ko if: inputType==='number' -->
+                                                    <input type="number" class="form-control"
+                                                        data-bind="textInput: value" />
+                                                    <!-- /ko -->
+                                                    <!-- ko if: inputType==='range' -->
+                                                    <input type="number" class="form-control"
+                                                        data-bind="textInput: value, attr: {min: valueRange.min, max: valueRange.max}" />
+                                                    <!-- /ko -->
+                                                    <!-- ko if: inputType==='select' -->
+                                                    <select class="form-control"
+                                                        data-bind="options: valueset, optionsText: 'text', optionsValue:'value', value: value, optionsCaption: 'Choose...'"></select>
+                                                    <!-- /ko -->
+                                                    <!-- ko if: inputType==='file' -->
+                                                    <input type="file" class="form-control" data-bind="file: value" />
+                                                    <!-- /ko -->
+                                                    <!-- ko if: inputType==='directory' -->
+                                                    <input type="file" class="form-control" data-bind="directory: value"
+                                                        webkitdirectory directory multiple />
+                                                    <!-- /ko -->
+                                                    <!-- ko if: inputType==='files' -->
+                                                    <input type="file" class="form-control" data-bind="files: value"
+                                                        multiple />
+                                                    <!-- /ko -->
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12 border border-secondary"
+                                        data-bind="hidden: currentConfig().sourceport()">
+                                        Choose a sourceport to see configuration options.
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

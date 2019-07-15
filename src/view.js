@@ -11,10 +11,14 @@ const iwadFileTypes = ['wad', 'pk3'];
 const { remote } = require('electron');
 const { Menu, MenuItem } = remote;
 const { exec } = require('child_process');
+const publicIp = require('public-ip');
 let args = require('minimist')(remote.process.argv);
 let dev = args.dev || args.d;
 let rightClickPosition = null;
 
+
+// this only shows up in dev mode
+// it was designed for debugging so i could easily jump to an element on the page in the developer console.
 const menu = new Menu();
 const menuItem = new MenuItem({
     label: 'Inspect Element',
@@ -36,21 +40,15 @@ if (dev) {
     );
 }
 
+
 //TODO: CHOCOLATE DOOM multi-screen command
 //chocolate-doom -server -window & chocolate-doom -autojoin -left -window & chocolate-doom -autojoin -right -window
 
-//TODO: Add command logic for moving to chosen levels
-/**
- * 
-    {
-        "command": "-warp",
-        "value": "1 1" or "1",
-        have it lookup from the Levels collection.
-    }
- */
+
 
 //TODO: create custom commands for WAD merging in chocolate doom
 
+// These are all the collections loaded from the nedb databases
 let iwadCollection = new Datastore({ filename: path.resolve(__dirname, '../../iwads.db'), autoload: true });
 let pwadCollection = new Datastore({ filename: path.resolve(__dirname, '../../pwads.db'), autoload: true });
 let sourceportCollection = new Datastore({ filename: path.resolve(__dirname, '../../sourceports.db'), autoload: true });
@@ -70,6 +68,10 @@ let skillLevelsCollection = new Datastore({
     autoload: true
 });
 
+
+// a config chain is the chain of commands and options needed to run a game.
+// it has a sourceport, it has an iwad, it has pwads, added options...
+// this is where the generated command comes from
 function ConfigChain(
     id,
     configName,
@@ -187,11 +189,24 @@ function ConfigChain(
         return self.configName() + ' - ' + iwadName + ' - ' + sourceportName;
     });
 
+    // gets the multiplayer address from the loaded port multiplayer option
+    self.usePort = ko.computed(() => {
+        let port = 5029;
+        if (self.sourceportConfigs){
+            _.forEach(self.sourceportConfigs.multiplayer(), config => {
+                if (config.command === '-port'){
+                    port = config.value();
+                }
+            });
+        }
+        return port;
+    });
+
     //this will be generated from the current config chain
     self.generatedCommand = ko.computed(() => {
         let command = '';
         if (self.sourceport()) {
-            command += '"'+self.sourceport() + '" ';
+            command += '"' + self.sourceport() + '" ';
         }
         if (self.iwad()) {
             command += '-iwad "' + self.iwad() + '" ';
@@ -406,6 +421,9 @@ function ConfigChain(
     });
 }
 
+// deathmatch flags
+// they all have an integer value to them
+// simply add up whatever gets enabled, and that becomes the value needed for the dmflag command
 function DMFlag(enabled, name, value, description, command, sourceport) {
     let self = this;
     self.enabled = ko.observable(enabled);
@@ -416,6 +434,9 @@ function DMFlag(enabled, name, value, description, command, sourceport) {
     self.sourceport = sourceport;
 }
 
+// each command line option has to be enabled
+// these are loaded from the database
+// depending on the type of option, it may already have default data, or an expectation of what kind of data it wants.
 function CommandLineOption(
     enabled,
     name,
@@ -443,6 +464,7 @@ function CommandLineOption(
     self.uniqueCommandId = uniqueCommandId;
 }
 
+// everything... pwads, iwads, and sourceports... they're all files.
 function File(
     filepath,
     filename,
@@ -538,6 +560,11 @@ function File(
     if (hidden === true) {
         self.hidden(true);
     }
+    // this is the only place where things get weird.
+    // the basetype is what gets sent to the database backend
+    // but, for knockout, i need to know, for example, if it's an iwad, then what kind of iwad is it...
+    // is it doom, heretic, hexen, strife?  what kind of iwad is it?  options will change based on this.
+    // same thing with sourceport types... zdoom, zandronum, chocolate?  what kind of sourceport is it?
     self.basetype = ko.observable(basetype);
     self.hideFile = () => {
         let isHidden = self.hidden();
@@ -603,48 +630,21 @@ function File(
             return 'Hide File';
         }
     });
-    self.tooltipText = ko.computed(() => {
-        let text = '';
-        let addNewline = false;
-        if (self.error() || self.warning()) {
-            if (!self.nameValid()) {
-                text += addNewline ? ' <br> ' : '';
-                text += 'Missing Name/Title';
-                addNewline = true;
-            }
-            if (!self.authorsValid()) {
-                text += addNewline ? ' <br> ' : '';
-                text += 'Missing Authors';
-                addNewline = true;
-            }
-            if (!self.metaTagsValid()) {
-                text += addNewline ? ' <br> ' : '';
-                text += 'Missing Meta Tags';
-                addNewline = true;
-            }
-            if (!self.sourceValid()) {
-                text += addNewline ? ' <br> ' : '';
-                text += 'Missing Source';
-                addNewline = true;
-            }
-            if (!self.quickDescriptionValid()) {
-                text += addNewline ? ' <br> ' : '';
-                text += 'Missing Description';
-                addNewline = true;
-            }
-        } else {
-            text += self.quickDescription();
-        }
-        return text;
-    });
 }
 
+// ini files are only used by sourceports
+// these contain all the extra added options you want the sourceport to load with
 function IniFile(filepath, filename) {
     let self = this;
     self.filepath = filepath;
     self.filename = filename;
 }
 
+// level 1, level 2?  
+// ok, javascript doesn't like the word "map".  it's a reserved word
+// the problem is doom games refer to levels as maps
+// so any time you want to go to a "map", the word "level" will be used here.
+// this function is for dynamically loading level names based on what kind of iwad you chose.
 function Level(level, chosenIwadType) {
     let self = this;
     if (level) {
@@ -699,23 +699,52 @@ function Level(level, chosenIwadType) {
     }
 }
 
+// much like how Level worked, skill levels are the difficulty levels.
+// hurt me plenty, ultraviolence, nightmare, stuff like that.
+// this function exists because each iwad has different text for their skill levels
+// this is mostly added for flavor.
 function SkillLevel(name, level) {
     let self = this;
     self.name = name;
     self.skillLevel = level;
 }
 
+// this is the main brain of the entire application.
+// not much to say here, dig in and see the comments for specific things yourself.
 function AppViewModel() {
     let self = this;
+    // this is all debug stuff
     self.isDebug = dev;
     self.nodeVersion = process.versions.node;
     self.chromeVersion = process.versions.chrome;
     self.electronVersion = process.versions.electron;
+    // </debug stuff>
     self.idTechFolder = path.resolve(__dirname, '../../idTech');
     self.iwadDirectory = self.idTechFolder + path.sep + 'iwads';
     self.pwadDirectory = self.idTechFolder + path.sep + 'pwads';
     self.sourceportDirectory = self.idTechFolder + path.sep + 'sourceports';
+    self.ip = ko.observable();
+    self.chosenFile = ko.observable();
+    self.chosenPreviousConfig = ko.observable();
+    self.showHiddenFiles = ko.observable(false);
+    self.iwadSearch = ko.observable();
+    self.pwadSearch = ko.observable();
+    self.sourceportSearch = ko.observable();
+    self.currentConfig = ko.observable();
+    self.configSearch = ko.observable('');
+
     self.skillLevels = ko.observableArray();
+    self.levels = ko.observableArray();
+    self.Allfiles = ko.observableArray();
+    self.iniFiles = ko.observableArray();
+    self.files = {
+        iwads: ko.observableArray(),
+        pwads: ko.observableArray(),
+        sourceports: ko.observableArray()
+    };
+    self.previousConfigChains = ko.observableArray();
+    self.configChains = ko.observableArray();
+    self.availablePwads = ko.observableArray();
     self.sourceportTypes = ko.observableArray(['ZDoom', 'Zandronum', 'Chocolate', 'Other']);
     self.gamemodes = ko.observableArray([
         {
@@ -777,17 +806,16 @@ function AppViewModel() {
             description: 'Other'
         }
     ]);
-
-    self.showHiddenFiles = ko.observable(false);
-
-    self.levels = ko.observableArray();
-    self.Allfiles = ko.observableArray();
-    self.files = {
-        iwads: ko.observableArray(),
-        pwads: ko.observableArray(),
-        sourceports: ko.observableArray()
-    };
-    self.availablePwads = ko.observableArray();
+    // gets the address for anyone hosting a game
+    self.multiplayerAddress = ko.computed(() => {
+        if (self.currentConfig()){
+            return self.ip()+':'+self.currentConfig().usePort();
+        } else {
+            return '';
+        }
+    });
+    // returns true if and only if all iwads are hidden.
+    // used to display special message saying "hey, you might wanna unhide stuff"
     self.iwadsAllHidden = ko.computed(() => {
         let counter = 0;
         _.forEach(self.files.iwads(), iwad => {
@@ -797,6 +825,8 @@ function AppViewModel() {
         });
         return counter === self.files.iwads.length;
     });
+    // returns true if and only if all pwads are hidden.
+    // used to display special message saying "hey, you might wanna unhide stuff"
     self.pwadsAllHidden = ko.computed(() => {
         let counter = 0;
         _.forEach(self.files.pwads(), pwad => {
@@ -806,6 +836,8 @@ function AppViewModel() {
         });
         return counter === self.files.pwads.length;
     });
+    // returns true if and only if all sourceports are hidden.
+    // used to display special message saying "hey, you might wanna unhide stuff"
     self.sourceportsAllHidden = ko.computed(() => {
         let counter = 0;
         _.forEach(self.files.sourceports(), sourceport => {
@@ -815,488 +847,17 @@ function AppViewModel() {
         });
         return counter === self.files.sourceports.length;
     });
+    //-------------------------------------------------------------------------
+    // all the loading functions for loading stuff from the database
+    //-------------------------------------------------------------------------
+    // catch-all for loading all collections.
+    // convenience function so i only have to call one thing to load everything
     self.loadCollections = reloadFiles => {
         self.buildIwadCollection(reloadFiles);
         self.buildPwadCollection(reloadFiles);
         self.buildSourceportCollection(reloadFiles);
     };
-    self.chosenFile = ko.observable();
-    self.chosenPreviousConfig = ko.observable();
-    self.editFile = (filetype, index) => {
-        let file = {};
-        switch (filetype()) {
-            case 'iwad':
-                file = self.files.iwads()[index()];
-                break;
-            case 'pwad':
-                file = self.files.pwads()[index()];
-                break;
-            case 'sourceport':
-                file = self.files.sourceports()[index()];
-                break;
-        }
-        let rawFileProperties = {
-            filename: file.filename,
-            authors: file.authors(),
-            metaTags: file.metaTags(),
-            source: file.source(),
-            name: file.name(),
-            quickDescription: file.quickDescription(),
-            longDescription: file.longDescription(),
-            hidden: file.hidden(),
-            basetype: file.basetype(),
-            filepath: file.filepath,
-            filetype: file.filetype()
-        };
-        self.chosenFile(
-            new File(
-                rawFileProperties.filepath,
-                rawFileProperties.filename,
-                rawFileProperties.authors,
-                rawFileProperties.metaTags,
-                rawFileProperties.source,
-                rawFileProperties.name,
-                rawFileProperties.quickDescription,
-                rawFileProperties.longDescription,
-                rawFileProperties.filetype,
-                rawFileProperties.hidden,
-                rawFileProperties.basetype
-            )
-        );
-        if (self.chosenFile().filetype() === 'iwad') {
-            self.chosenFile().iwadBasetype = ko.observable(self.chosenFile().basetype());
-        } else if (self.chosenFile().filetype() === 'sourceport') {
-            self.chosenFile().sourceportBasetype = ko.observable(self.chosenFile().basetype());
-        }
-    };
-    self.clearFileEdit = () => {
-        self.chosenFile(null);
-    };
-    self.updateFile = () => {
-        let rawFileProperties = {
-            filename: self.chosenFile().filename,
-            authors: self.chosenFile().authors(),
-            metaTags: self.chosenFile().metaTags(),
-            source: self.chosenFile().source(),
-            name: self.chosenFile().name(),
-            quickDescription: self.chosenFile().quickDescription(),
-            longDescription: self.chosenFile().longDescription(),
-            hidden: self.chosenFile().hidden()
-        };
-        if (self.chosenFile().filetype() === 'iwad') {
-            rawFileProperties.basetype = self.chosenFile().iwadBasetype();
-        } else if (self.chosenFile().filetype() === 'sourceport') {
-            rawFileProperties.basetype = self.chosenFile().sourceportBasetype();
-        }
-        let directory = path.dirname(self.chosenFile().filepath);
-        let RealFilename = self.chosenFile().filepath.substring(0, self.chosenFile().filepath.lastIndexOf('.'));
-        fs.writeFile(path.resolve(directory, RealFilename + '.json'), JSON.stringify(rawFileProperties), err => {
-            if (err) {
-                return console.log('update file error: ', err);
-            }
-            switch (self.chosenFile().filetype()) {
-                case 'iwad':
-                    self.buildIwadCollection(true);
-                    break;
-                case 'pwad':
-                    self.buildPwadCollection(true);
-                    break;
-                case 'sourceport':
-                    self.buildSourceportCollection(true);
-                    break;
-            }
-        });
-        self.loadLevels();
-        self.loadSkillLevels();
-    };
-    self.loadIwadFiles = () => {
-        iwadCollection
-            .find({})
-            .sort({ filename: 1 })
-            .exec((err, allIwads) => {
-                if (err) {
-                    console.log('load iwad files error: ', err);
-                } else {
-                    let newIwads = [];
-                    _.forEach(allIwads, iwad => {
-                        let newIwad = new File(
-                            iwad.filepath,
-                            iwad.filename,
-                            iwad.authors,
-                            iwad.metaTags,
-                            iwad.source,
-                            iwad.name,
-                            iwad.quickDescription,
-                            iwad.longDescription,
-                            'iwad',
-                            iwad.hidden,
-                            iwad.basetype
-                        );
-                        newIwads.push(newIwad);
-                    });
-                    self.files.iwads.removeAll();
-                    self.files.iwads.push.apply(self.files.iwads, newIwads);
-                    self.loadLevels();
-                    self.loadSkillLevels();
-                }
-            });
-    };
-
-    self.loadPwadFiles = () => {
-        pwadCollection
-            .find({})
-            .sort({ filename: 1 })
-            .exec((err, allPwads) => {
-                if (err) {
-                    console.log('load pwad files error: ', err);
-                } else {
-                    let newPwads = [];
-                    let newAvailablePwads = [];
-                    _.forEach(allPwads, pwad => {
-                        let newPwad = new File(
-                            pwad.filepath,
-                            pwad.filename,
-                            pwad.authors,
-                            pwad.metaTags,
-                            pwad.source,
-                            pwad.name,
-                            pwad.quickDescription,
-                            pwad.longDescription,
-                            'pwad',
-                            pwad.hidden
-                        );
-                        newPwads.push(newPwad);
-                        let inchosen = false;
-                        _.forEach(self.currentConfig().pwads(), pwad => {
-                            if (newPwad.filepath === pwad.filepath) {
-                                inchosen = true;
-                            }
-                        });
-                        if (!inchosen) {
-                            newAvailablePwads.push(newPwad);
-                        }
-                    });
-                    self.files.pwads.removeAll();
-                    self.availablePwads.removeAll();
-                    self.files.pwads.push.apply(self.files.pwads, newPwads);
-                    self.availablePwads.push.apply(self.availablePwads, newAvailablePwads);
-                }
-            });
-    };
-    self.loadSourceportFiles = () => {
-        sourceportCollection
-            .find({})
-            .sort({ filename: 1 })
-            .exec((err, allSourceports) => {
-                if (err) {
-                    console.log('load sourceportfiles error: ', err);
-                } else {
-                    let newSourceports = [];
-                    _.forEach(allSourceports, sourceport => {
-                        let newSourceport = new File(
-                            sourceport.filepath,
-                            sourceport.filename,
-                            sourceport.authors,
-                            sourceport.metaTags,
-                            sourceport.source,
-                            sourceport.name,
-                            sourceport.quickDescription,
-                            sourceport.longDescription,
-                            'sourceport',
-                            sourceport.hidden,
-                            sourceport.basetype
-                        );
-                        newSourceports.push(newSourceport);
-                    });
-                    self.files.sourceports.removeAll();
-                    self.files.sourceports.push.apply(self.files.sourceports, newSourceports);
-                }
-            });
-    };
-    self.previousConfigChains = ko.observableArray();
-    self.configChains = ko.observableArray();
-    self.loadConfigChains = () => {
-        configCollection.find({}, (err, allConfigChains) => {
-            if (err) {
-                console.log('loadConfigChains error: ', err);
-            } else {
-                if (allConfigChains.length < 1) {
-                    self.currentConfig().id(1);
-                    self.saveCurrentConfig();
-                    self.loadConfigChains();
-                }
-                let newConfigChains = [];
-                _.forEach(allConfigChains, configChain => {
-                    let newConfigChain = new ConfigChain(
-                        configChain._id,
-                        configChain.configName,
-                        configChain.configDescription,
-                        configChain.sourceport,
-                        configChain.iniFile,
-                        configChain.iwad,
-                        configChain.gamemode,
-                        configChain.level,
-                        configChain.skill,
-                        configChain.pwads,
-                        configChain.dmFlags,
-                        configChain.sourceportConfigs
-                    );
-                    newConfigChains.push(newConfigChain);
-                });
-                self.configChains.removeAll();
-                self.configChains.push.apply(self.configChains, newConfigChains);
-            }
-        });
-    };
-
-    self.loadPreviousConfigChains = () => {
-        previousConfigCollection
-            .find({})
-            .sort({ index: -1 })
-            .exec((err, allConfigChains) => {
-                if (err) {
-                    console.log('loadPreviousConfigChains error: ', err);
-                } else {
-                    let newConfigChains = [];
-                    _.forEach(allConfigChains, configChain => {
-                        let newConfigChain = new ConfigChain(
-                            configChain._id,
-                            configChain.configName,
-                            configChain.configDescription,
-                            configChain.sourceport,
-                            configChain.iniFile,
-                            configChain.iwad,
-                            configChain.gamemode,
-                            configChain.level,
-                            configChain.skill,
-                            configChain.pwads,
-                            configChain.dmFlags,
-                            configChain.sourceportConfigs
-                        );
-                        newConfigChains.push(newConfigChain);
-                    });
-                    self.previousConfigChains.removeAll();
-                    self.previousConfigChains.push.apply(self.previousConfigChains, newConfigChains);
-                }
-            });
-    };
-
-    self.iniFiles = ko.observableArray();
-
-    self.chooseSourceport = sourceport => {
-        if (sourceport) {
-            self.getIniFilesForGivenSourceport(sourceport);
-        } else {
-            self.iniFiles.removeAll();
-        }
-    };
-    self.getIwad = filepath => {
-        let iwad = {};
-        for (let i = 0; i < self.files.iwads().length; ++i) {
-            if (self.files.iwads()[i].filepath === filepath) {
-                iwad = self.files.iwads()[i];
-                break;
-            }
-        }
-        return iwad;
-    };
-    self.getSourceport = filepath => {
-        let sourceport = {};
-        for (let i = 0; i < self.files.sourceports().length; ++i) {
-            if (self.files.sourceports()[i].filepath === filepath) {
-                sourceport = self.files.sourceports()[i];
-                break;
-            }
-        }
-        return sourceport;
-    };
-    self.loadLevels = () => {
-        self.levels.removeAll();
-        let query = null;
-        let basetype = null;
-        if (self.currentConfig().iwad() != null) {
-            let iwad = self.getIwad(self.currentConfig().iwad());
-            basetype = iwad.iwadBasetype();
-            query = { [basetype]: { $exists: true, $ne: null } };
-        }
-        levelsCollection.find(query).sort({name: 1}).exec((err, allLevels) => {
-            if (err) {
-                console.log('levelsCollection error: ', err);
-            } else {
-                let newLevels = [];
-                _.forEach(allLevels, level => {
-                    let newLevel = new Level(level, basetype);
-                    newLevels.push(newLevel);
-                });
-                if (newLevels.length > 0) {
-                    self.levels.push.apply(self.levels, newLevels);
-                }
-            }
-        });
-    };
-    self.loadSkillLevels = () => {
-        self.skillLevels.removeAll();
-        let query = null;
-        let iwadType = null;
-        if (self.currentConfig().iwad() != null) {
-            let iwad = self.getIwad(self.currentConfig().iwad());
-            iwadType = iwad.iwadBasetype();
-        } else {
-            iwadType = 'doom';
-        }
-        query = { iwad: iwadType };
-        skillLevelsCollection.find(query, (err, skillLevelSets) => {
-            if (err) {
-                console.log('loadSkillLevels error: ', err);
-            } else {
-                let newSkillLevels = [];
-                _.forEach(skillLevelSets, skillLevelSet => {
-                    _.forEach(skillLevelSet.skillLevels, skillLevel => {
-                        let newSkillLevel = new SkillLevel(skillLevel.name, skillLevel.skillLevel);
-                        newSkillLevels.push(newSkillLevel);
-                    });
-                });
-                if (newSkillLevels.length > 0) {
-                    self.skillLevels.push.apply(self.skillLevels, newSkillLevels);
-                }
-            }
-        });
-    };
-    self.loadAllCommandLineOptions = () => {
-        self.loadCommandLineOptions('config');
-        self.loadCommandLineOptions('multiplayer');
-        self.loadCommandLineOptions('networking');
-        self.loadCommandLineOptions('debug');
-        self.loadCommandLineOptions('display');
-        self.loadCommandLineOptions('gameplay');
-        self.loadCommandLineOptions('recording');
-        self.loadCommandLineOptions('advanced');
-    };
-    self.loadDMFlags = () => {
-        self.currentConfig().dmFlags.removeAll();
-        let sourceportType = null;
-        if (self.currentConfig().sourceport() != null) {
-            let sourceport = self.getSourceport(self.currentConfig().sourceport());
-            sourceportType = sourceport.sourceportBasetype();
-            if (sourceportType) {
-                sourceportType = sourceportType.toLowerCase();
-            }
-        }
-        if (sourceportType != null) {
-            let newDMFlags = [];
-            DMFlagsCollection.find({ sourceport: sourceportType }).sort({value: 1}).exec((err, dmFlags) => {
-                if (err) {
-                    console.log('load DMFlags error: ', err);
-                } else {
-                    _.forEach(dmFlags, dmFlag => {
-                        let newFlag = new DMFlag(
-                            false,
-                            dmFlag.name,
-                            dmFlag.value,
-                            dmFlag.description,
-                            dmFlag.command,
-                            dmFlag.sourceport
-                        );
-                        newDMFlags.push(newFlag);
-                    });
-                    if (newDMFlags.length > 0) {
-                        self.currentConfig().dmFlags.push.apply(self.currentConfig().dmFlags, newDMFlags);
-                    }
-                }
-            });
-        }
-    };
-    self.loadCommandLineOptions = category => {
-        self.currentConfig().sourceportConfigs[category].removeAll();
-        let query = null;
-        let sourceportType = null;
-        if (self.currentConfig().sourceport() != null) {
-            let sourceport = self.getSourceport(self.currentConfig().sourceport());
-            sourceportType = sourceport.sourceportBasetype();
-            if (sourceportType) {
-                sourceportType = sourceportType.toLowerCase();
-            }
-        }
-        if (sourceportType != null) {
-            query = { category: category, sourceports: sourceportType };
-            commandLineCollection.find(query, (err, commandLineOptions) => {
-                if (err) {
-                    console.log('load Command line options error: ', err);
-                } else {
-                    let newOptions = [];
-                    _.forEach(commandLineOptions, option => {
-                        let newOption = new CommandLineOption(
-                            false,
-                            option.name,
-                            option.inputType,
-                            option.description,
-                            option.command,
-                            option.value,
-                            option.sourceports,
-                            option.category,
-                            option.valueRange,
-                            option.valueset,
-                            option.uniqueCommandId
-                        );
-                        newOptions.push(newOption);
-                    });
-                    if (newOptions.length > 0) {
-                        self.currentConfig().sourceportConfigs[category].push.apply(
-                            self.currentConfig().sourceportConfigs[category],
-                            newOptions
-                        );
-                    }
-                }
-            });
-        }
-    };
-    self.getIniFilesForGivenSourceport = sourceport => {
-        let directory = path.dirname(sourceport);
-        self.iniFiles.removeAll();
-        function walk(directory) {
-            fs.readdir(directory, (e, files) => {
-                if (e) {
-                    console.log('get ini files for sourceport error: ', e);
-                    return;
-                }
-                files.forEach(
-                    file => {
-                        let fullPath = path.join(directory, file);
-                        fs.stat(fullPath, (forEachErr, f) => {
-                            if (forEachErr) {
-                                console.log('get ini files for sourceport foreach error: ', forEachErr);
-                                return;
-                            }
-                            if (f.isDirectory()) {
-                                if (dev) {
-                                    console.log(
-                                        'getIniFilesForGivenSourceport:: ' + file + ' and is directory: ' + fullPath
-                                    );
-                                }
-                                // walk(fullPath); no need to dive into further directories, if your ini file isn't in
-                                //the same directory as the exe, then I don't care about it.
-                            } else {
-                                let fileExt = file.substring(file.lastIndexOf('.') + 1);
-
-                                if (fileExt === 'ini') {
-                                    let iniFile = new IniFile(fullPath, file);
-                                    self.iniFiles.push(iniFile);
-                                    self.iniFiles.sort();
-                                }
-                            }
-                        });
-                    },
-                    err => {
-                        if (err) {
-                            throw err;
-                        }
-                    }
-                );
-            });
-        }
-        walk(directory);
-    };
-
+    // loads the iwad database by checking all the iwad files in the idTech/iwads directory
     self.buildIwadCollection = reloadFiles => {
         let directoryName = self.iwadDirectory;
         function walk(directory) {
@@ -1450,7 +1011,7 @@ function AppViewModel() {
         }
         walk(directoryName);
     };
-
+    // loads the pwads database by checking all the pwad files in the idTech/pwads directory
     self.buildPwadCollection = reloadFiles => {
         let directoryName = self.pwadDirectory;
         function walk(directory) {
@@ -1600,7 +1161,7 @@ function AppViewModel() {
         }
         walk(directoryName);
     };
-
+    // loads the sourceports by checking all the sourceports in the idTech/sourceports directory
     self.buildSourceportCollection = reloadFiles => {
         let directoryName = self.sourceportDirectory;
         function walk(directory) {
@@ -1708,11 +1269,523 @@ function AppViewModel() {
         }
         walk(directoryName);
     };
+    // loads iwads from the database into the app's viewmodel, then loads the maps and difficulty's
+    self.loadIwadFiles = () => {
+        iwadCollection
+            .find({})
+            .sort({ filename: 1 })
+            .exec((err, allIwads) => {
+                if (err) {
+                    console.log('load iwad files error: ', err);
+                } else {
+                    let newIwads = [];
+                    _.forEach(allIwads, iwad => {
+                        let newIwad = new File(
+                            iwad.filepath,
+                            iwad.filename,
+                            iwad.authors,
+                            iwad.metaTags,
+                            iwad.source,
+                            iwad.name,
+                            iwad.quickDescription,
+                            iwad.longDescription,
+                            'iwad',
+                            iwad.hidden,
+                            iwad.basetype
+                        );
+                        newIwads.push(newIwad);
+                    });
+                    self.files.iwads.removeAll();
+                    self.files.iwads.push.apply(self.files.iwads, newIwads);
+                    self.loadLevels();
+                    self.loadSkillLevels();
+                }
+            });
+    };
+    // loads pwads from the database into the app's viewmodel
+    // takes the current configuration into account for loading the pwad drag-drop selector
+    self.loadPwadFiles = () => {
+        pwadCollection
+            .find({})
+            .sort({ filename: 1 })
+            .exec((err, allPwads) => {
+                if (err) {
+                    console.log('load pwad files error: ', err);
+                } else {
+                    let newPwads = [];
+                    let newAvailablePwads = [];
+                    _.forEach(allPwads, pwad => {
+                        let newPwad = new File(
+                            pwad.filepath,
+                            pwad.filename,
+                            pwad.authors,
+                            pwad.metaTags,
+                            pwad.source,
+                            pwad.name,
+                            pwad.quickDescription,
+                            pwad.longDescription,
+                            'pwad',
+                            pwad.hidden
+                        );
+                        newPwads.push(newPwad);
+                        let inchosen = false;
+                        _.forEach(self.currentConfig().pwads(), pwad => {
+                            if (newPwad.filepath === pwad.filepath) {
+                                inchosen = true;
+                            }
+                        });
+                        if (!inchosen) {
+                            newAvailablePwads.push(newPwad);
+                        }
+                    });
+                    self.files.pwads.removeAll();
+                    self.availablePwads.removeAll();
+                    self.files.pwads.push.apply(self.files.pwads, newPwads);
+                    self.availablePwads.push.apply(self.availablePwads, newAvailablePwads);
+                }
+            });
+    };
+    // loads sourceports from the database into the app's viewmodel
+    self.loadSourceportFiles = () => {
+        sourceportCollection
+            .find({})
+            .sort({ filename: 1 })
+            .exec((err, allSourceports) => {
+                if (err) {
+                    console.log('load sourceportfiles error: ', err);
+                } else {
+                    let newSourceports = [];
+                    _.forEach(allSourceports, sourceport => {
+                        let newSourceport = new File(
+                            sourceport.filepath,
+                            sourceport.filename,
+                            sourceport.authors,
+                            sourceport.metaTags,
+                            sourceport.source,
+                            sourceport.name,
+                            sourceport.quickDescription,
+                            sourceport.longDescription,
+                            'sourceport',
+                            sourceport.hidden,
+                            sourceport.basetype
+                        );
+                        newSourceports.push(newSourceport);
+                    });
+                    self.files.sourceports.removeAll();
+                    self.files.sourceports.push.apply(self.files.sourceports, newSourceports);
+                }
+            });
+    };
+    // loads all SAVED config chains from the databse into the app's viewmodel
+    self.loadConfigChains = () => {
+        configCollection.find({}, (err, allConfigChains) => {
+            if (err) {
+                console.log('loadConfigChains error: ', err);
+            } else {
+                if (allConfigChains.length < 1) {
+                    self.currentConfig().id(1);
+                    self.saveCurrentConfig();
+                    self.loadConfigChains();
+                }
+                let newConfigChains = [];
+                _.forEach(allConfigChains, configChain => {
+                    let newConfigChain = new ConfigChain(
+                        configChain._id,
+                        configChain.configName,
+                        configChain.configDescription,
+                        configChain.sourceport,
+                        configChain.iniFile,
+                        configChain.iwad,
+                        configChain.gamemode,
+                        configChain.level,
+                        configChain.skill,
+                        configChain.pwads,
+                        configChain.dmFlags,
+                        configChain.sourceportConfigs
+                    );
+                    newConfigChains.push(newConfigChain);
+                });
+                self.configChains.removeAll();
+                self.configChains.push.apply(self.configChains, newConfigChains);
+            }
+        });
+    };
+    // loads only the previous configs from the database into the app's viewmodel
+    self.loadPreviousConfigChains = () => {
+        previousConfigCollection
+            .find({})
+            .sort({ index: -1 })
+            .exec((err, allConfigChains) => {
+                if (err) {
+                    console.log('loadPreviousConfigChains error: ', err);
+                } else {
+                    let newConfigChains = [];
+                    _.forEach(allConfigChains, configChain => {
+                        let newConfigChain = new ConfigChain(
+                            configChain._id,
+                            configChain.configName,
+                            configChain.configDescription,
+                            configChain.sourceport,
+                            configChain.iniFile,
+                            configChain.iwad,
+                            configChain.gamemode,
+                            configChain.level,
+                            configChain.skill,
+                            configChain.pwads,
+                            configChain.dmFlags,
+                            configChain.sourceportConfigs
+                        );
+                        newConfigChains.push(newConfigChain);
+                    });
+                    self.previousConfigChains.removeAll();
+                    self.previousConfigChains.push.apply(self.previousConfigChains, newConfigChains);
+                }
+            });
+    };
+    // loads all the maps/map names from the database into the app's viewmodel
+    // will attempt to take the current config's iwad choice into account for loading the map's names
+    // if not available, then will just assume the eXmY AND the mapXY variants, without nice names.
+    self.loadLevels = () => {
+        self.levels.removeAll();
+        let query = null;
+        let basetype = null;
+        if (self.currentConfig().iwad() != null) {
+            let iwad = self.getIwad(self.currentConfig().iwad());
+            basetype = iwad.iwadBasetype();
+            query = { [basetype]: { $exists: true, $ne: null } };
+        }
+        levelsCollection
+            .find(query)
+            .sort({ name: 1 })
+            .exec((err, allLevels) => {
+                if (err) {
+                    console.log('levelsCollection error: ', err);
+                } else {
+                    let newLevels = [];
+                    _.forEach(allLevels, level => {
+                        let newLevel = new Level(level, basetype);
+                        newLevels.push(newLevel);
+                    });
+                    if (newLevels.length > 0) {
+                        self.levels.push.apply(self.levels, newLevels);
+                    }
+                }
+            });
+    };
+    // loads all difficulty levels from the database into the app's viewmodel
+    // will attempt to take the current config's iwad choice into account for loading the text of the difficulty
+    // if not available, will just default to doom's text
+    self.loadSkillLevels = () => {
+        self.skillLevels.removeAll();
+        let query = null;
+        let iwadType = null;
+        if (self.currentConfig().iwad() != null) {
+            let iwad = self.getIwad(self.currentConfig().iwad());
+            iwadType = iwad.iwadBasetype();
+        } else {
+            iwadType = 'doom';
+        }
+        query = { iwad: iwadType };
+        skillLevelsCollection.find(query, (err, skillLevelSets) => {
+            if (err) {
+                console.log('loadSkillLevels error: ', err);
+            } else {
+                let newSkillLevels = [];
+                _.forEach(skillLevelSets, skillLevelSet => {
+                    _.forEach(skillLevelSet.skillLevels, skillLevel => {
+                        let newSkillLevel = new SkillLevel(skillLevel.name, skillLevel.skillLevel);
+                        newSkillLevels.push(newSkillLevel);
+                    });
+                });
+                if (newSkillLevels.length > 0) {
+                    self.skillLevels.push.apply(self.skillLevels, newSkillLevels);
+                }
+            }
+        });
+    };
+    // loads all dmflags from the database into the app's viewmodel
+    // will take current sourceport into account, otherwise it won't load anything
+    self.loadDMFlags = () => {
+        self.currentConfig().dmFlags.removeAll();
+        let sourceportType = null;
+        if (self.currentConfig().sourceport() != null) {
+            let sourceport = self.getSourceport(self.currentConfig().sourceport());
+            sourceportType = sourceport.sourceportBasetype();
+            if (sourceportType) {
+                sourceportType = sourceportType.toLowerCase();
+            }
+        }
+        if (sourceportType != null) {
+            let newDMFlags = [];
+            DMFlagsCollection.find({ sourceport: sourceportType })
+                .sort({ value: 1 })
+                .exec((err, dmFlags) => {
+                    if (err) {
+                        console.log('load DMFlags error: ', err);
+                    } else {
+                        _.forEach(dmFlags, dmFlag => {
+                            let newFlag = new DMFlag(
+                                false,
+                                dmFlag.name,
+                                dmFlag.value,
+                                dmFlag.description,
+                                dmFlag.command,
+                                dmFlag.sourceport
+                            );
+                            newDMFlags.push(newFlag);
+                        });
+                        if (newDMFlags.length > 0) {
+                            self.currentConfig().dmFlags.push.apply(self.currentConfig().dmFlags, newDMFlags);
+                        }
+                    }
+                });
+        }
+    };
+    // loads all command line options from the database into the app's viewmodel
+    // will take current sourceport into account, otherwise it won't load anything
+    // this is a convenience function to load all the command line options from one function call.
+    self.loadAllCommandLineOptions = () => {
+        self.loadCommandLineOptions('config');
+        self.loadCommandLineOptions('multiplayer');
+        self.loadCommandLineOptions('networking');
+        self.loadCommandLineOptions('debug');
+        self.loadCommandLineOptions('display');
+        self.loadCommandLineOptions('gameplay');
+        self.loadCommandLineOptions('recording');
+        self.loadCommandLineOptions('advanced');
+    };
+    // loads command line options from the database into the app's viewmodel from a given category 
+    // (e.g. display, debug, etc.)
+    // will take current sourceport into account, otherwise it won't load anything
+    // this is a convenience function to load all the command line options from one function call.
+    self.loadCommandLineOptions = category => {
+        self.currentConfig().sourceportConfigs[category].removeAll();
+        let query = null;
+        let sourceportType = null;
+        if (self.currentConfig().sourceport() != null) {
+            let sourceport = self.getSourceport(self.currentConfig().sourceport());
+            sourceportType = sourceport.sourceportBasetype();
+            if (sourceportType) {
+                sourceportType = sourceportType.toLowerCase();
+            }
+        }
+        if (sourceportType != null) {
+            query = { category: category, sourceports: sourceportType };
+            commandLineCollection.find(query, (err, commandLineOptions) => {
+                if (err) {
+                    console.log('load Command line options error: ', err);
+                } else {
+                    let newOptions = [];
+                    _.forEach(commandLineOptions, option => {
+                        let newOption = new CommandLineOption(
+                            false,
+                            option.name,
+                            option.inputType,
+                            option.description,
+                            option.command,
+                            option.value,
+                            option.sourceports,
+                            option.category,
+                            option.valueRange,
+                            option.valueset,
+                            option.uniqueCommandId
+                        );
+                        newOptions.push(newOption);
+                    });
+                    if (newOptions.length > 0) {
+                        self.currentConfig().sourceportConfigs[category].push.apply(
+                            self.currentConfig().sourceportConfigs[category],
+                            newOptions
+                        );
+                    }
+                }
+            });
+        }
+    };
+    //-------------------------------------------------------------------------
+    // All functions for editing files in the file database section
+    //-------------------------------------------------------------------------
+    // when you click a file in the list on the left side, this is what loads that file's options
+    // in the right pane for you to edit.
+    self.editFile = (filetype, index) => {
+        let file = {};
+        switch (filetype()) {
+            case 'iwad':
+                file = self.files.iwads()[index()];
+                break;
+            case 'pwad':
+                file = self.files.pwads()[index()];
+                break;
+            case 'sourceport':
+                file = self.files.sourceports()[index()];
+                break;
+        }
+        let rawFileProperties = {
+            filename: file.filename,
+            authors: file.authors(),
+            metaTags: file.metaTags(),
+            source: file.source(),
+            name: file.name(),
+            quickDescription: file.quickDescription(),
+            longDescription: file.longDescription(),
+            hidden: file.hidden(),
+            basetype: file.basetype(),
+            filepath: file.filepath,
+            filetype: file.filetype()
+        };
+        self.chosenFile(
+            new File(
+                rawFileProperties.filepath,
+                rawFileProperties.filename,
+                rawFileProperties.authors,
+                rawFileProperties.metaTags,
+                rawFileProperties.source,
+                rawFileProperties.name,
+                rawFileProperties.quickDescription,
+                rawFileProperties.longDescription,
+                rawFileProperties.filetype,
+                rawFileProperties.hidden,
+                rawFileProperties.basetype
+            )
+        );
+        if (self.chosenFile().filetype() === 'iwad') {
+            self.chosenFile().iwadBasetype = ko.observable(self.chosenFile().basetype());
+        } else if (self.chosenFile().filetype() === 'sourceport') {
+            self.chosenFile().sourceportBasetype = ko.observable(self.chosenFile().basetype());
+        }
+    };
+    // every time you click one of the categories "iwads, pwads, sourceports", this basically clears out the right pane
+    // whatever file you were looking at, if you click another category, it clears it out for you.
+    self.clearFileEdit = () => {
+        self.chosenFile(null);
+    };
+    // this is what gets called every time you click outside of one of the text boxes for editing a file's properties.
+    // once initiated, it updates that file's data in the database, then reloads everything.
+    // probably a little excessive, but eh, this app's not that big, who cares.
+    self.updateFile = () => {
+        let rawFileProperties = {
+            filename: self.chosenFile().filename,
+            authors: self.chosenFile().authors(),
+            metaTags: self.chosenFile().metaTags(),
+            source: self.chosenFile().source(),
+            name: self.chosenFile().name(),
+            quickDescription: self.chosenFile().quickDescription(),
+            longDescription: self.chosenFile().longDescription(),
+            hidden: self.chosenFile().hidden()
+        };
+        if (self.chosenFile().filetype() === 'iwad') {
+            rawFileProperties.basetype = self.chosenFile().iwadBasetype();
+        } else if (self.chosenFile().filetype() === 'sourceport') {
+            rawFileProperties.basetype = self.chosenFile().sourceportBasetype();
+        }
+        let directory = path.dirname(self.chosenFile().filepath);
+        let RealFilename = self.chosenFile().filepath.substring(0, self.chosenFile().filepath.lastIndexOf('.'));
+        fs.writeFile(path.resolve(directory, RealFilename + '.json'), JSON.stringify(rawFileProperties), err => {
+            if (err) {
+                return console.log('update file error: ', err);
+            }
+            switch (self.chosenFile().filetype()) {
+                case 'iwad':
+                    self.buildIwadCollection(true);
+                    break;
+                case 'pwad':
+                    self.buildPwadCollection(true);
+                    break;
+                case 'sourceport':
+                    self.buildSourceportCollection(true);
+                    break;
+            }
+        });
+        self.loadLevels();
+        self.loadSkillLevels();
+    };
+    // sourceport dropdown calls this function on change
+    // this is what kicks off the "getIniFilesForGivenSourceport" function
+    self.chooseSourceport = sourceport => {
+        if (sourceport) {
+            self.getIniFilesForGivenSourceport(sourceport);
+        } else {
+            self.iniFiles.removeAll();
+        }
+    };
+    // get iwad for given filepath
+    // usually utilized to get certain iwad options
+    self.getIwad = filepath => {
+        let iwad = {};
+        for (let i = 0; i < self.files.iwads().length; ++i) {
+            if (self.files.iwads()[i].filepath === filepath) {
+                iwad = self.files.iwads()[i];
+                break;
+            }
+        }
+        return iwad;
+    };
+    // get sourceport for given filepath
+    // usually utilized to get certain sourceport options
+    self.getSourceport = filepath => {
+        let sourceport = {};
+        for (let i = 0; i < self.files.sourceports().length; ++i) {
+            if (self.files.sourceports()[i].filepath === filepath) {
+                sourceport = self.files.sourceports()[i];
+                break;
+            }
+        }
+        return sourceport;
+    };
+    // uses the sourceport's filepath to look for any ini files contained within the same directory.
+    // note: it will not dig into other directories within the sourceport's directory.
+    // if you want this app to load your ini file, then you need to put that ini file in the same place as your 
+    // sourceport's executable
+    // this function will then populate the ini file dropdown on the fly
+    self.getIniFilesForGivenSourceport = sourceport => {
+        let directory = path.dirname(sourceport);
+        self.iniFiles.removeAll();
+        function walk(directory) {
+            fs.readdir(directory, (e, files) => {
+                if (e) {
+                    console.log('get ini files for sourceport error: ', e);
+                    return;
+                }
+                files.forEach(
+                    file => {
+                        let fullPath = path.join(directory, file);
+                        fs.stat(fullPath, (forEachErr, f) => {
+                            if (forEachErr) {
+                                console.log('get ini files for sourceport foreach error: ', forEachErr);
+                                return;
+                            }
+                            if (f.isDirectory()) {
+                                if (dev) {
+                                    console.log(
+                                        'getIniFilesForGivenSourceport:: ' + file + ' and is directory: ' + fullPath
+                                    );
+                                }
+                                // walk(fullPath); no need to dive into further directories, if your ini file isn't in
+                                //the same directory as the exe, then I don't care about it.
+                            } else {
+                                let fileExt = file.substring(file.lastIndexOf('.') + 1);
 
-    self.iwadSearch = ko.observable();
-    self.pwadSearch = ko.observable();
-    self.sourceportSearch = ko.observable();
-
+                                if (fileExt === 'ini') {
+                                    let iniFile = new IniFile(fullPath, file);
+                                    self.iniFiles.push(iniFile);
+                                    self.iniFiles.sort();
+                                }
+                            }
+                        });
+                    },
+                    err => {
+                        if (err) {
+                            throw err;
+                        }
+                    }
+                );
+            });
+        }
+        walk(directory);
+    };
+    //-------------------------------------------------------------------------
+    // here are the search functions for iwads, pwads, and sourceports
+    //-------------------------------------------------------------------------
     self.findIwad = () => {
         let handle = iwads => {
             let newIwads = [];
@@ -1744,11 +1817,11 @@ function AppViewModel() {
             iwadCollection
                 .find({
                     $where: function() {
-                        let containsName = this.name!=null && this.name.toUpperCase().indexOf(text) > -1;
-                        let containsFilename = this.filename!=null && this.filename.toUpperCase().indexOf(text) > -1;
+                        let containsName = this.name != null && this.name.toUpperCase().indexOf(text) > -1;
+                        let containsFilename = this.filename != null && this.filename.toUpperCase().indexOf(text) > -1;
                         let containsMetaTag = () => {
                             let doesContain = false;
-                            if (this.metaTags!=null) {
+                            if (this.metaTags != null) {
                                 _.forEach(this.metaTags, tag => {
                                     if (!doesContain) {
                                         doesContain = tag.toUpperCase().indexOf(text) > -1;
@@ -1759,7 +1832,7 @@ function AppViewModel() {
                         };
                         let containsAuthor = () => {
                             let doesContain = false;
-                            if (this.authors!=null) {
+                            if (this.authors != null) {
                                 _.forEach(this.authors, author => {
                                     if (!doesContain) {
                                         doesContain = author.toUpperCase().indexOf(text) > -1;
@@ -1768,11 +1841,11 @@ function AppViewModel() {
                             }
                             return doesContain;
                         };
-                        let containsSource = this.source!=null && this.source.toUpperCase().indexOf(text) > -1;
+                        let containsSource = this.source != null && this.source.toUpperCase().indexOf(text) > -1;
                         let containsQuickDescription =
-                            this.quickDescription!=null && this.quickDescription.toUpperCase().indexOf(text) > -1;
+                            this.quickDescription != null && this.quickDescription.toUpperCase().indexOf(text) > -1;
                         let containsLongDescription =
-                            this.longDescription!=null && this.longDescription.toUpperCase().indexOf(text) > -1;
+                            this.longDescription != null && this.longDescription.toUpperCase().indexOf(text) > -1;
                         return (
                             containsName ||
                             containsFilename ||
@@ -1835,11 +1908,11 @@ function AppViewModel() {
             pwadCollection
                 .find({
                     $where: function() {
-                        let containsName = this.name!=null && this.name.toUpperCase().indexOf(text) > -1;
-                        let containsFilename = this.filename!=null && this.filename.toUpperCase().indexOf(text) > -1;
+                        let containsName = this.name != null && this.name.toUpperCase().indexOf(text) > -1;
+                        let containsFilename = this.filename != null && this.filename.toUpperCase().indexOf(text) > -1;
                         let containsMetaTag = () => {
                             let doesContain = false;
-                            if (this.metaTags!=null) {
+                            if (this.metaTags != null) {
                                 _.forEach(this.metaTags, tag => {
                                     if (!doesContain) {
                                         doesContain = tag.toUpperCase().indexOf(text) > -1;
@@ -1850,7 +1923,7 @@ function AppViewModel() {
                         };
                         let containsAuthor = () => {
                             let doesContain = false;
-                            if (this.authors!=null) {
+                            if (this.authors != null) {
                                 _.forEach(this.authors, author => {
                                     if (!doesContain) {
                                         doesContain = author.toUpperCase().indexOf(text) > -1;
@@ -1859,11 +1932,11 @@ function AppViewModel() {
                             }
                             return doesContain;
                         };
-                        let containsSource = this.source!=null && this.source.toUpperCase().indexOf(text) > -1;
+                        let containsSource = this.source != null && this.source.toUpperCase().indexOf(text) > -1;
                         let containsQuickDescription =
-                            this.quickDescription!=null && this.quickDescription.toUpperCase().indexOf(text) > -1;
+                            this.quickDescription != null && this.quickDescription.toUpperCase().indexOf(text) > -1;
                         let containsLongDescription =
-                            this.longDescription!=null && this.longDescription.toUpperCase().indexOf(text) > -1;
+                            this.longDescription != null && this.longDescription.toUpperCase().indexOf(text) > -1;
                         return (
                             containsName ||
                             containsFilename ||
@@ -1927,11 +2000,11 @@ function AppViewModel() {
             sourceportCollection
                 .find({
                     $where: function() {
-                        let containsName = this.name!=null && this.name.toUpperCase().indexOf(text) > -1;
-                        let containsFilename = this.filename!=null && this.filename.toUpperCase().indexOf(text) > -1;
+                        let containsName = this.name != null && this.name.toUpperCase().indexOf(text) > -1;
+                        let containsFilename = this.filename != null && this.filename.toUpperCase().indexOf(text) > -1;
                         let containsMetaTag = () => {
                             let doesContain = false;
-                            if (this.metaTags!=null) {
+                            if (this.metaTags != null) {
                                 _.forEach(this.metaTags, tag => {
                                     if (!doesContain) {
                                         doesContain = tag.toUpperCase().indexOf(text) > -1;
@@ -1942,7 +2015,7 @@ function AppViewModel() {
                         };
                         let containsAuthor = () => {
                             let doesContain = false;
-                            if (this.authors!=null) {
+                            if (this.authors != null) {
                                 _.forEach(this.authors, author => {
                                     if (!doesContain) {
                                         doesContain = author.toUpperCase().indexOf(text) > -1;
@@ -1951,11 +2024,11 @@ function AppViewModel() {
                             }
                             return doesContain;
                         };
-                        let containsSource = this.source!=null && this.source.toUpperCase().indexOf(text) > -1;
+                        let containsSource = this.source != null && this.source.toUpperCase().indexOf(text) > -1;
                         let containsQuickDescription =
-                            this.quickDescription!=null && this.quickDescription.toUpperCase().indexOf(text) > -1;
+                            this.quickDescription != null && this.quickDescription.toUpperCase().indexOf(text) > -1;
                         let containsLongDescription =
-                            this.longDescription!=null && this.longDescription.toUpperCase().indexOf(text) > -1;
+                            this.longDescription != null && this.longDescription.toUpperCase().indexOf(text) > -1;
                         return (
                             containsName ||
                             containsFilename ||
@@ -1988,35 +2061,11 @@ function AppViewModel() {
                 });
         }
     };
-
-    self.walk = directoryName => {
-        fs.readdir(directoryName, (e, files) => {
-            if (e) {
-                console.log('walk function: ', e);
-                return;
-            }
-            files.forEach(file => {
-                let fullPath = path.join(directoryName, file);
-                fs.stat(fullPath, (statErr, f) => {
-                    if (statErr) {
-                        console.log('walk function foreach error: ', statErr);
-                        return;
-                    }
-                    if (f.isDirectory()) {
-                        console.log(fullPath);
-                        self.walk(fullPath);
-                    } else {
-                        self.Allfiles.push(fullPath);
-                        self.Allfiles.sort();
-                        console.log(fullPath);
-                    }
-                });
-            });
-        });
-    };
-
-    self.currentConfig = ko.observable();
-
+    //-------------------------------------------------------------------------
+    // here are all the config chain functions
+    //-------------------------------------------------------------------------
+    // this will initialize all configuration options to basically null or blank
+    // a fresh slate
     self.loadDefaultConfig = () => {
         self.currentConfig(
             new ConfigChain(
@@ -2035,9 +2084,8 @@ function AppViewModel() {
             )
         );
     };
-
-    self.configSearch = ko.observable('');
-
+    // this is for the search function in finding a previously saved config.
+    // it doesn't look in "previous configs"
     self.findConfig = () => {
         let handle = configs => {
             let newConfigChains = [];
@@ -2070,22 +2118,22 @@ function AppViewModel() {
             configCollection
                 .find({
                     $where: function() {
-                        let containsName = this.configName!=null && this.configName.toUpperCase().indexOf(text) > -1;
+                        let containsName = this.configName != null && this.configName.toUpperCase().indexOf(text) > -1;
                         let containsDescription =
-                            this.configDescription!=null && this.configDescription.toUpperCase().indexOf(text) > -1;
-                        let containsIniFile = this.iniFile!=null && this.iniFile.toUpperCase().indexOf(text) > -1;
-                        let containsIwad = this.iwad!=null && this.iwad.toUpperCase().indexOf(text) > -1;
-                        let containsGamemode = this.gamemode!=null && this.gamemode.toUpperCase().indexOf(text) > -1;
+                            this.configDescription != null && this.configDescription.toUpperCase().indexOf(text) > -1;
+                        let containsIniFile = this.iniFile != null && this.iniFile.toUpperCase().indexOf(text) > -1;
+                        let containsIwad = this.iwad != null && this.iwad.toUpperCase().indexOf(text) > -1;
+                        let containsGamemode = this.gamemode != null && this.gamemode.toUpperCase().indexOf(text) > -1;
                         let containsSkill =
-                            this.skill!=null &&
+                            this.skill != null &&
                             this.skill
                                 .toString()
                                 .toUpperCase()
                                 .indexOf(text) > -1;
-                        let containsLevel = this.level!=null && this.level.toUpperCase().indexOf(text) > -1;
+                        let containsLevel = this.level != null && this.level.toUpperCase().indexOf(text) > -1;
                         let containsPwad = () => {
                             let doesContain = false;
-                            if (this.pwads!=null) {
+                            if (this.pwads != null) {
                                 _.forEach(this.pwads, pwad => {
                                     if (!doesContain && pwad.filepath) {
                                         doesContain = pwad.filepath.toUpperCase().indexOf(text) > -1;
@@ -2128,7 +2176,8 @@ function AppViewModel() {
                 });
         }
     };
-
+    // this is the function that big blue play button calls
+    // it literally runs the generated configuration command
     self.runCurrentConfig = () => {
         let config = ko.mapping.toJS(self.currentConfig);
         previousConfigCollection.find({}, (err, configs) => {
@@ -2138,16 +2187,16 @@ function AppViewModel() {
                 if (configs.length === 50) {
                     previousConfigCollection.remove({ _id: configs[0]._id });
                 }
-                config.index=configs.length;
+                config.index = configs.length;
                 previousConfigCollection.insert(config, (insertErr, newDoc) => {
                     if (insertErr) {
                         console.log('runCurrentConfig insert error: ', insertErr);
                     } else {
                         previousConfigCollection.persistence.compactDatafile();
                         self.loadPreviousConfigChains();
-                        exec(self.currentConfig().generatedCommand(), (execErr, stdout, stderr)=>{
-                            if (execErr){
-                                console.log("couldn't execute the command: ", execErr);   
+                        exec(self.currentConfig().generatedCommand(), (execErr, stdout, stderr) => {
+                            if (execErr) {
+                                console.log("couldn't execute the command: ", execErr);
                             }
                             console.log(`stdout: ${stdout}`);
                             console.log(`stdout: ${stderr}`);
@@ -2157,14 +2206,14 @@ function AppViewModel() {
             }
         });
     };
-
-    self.exportCurrentConfig = () => {};
-
+    // This is what the save button calls
+    // this saves the current configuration under the name you specified.
+    // if the name already exists, then it overwrites the old one.
     self.saveCurrentConfig = () => {
         let config = ko.mapping.toJS(self.currentConfig);
         config._id = config.id;
-        if (!config.configName){
-            config.configName='[no name]';
+        if (!config.configName) {
+            config.configName = '[no name]';
         }
         configCollection.update({ _id: config._id }, config, { upsert: true }, (err, numReplaced) => {
             if (err) {
@@ -2175,7 +2224,8 @@ function AppViewModel() {
             }
         });
     };
-
+    // this is what the delete button calls
+    // deletes the current configuration from the database
     self.deleteConfig = config => {
         if (config) {
             let toJS = ko.mapping.toJS(config);
@@ -2184,7 +2234,9 @@ function AppViewModel() {
             self.loadConfigChains();
         }
     };
-
+    // this is what the clone button calls
+    // this will make a copy of a configuration and append " - copy" to the end of its name.
+    // it'll immediately load the cloned configuration for you to change
     self.cloneConfig = config => {
         if (config) {
             let newConfig = ko.mapping.toJS(config);
@@ -2222,7 +2274,8 @@ function AppViewModel() {
             });
         }
     };
-
+    // this is what the load button calls
+    // loads a previously saved or cloned configuration from the database.
     self.loadConfig = config => {
         if (config) {
             self.chosenPreviousConfig('');
@@ -2251,7 +2304,8 @@ function AppViewModel() {
             });
         }
     };
-
+    // this is what the previous configuration dropdown box calls
+    // as soon as you select a previous configuration, it loads the configuration from the database.
     self.loadPreviousConfig = () => {
         if (self.chosenPreviousConfig()) {
             previousConfigCollection.findOne({ _id: self.chosenPreviousConfig() }, (err, newConfig) => {
@@ -2276,7 +2330,7 @@ function AppViewModel() {
             });
         }
     };
-
+    // the initialization function that starts the whole app going.
     self.init = () => {
         //self.goToView(self.views[0]);
         console.log('init: loading files');
@@ -2284,8 +2338,39 @@ function AppViewModel() {
         self.loadDefaultConfig();
         self.loadPreviousConfigChains();
         self.loadConfigChains();
+        (async () => {
+            self.ip(await publicIp.v4());
+        })();
         //TODO: remove this when you can start loading configs from files.
     };
+    // this is used by the debug function
+    // it's just designed to load all files and display them so you can easily see what files the app can see.
+    self.walk = directoryName => {
+        fs.readdir(directoryName, (e, files) => {
+            if (e) {
+                console.log('walk function: ', e);
+                return;
+            }
+            files.forEach(file => {
+                let fullPath = path.join(directoryName, file);
+                fs.stat(fullPath, (statErr, f) => {
+                    if (statErr) {
+                        console.log('walk function foreach error: ', statErr);
+                        return;
+                    }
+                    if (f.isDirectory()) {
+                        console.log(fullPath);
+                        self.walk(fullPath);
+                    } else {
+                        self.Allfiles.push(fullPath);
+                        self.Allfiles.sort();
+                        console.log(fullPath);
+                    }
+                });
+            });
+        });
+    };
+    // here at the end, calling the initialization function.  
     self.init();
 }
 
@@ -2302,11 +2387,6 @@ function resizeToFitContent(el) {
     el.style.height = el.scrollHeight + 'px';
 }
 ready(() => {
-    /* this was fun, but seriously, no
-    document.querySelectorAll('body')[0].addEventListener('click', function () {
-        document.bgColor = 'red';
-    });
-    */
     /**
      * let's activate the titlebar so we can close this bad boy
      */
