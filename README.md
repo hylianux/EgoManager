@@ -14,17 +14,16 @@ After cloning or downloading the repository, simply run:
   * you can run the app in dev mode by running EgoManager.exe with the -dev parameter
 * `npm run build-package` to build, export as an executable, AND archive the whole thing in a nice neat little .7z file.
 
-## Still to do
+## Using the app
 
-### Configuration Builder
+1. Extract everything.
+1. Open the idTech folder, and place all your sourceports, iwads, and pwads in the respective folders.
+1. Run the application.
 
-1. If sourceport is of known type (GZDoom, Zandronum, Chocolate Doom), add extra UI for determining options specific to that sourceport.
-1. lokijs - use the concept of a "default config" and a "current config".  let the user's session be "current config", and if they make a new config, then simply copy the "default config" to the user's "current config".
-1. store configurations
-1. clone configurations
-1. export configurations as batch file (choose relative paths or absolute paths)
+### Cataloguing Files
 
-### Chocolate-Doom Specific
+You should definitely catalogue your files.  I've included a [zipped file](https://github.com/hylianux/EgoManager/releases/download/v0.1-beta/Extra.Metadata.7z) with all the .json files of metadata for the known official Iwads and the 3 sourceports this launcher was designed for (and you can also find it under the latest beta release).  You can extract that to your iwads/sourceports directories and that should help speed up all the cataloguing.  
 
-1. create chocolate-doom pwad and deh constructor (it's different than zdoom-based mods... yay old-school?)
-1. create 3-screen implementation
+### Building a Command Chain
+
+Select a sourceport, then an iwad, then go crazy with all the options you can set for running a game.  Save/load configurations for easy access later, or, if you still prefer using bat files, then you can copy and paste the generated command at the top to your own .bat file.  My launcher is flexible enough to give you what you need to run the game your own way.
