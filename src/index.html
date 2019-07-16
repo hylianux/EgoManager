@@ -25,8 +25,10 @@
             <div class="col-md-12">
                 <ul class="nav nav-tabs justify-content-center">
                     <li class="nav-item">
-                        <a class="nav-link active" data-toggle="tab" href="#configBuilder">Configuration Builder &nbsp;&nbsp;
-                                <i data-toggle="tooltip" data-bind="click: absolutePaths.bind($data, !absolutePaths()), class: absolutePathsClass"
+                        <a class="nav-link active" data-toggle="tab" href="#configBuilder">Configuration Builder
+                            &nbsp;&nbsp;
+                            <i data-toggle="tooltip"
+                                data-bind="click: absolutePaths.bind($data, !absolutePaths()), class: absolutePathsClass"
                                 title="Click to switch between absolute and relative paths"></i>
                         </a>
                     </li>
@@ -144,11 +146,11 @@
                     </div>
                     <!--Everything Else-->
                     <div class="col-md-9 border border-secondary">
-                        <!--select: sourceport, ini file, iwad, map, gamemode, skill-->
+                        <!--select: sourceport, ini file, iwad, map, skill-->
                         <div class="row">
                             <div class="col-md-4 border border-secondary">
                                 <div class="row">
-                                    <div class="col-md-12 border border-secondary">
+                                    <div class="col-md-12">
                                         <div style="margin-top: 10px" class="form-group">
                                             <label class="control-label" for="sourceportSelect" data-toggle="tooltip"
                                                 title="Choose from the sourceports you loaded in file database.">
@@ -166,12 +168,13 @@
                                             <select id="iniSelect" class="form-control"
                                                 data-bind="options: iniFiles, optionsText: 'filename', value: currentConfig().chosenIniFile, optionsValue: 'filepath', optionsCaption: 'Choose Ini File'"></select>
                                         </div>
+
                                     </div>
                                 </div>
                             </div>
                             <div class="col-md-4 border border-secondary">
                                 <div class="row">
-                                    <div class="col-md-12 border border-secondary">
+                                    <div class="col-md-12">
                                         <div style="margin-top: 10px;" class="form-group">
                                             <label class="control-label" for="iwadSelect" data-toggle="tooltip"
                                                 title="Choose which game you'd like to play.  These are loaded from the file database.">
@@ -180,20 +183,25 @@
                                             <select id="iwadSelect" class="form-control"
                                                 data-bind="options: files.iwads, optionsText: 'displayName', optionsValue: 'filepath', value: currentConfig().iwad, optionsCaption: 'Choose Iwad'"></select>
                                         </div>
-                                        <div class="form-group">
-                                            <label for="gamemodeSelect" class="control-label" data-toggle="tooltip"
-                                                title="Choose Solo for Singleplayer, Co-op for Online Co-op, or Deathmatch for Online competitive play.  Solo-net will create a singleplayer game inside a local offline co-op server, allowing you to play through the game alone as though you were playing in online co-op.">Select
-                                                Gamemode</label>
-                                            <select id="gamemodeSelect" class="form-control"
-                                                data-bind="options: gamemodes, optionsText: 'displayText', optionsValue:'value', value: currentConfig().gamemode, optionsCaption: 'Choose Gamemode'"></select>
+                                        <div style="margin-top: 10px;" class="form-group">
+                                            <label class="control-label" for="negativeSpace">Please select your
+                                                sourceport and iwad before choosing a skill or level</label>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-md-4 border border-secondary">
                                 <div class="row">
-                                    <div class="col-md-12 border border-secondary">
+                                    <div class="col-md-12">
                                         <div style="margin-top: 10px;" class="form-group">
+                                            <label class="control-label" for="skillSelect" data-toggle="tooltip"
+                                                title="Use in conjunction with Map Warping, this sets the difficulty level, with 1 being the easiest and 5 being the hardest.">
+                                                Select your skill level/difficulty
+                                            </label>
+                                            <select id="skillSelect" class="form-control"
+                                                data-bind="options: skillLevels, optionsText: 'name', optionsValue:'skillLevel', value: currentConfig().skill, optionsCaption: 'Choose Skill Level'"></select>
+                                        </div>
+                                        <div class="form-group">
                                             <label class="control-label" for="mapInput" data-toggle="tooltip"
                                                 title="Leave this blank if you'd like to start the game from the beginning.  Otherwise, choose a level to warp to.">
                                                 Warp to map/level
@@ -201,14 +209,6 @@
                                             <input id="mapInput" type="text" class="form-control"
                                                 placeholder="Select Map"
                                                 data-bind="jqAuto: {autoFocus: true}, jqAutoSource: levels, jqAutoValue: currentConfig().level, jqAutoSourceLabel: 'displayName', jqAutoSourceInputValue: 'name', jqAutoSourceValue: 'warptext'" />
-                                        </div>
-                                        <div class="form-group">
-                                            <label class="control-label" for="skillSelect" data-toggle="tooltip"
-                                                title="Use in conjunction with Map Warping, this sets the difficulty level, with 1 being the easiest and 5 being the hardest.">
-                                                Select your skill level/difficulty
-                                            </label>
-                                            <select id="skillSelect" class="form-control"
-                                                data-bind="options: skillLevels, optionsText: 'name', optionsValue:'skillLevel', value: currentConfig().skill, optionsCaption: 'Choose Skill Level'"></select>
                                         </div>
                                     </div>
                                 </div>
@@ -218,31 +218,46 @@
                         <div class="row">
                             <div class="col-md-12 border border-secondary">
                                 <div class="row">
-                                    <div class="col-md-6">
-                                        <h4>Available Pwads</h4>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <h4>Chosen Pwads</h4>
+                                    <div class="col-md-12">
+                                        <h5>
+                                            <a href="#" data-toggle="collapse" data-target="#pwadStuff">PWads/Mods
+                                                Selection</a>
+                                        </h5>
                                     </div>
                                 </div>
-                                <div class="row">
-                                    <!--pwad selector-->
-                                    <div class="col-md-6 border border-secondary"
-                                        data-bind="sortable: { template: 'taskTmpl', data: availablePwads }"></div>
-                                    <div class="col-md-6 border border-secondary"
-                                        data-bind="sortable: { template: 'taskTmpl', data: currentConfig().pwads }">
+                                <div class="row collapse show" id="pwadStuff">
+                                    <div class="col-md-12">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                Available Pwads
+                                            </div>
+                                            <div class="col-md-6">
+                                                Chosen Pwads
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <!--pwad selector-->
+                                            <div class="col-md-6 border border-secondary"
+                                                data-bind="sortable: { template: 'taskTmpl', data: availablePwads }">
+                                            </div>
+                                            <div class="col-md-6 border border-secondary"
+                                                data-bind="sortable: { template: 'taskTmpl', data: currentConfig().pwads }">
+                                            </div>
+                                            <script id="taskTmpl" type="text/html"><div class="item">
+                                                        <span>
+                                                           <a href="#" class="nav-link" data-bind="text: displayName"></a>
+                                                       </span> 
+                                                   </div></script>
+                                        </div>
                                     </div>
-                                    <script id="taskTmpl" type="text/html"><div class="item">
-                                            <span>
-                                               <a href="#" class="nav-link" data-bind="text: displayName"></a>
-                                           </span> 
-                                       </div></script>
+
                                 </div>
+
                             </div>
                         </div>
-                        <!--multiplayer options (only available when gamemode not solo)-->
+                        <!--multiplayer options -->
                         <div class="row">
-                            <div class="col-md-12">
+                            <div class="col-md-12 border border-secondary">
                                 <div class="row">
                                     <div class="col-md-12">
                                         <h5>
@@ -252,7 +267,7 @@
                                     </div>
                                 </div>
                                 <div class="row collapse show" id="multiplayerStuff">
-                                    <div data-bind="hidden: (currentConfig().gamemode()==='solo')||(!currentConfig().sourceport())"
+                                    <div data-bind="hidden: !currentConfig().sourceport()"
                                         class="col-md-12 border border-secondary">
                                         <ul class="nav nav-tabs">
                                             <li class="nav-item">
@@ -261,7 +276,7 @@
                                                 </a>
                                             </li>
                                             <li class="nav-item"
-                                                data-bind="hidden: (currentConfig().gamemode()==='solo'||(currentConfig().sourceport()&&getSourceport(currentConfig().sourceport()).sourceportBasetype()==='Chocolate'))">
+                                                data-bind="hidden: (currentConfig().sourceport()&&getSourceport(currentConfig().sourceport()).sourceportBasetype()==='Chocolate')">
                                                 <a class="nav-link" data-toggle="tab" href="#DMFlags">
                                                     DMFlags
                                                 </a>
@@ -437,8 +452,8 @@
                                         </div>
                                     </div>
                                     <div class="col-md-12 border border-secondary"
-                                        data-bind="hidden: currentConfig().gamemode()!='solo' && currentConfig().sourceport()">
-                                        Choose a sourceport and set gamemode to multiplayer to see multiplayer
+                                        data-bind="hidden: currentConfig().sourceport()">
+                                        Choose a sourceport to see multiplayer
                                         configuration options.
                                     </div>
                                 </div>
@@ -446,11 +461,12 @@
                         </div>
                         <!--Sourceport Configs-->
                         <div class="row">
-                            <div class="col-md-12">
+                            <div class="col-md-12 border border-secondary">
                                 <div class="row">
                                     <div class="col-md-12">
                                         <h5>
-                                            <a href="#" data-toggle="collapse" data-target="#configStuff">Configuration Options</a>
+                                            <a href="#" data-toggle="collapse" data-target="#configStuff">Configuration
+                                                Options</a>
                                         </h5>
                                     </div>
                                 </div>

@@ -66,7 +66,6 @@ let skillLevelsCollection = new Datastore({
 
 // a config chain is the chain of commands and options needed to run a game.
 // it has a sourceport, it has an iwad, it has pwads, added options...
-// this is where the generated command comes from
 function ConfigChain(
     id,
     configName,
@@ -74,7 +73,6 @@ function ConfigChain(
     sourceport,
     iniFile,
     iwad,
-    gamemode,
     level,
     skill,
     pwads,
@@ -90,7 +88,6 @@ function ConfigChain(
 
     self.iwad = ko.observable(iwad);
 
-    self.gamemode = ko.observable(gamemode);
     self.level = ko.observable(level);
     self.skill = ko.observable(skill);
     self.dmFlags = ko.observableArray();
@@ -525,16 +522,6 @@ function AppViewModel() {
     self.configChains = ko.observableArray();
     self.availablePwads = ko.observableArray();
     self.sourceportTypes = ko.observableArray(['ZDoom', 'Zandronum', 'Chocolate', 'Other']);
-    self.gamemodes = ko.observableArray([
-        {
-            value: 'solo',
-            displayText: 'Solo'
-        },
-        {
-            value: 'multiplayer',
-            displayText: 'Multiplayer'
-        }
-    ]);
     self.iwadTypes = ko.observableArray([
         {
             name: 'doom',
@@ -657,11 +644,13 @@ function AppViewModel() {
                     '" ';
             }
             if (self.currentConfig().chosenIniFile()) {
-                command += '-config ' + '"' +
-                (self.absolutePaths()
-                    ? path.resolve(__dirname, self.currentConfig().chosenIniFile())
-                    : self.currentConfig().chosenIniFile()) +
-                '" ';
+                command +=
+                    '-config ' +
+                    '"' +
+                    (self.absolutePaths()
+                        ? path.resolve(__dirname, self.currentConfig().chosenIniFile())
+                        : self.currentConfig().chosenIniFile()) +
+                    '" ';
             }
             if (self.currentConfig().level()) {
                 command += '-warp ' + self.currentConfig().level() + ' ';
@@ -670,14 +659,39 @@ function AppViewModel() {
                 command += '-skill ' + self.currentConfig().skill() + ' ';
             }
             if (self.currentConfig().pwads() && self.currentConfig().pwads().length > 0) {
+                let isChocolate = false;
+                if (
+                    self.currentConfig().sourceport() &&
+                    self.getSourceport(self.currentConfig().sourceport()).sourceportBasetype()
+                ) {
+                    isChocolate =
+                        self
+                            .getSourceport(self.currentConfig().sourceport())
+                            .sourceportBasetype()
+                            .toLowerCase() === 'chocolate';
+                }
                 command += '-file ';
                 _.forEach(self.currentConfig().pwads(), pwad => {
-                    command += '"' +
-                    (self.absolutePaths()
-                        ? path.resolve(__dirname, pwad.filepath)
-                        : pwad.filepath) +
-                    '" ';
+                    let isDeh = pwad.filepath.indexOf('.deh') > -1;
+                    if (!isChocolate || !isDeh) {
+                        command +=
+                            '"' +
+                            (self.absolutePaths() ? path.resolve(__dirname, pwad.filepath) : pwad.filepath) +
+                            '" ';
+                    }
                 });
+                if (isChocolate) {
+                    command += '-deh ';
+                    _.forEach(self.currentConfig().pwads(), pwad => {
+                        let isDeh = pwad.filepath.indexOf('.deh') > -1;
+                        if (isDeh) {
+                            command +=
+                                '"' +
+                                (self.absolutePaths() ? path.resolve(__dirname, pwad.filepath) : pwad.filepath) +
+                                '" ';
+                        }
+                    });
+                }
             }
             if (self.currentConfig().dmFlags()) {
                 let dmFlags = [];
@@ -743,6 +757,31 @@ function AppViewModel() {
                 }
             }
             if (self.currentConfig().sourceportConfigs) {
+                // ok, first, let's check if you bothered to use 3-screen mode, because if you did,
+                // i gotta disable the commands for "-server" and "-autojoin".
+                let is3Screen = false;
+                if (self.currentConfig().sourceportConfigs.advanced()) {
+                    _.forEach(self.currentConfig().sourceportConfigs.advanced(), config => {
+                        if (config.command === '-three-screen-mode' && config.enabled()) {
+                            is3Screen = true;
+                        }
+                    });
+                }
+                if (is3Screen) {
+                    _.forEach(self.currentConfig().sourceportConfigs.multiplayer(), config => {
+                        if (config.command === '-server') {
+                            config.enabled(true);
+                        }
+                        if (config.command === '-autojoin') {
+                            config.enabled(false);
+                        }
+                    });
+                    _.forEach(self.currentConfig().sourceportConfigs.display(), config => {
+                        if (config.command === '-window') {
+                            config.enabled(true);
+                        }
+                    });
+                }
                 if (self.currentConfig().sourceportConfigs.config()) {
                     _.forEach(self.currentConfig().sourceportConfigs.config(), config => {
                         if (config.enabled()) {
@@ -750,7 +789,8 @@ function AppViewModel() {
                             if (config.inputType === 'files' || config.inputType === 'directory') {
                                 if (config.value()) {
                                     _.forEach(config.value().split(';'), file => {
-                                        value += '"' + file + '" ';
+                                        let relativePath = path.relative(__dirname, file);
+                                        value += '"' + self.absolutePaths()?relativePath:file + '" ';
                                     });
                                     value = value.substring(0, value.length - 1);
                                 }
@@ -768,7 +808,8 @@ function AppViewModel() {
                             if (config.inputType === 'files' || config.inputType === 'directory') {
                                 if (config.value()) {
                                     _.forEach(config.value().split(';'), file => {
-                                        value += '"' + file + '" ';
+                                        let relativePath = path.relative(__dirname, file);
+                                        value += '"' + self.absolutePaths()?relativePath:file + '" ';
                                     });
                                     value = value.substring(0, value.length - 1);
                                 }
@@ -786,7 +827,8 @@ function AppViewModel() {
                             if (config.inputType === 'files' || config.inputType === 'directory') {
                                 if (config.value()) {
                                     _.forEach(config.value().split(';'), file => {
-                                        value += '"' + file + '" ';
+                                        let relativePath = path.relative(__dirname, file);
+                                        value += '"' + self.absolutePaths()?relativePath:file + '" ';
                                     });
                                     value = value.substring(0, value.length - 1);
                                 }
@@ -804,7 +846,8 @@ function AppViewModel() {
                             if (config.inputType === 'files' || config.inputType === 'directory') {
                                 if (config.value()) {
                                     _.forEach(config.value().split(';'), file => {
-                                        value += '"' + file + '" ';
+                                        let relativePath = path.relative(__dirname, file);
+                                        value += '"' + self.absolutePaths()?relativePath:file + '" ';
                                     });
                                     value = value.substring(0, value.length - 1);
                                 }
@@ -822,7 +865,8 @@ function AppViewModel() {
                             if (config.inputType === 'files' || config.inputType === 'directory') {
                                 if (config.value()) {
                                     _.forEach(config.value().split(';'), file => {
-                                        value += '"' + file + '" ';
+                                        let relativePath = path.relative(__dirname, file);
+                                        value += '"' + self.absolutePaths()?relativePath:file + '" ';
                                     });
                                     value = value.substring(0, value.length - 1);
                                 }
@@ -840,7 +884,8 @@ function AppViewModel() {
                             if (config.inputType === 'files' || config.inputType === 'directory') {
                                 if (config.value()) {
                                     _.forEach(config.value().split(';'), file => {
-                                        value += '"' + file + '" ';
+                                        let relativePath = path.relative(__dirname, file);
+                                        value += '"' + self.absolutePaths()?relativePath:file + '" ';
                                     });
                                     value = value.substring(0, value.length - 1);
                                 }
@@ -853,19 +898,22 @@ function AppViewModel() {
                 }
                 if (self.currentConfig().sourceportConfigs.advanced()) {
                     _.forEach(self.currentConfig().sourceportConfigs.advanced(), config => {
-                        if (config.enabled()) {
-                            let value = '';
-                            if (config.inputType === 'files' || config.inputType === 'directory') {
-                                if (config.value()) {
-                                    _.forEach(config.value().split(';'), file => {
-                                        value += '"' + file + '" ';
-                                    });
-                                    value = value.substring(0, value.length - 1);
+                        if (config.command != '-three-screen-mode') {
+                            if (config.enabled()) {
+                                let value = '';
+                                if (config.inputType === 'files' || config.inputType === 'directory') {
+                                    if (config.value()) {
+                                        _.forEach(config.value().split(';'), file => {
+                                            let relativePath = path.relative(__dirname, file);
+                                        value += '"' + self.absolutePaths()?relativePath:file + '" ';
+                                        });
+                                        value = value.substring(0, value.length - 1);
+                                    }
+                                } else {
+                                    value = config.value();
                                 }
-                            } else {
-                                value = config.value();
+                                command += config.command + ' ' + (value ? value : '') + ' ';
                             }
-                            command += config.command + ' ' + (value ? value : '') + ' ';
                         }
                     });
                 }
@@ -888,12 +936,12 @@ function AppViewModel() {
         let directoryName = self.iwadDirectory;
         iwadCollection.remove({}, { multi: true }, (removeErr, numRemoved) => {
             if (removeErr) {
-                console.log('buildIwadCollection removal error: ', removeErr);
+                console.error('buildIwadCollection removal error: ', removeErr);
             } else {
                 function walk(directory) {
                     fs.readdir(directory, (e, files) => {
                         if (e) {
-                            console.log('buildIwadCollection error: ', e);
+                            console.error('buildIwadCollection error: ', e);
                             return;
                         }
                         files.forEach(
@@ -901,7 +949,7 @@ function AppViewModel() {
                                 let fullPath = path.join(directory, file);
                                 fs.stat(fullPath, (foreachErr, f) => {
                                     if (foreachErr) {
-                                        console.log('buildIwadCollection foreach error: ', foreachErr);
+                                        console.error('buildIwadCollection foreach error: ', foreachErr);
                                         return;
                                     }
                                     if (f.isDirectory()) {
@@ -932,7 +980,7 @@ function AppViewModel() {
                                                 { upsert: true },
                                                 (updateErr, numReplaced) => {
                                                     if (updateErr) {
-                                                        console.log(
+                                                        console.error(
                                                             'buildIwadCollection updatingCollection error: ',
                                                             updateErr
                                                         );
@@ -947,7 +995,7 @@ function AppViewModel() {
                                         } else if (fileExt === 'json') {
                                             fs.readFile(fullPath, 'utf8', (err, data) => {
                                                 if (err) {
-                                                    console.log('buildIwadCollection json file read error!', err);
+                                                    console.error('buildIwadCollection json file read error!', err);
                                                 } else {
                                                     let iwad = JSON.parse(data);
                                                     if (dev) {
@@ -971,7 +1019,7 @@ function AppViewModel() {
                                                         { upsert: true },
                                                         (updateErr, numReplaced) => {
                                                             if (updateErr) {
-                                                                console.log(
+                                                                console.error(
                                                                     'buildIwadCollection updatingCollection with json file error: ',
                                                                     updateErr
                                                                 );
@@ -988,14 +1036,14 @@ function AppViewModel() {
                                         } else if (fileExt === 'txt') {
                                             iwadCollection.findOne({ filename: f }, (findErr, iwad) => {
                                                 if (findErr) {
-                                                    console.log(
+                                                    console.error(
                                                         'buildIwadCollection txt collection.find error: ',
                                                         findErr
                                                     );
                                                 } else {
                                                     fs.readFile(fullPath, 'utf8', (err, data) => {
                                                         if (err) {
-                                                            console.log(
+                                                            console.error(
                                                                 'buildIwadCollection txt file read error!',
                                                                 err
                                                             );
@@ -1017,7 +1065,7 @@ function AppViewModel() {
                                                                     {},
                                                                     (updateErr, numReplaced) => {
                                                                         if (updateErr) {
-                                                                            console.log(
+                                                                            console.error(
                                                                                 'buildIwadCollection txt updatingCollection error: ',
                                                                                 updateErr
                                                                             );
@@ -1055,12 +1103,12 @@ function AppViewModel() {
         let directoryName = self.pwadDirectory;
         pwadCollection.remove({}, { multi: true }, (removeErr, numRemoved) => {
             if (removeErr) {
-                console.log('buildIwadCollection removal error: ', removeErr);
+                console.error('buildIwadCollection removal error: ', removeErr);
             } else {
                 function walk(directory) {
                     fs.readdir(directory, (e, files) => {
                         if (e) {
-                            console.log('buildPwadCollection error:', e);
+                            console.error('buildPwadCollection error:', e);
                             return;
                         }
                         files.forEach(
@@ -1068,7 +1116,7 @@ function AppViewModel() {
                                 let fullPath = path.join(directory, file);
                                 fs.stat(fullPath, (statErr, f) => {
                                     if (statErr) {
-                                        console.log('buildPwadCollection statError error', statErr);
+                                        console.error('buildPwadCollection statError error', statErr);
                                         return;
                                     }
                                     if (f.isDirectory()) {
@@ -1094,7 +1142,7 @@ function AppViewModel() {
                                                 { upsert: true },
                                                 (updateErr, numReplaced) => {
                                                     if (updateErr) {
-                                                        console.log(
+                                                        console.error(
                                                             'buildPwadCollection updatingCollection error',
                                                             updateErr
                                                         );
@@ -1109,7 +1157,7 @@ function AppViewModel() {
                                         } else if (fileExt === 'json') {
                                             fs.readFile(fullPath, 'utf8', (err, data) => {
                                                 if (err) {
-                                                    console.log('buildPWadCollection json file read error!', err);
+                                                    console.error('buildPWadCollection json file read error!', err);
                                                 } else {
                                                     let pwad = JSON.parse(data);
                                                     if (dev) {
@@ -1132,7 +1180,7 @@ function AppViewModel() {
                                                         { upsert: true },
                                                         (updateErr, numReplaced) => {
                                                             if (updateErr) {
-                                                                console.log(
+                                                                console.error(
                                                                     'buildPwadCollection updatingCollection json error: ',
                                                                     updateErr
                                                                 );
@@ -1149,14 +1197,14 @@ function AppViewModel() {
                                         } else if (fileExt === 'txt') {
                                             pwadCollection.findOne({ filename: f }, (findErr, pwad) => {
                                                 if (findErr) {
-                                                    console.log(
+                                                    console.error(
                                                         'buildPwadCollection findingCollection txt error: ',
                                                         findErr
                                                     );
                                                 } else {
                                                     fs.readFile(fullPath, 'utf8', (err, data) => {
                                                         if (err) {
-                                                            console.log(
+                                                            console.error(
                                                                 'buildPwadCollection txt file read error!',
                                                                 err
                                                             );
@@ -1182,7 +1230,7 @@ function AppViewModel() {
                                                                     {},
                                                                     (updateErr, numReplaced) => {
                                                                         if (updateErr) {
-                                                                            console.log(
+                                                                            console.error(
                                                                                 'buildPwadCollection updatingCollection txt error: ',
                                                                                 updateErr
                                                                             );
@@ -1220,12 +1268,12 @@ function AppViewModel() {
         let directoryName = self.sourceportDirectory;
         sourceportCollection.remove({}, { multi: true }, (removeErr, numRemoved) => {
             if (removeErr) {
-                console.log('buildIwadCollection removal error: ', removeErr);
+                console.error('buildIwadCollection removal error: ', removeErr);
             } else {
                 function walk(directory) {
                     fs.readdir(directory, (e, files) => {
                         if (e) {
-                            console.log('Error: ', e);
+                            console.error('Error: ', e);
                             return;
                         }
                         files.forEach(
@@ -1233,7 +1281,7 @@ function AppViewModel() {
                                 let fullPath = path.join(directory, file);
                                 fs.stat(fullPath, (forEachErr, f) => {
                                     if (forEachErr) {
-                                        console.log('buildSourceportCollection stat error: ', forEachErr);
+                                        console.error('buildSourceportCollection stat error: ', forEachErr);
                                         return;
                                     }
                                     if (f.isDirectory()) {
@@ -1263,7 +1311,7 @@ function AppViewModel() {
                                                 { upsert: true },
                                                 (updateErr, numReplaced) => {
                                                     if (updateErr) {
-                                                        console.log(
+                                                        console.error(
                                                             'buildSourceportCollection update error: ',
                                                             updateErr
                                                         );
@@ -1278,7 +1326,10 @@ function AppViewModel() {
                                         } else if (fileExt === 'json') {
                                             fs.readFile(fullPath, 'utf8', (err, data) => {
                                                 if (err) {
-                                                    console.log('buildSourceportCollection json file read error!', err);
+                                                    console.error(
+                                                        'buildSourceportCollection json file read error!',
+                                                        err
+                                                    );
                                                 } else {
                                                     let sourceport = JSON.parse(data);
                                                     if (dev) {
@@ -1302,7 +1353,7 @@ function AppViewModel() {
                                                         { upsert: true },
                                                         (updateErr, numReplaced) => {
                                                             if (updateErr) {
-                                                                console.log(
+                                                                console.error(
                                                                     'buildSourceportCollection update json error: ',
                                                                     updateErr
                                                                 );
@@ -1339,7 +1390,7 @@ function AppViewModel() {
             .sort({ filename: 1 })
             .exec((err, allIwads) => {
                 if (err) {
-                    console.log('load iwad files error: ', err);
+                    console.error('load iwad files error: ', err);
                 } else {
                     let newIwads = [];
                     _.forEach(allIwads, iwad => {
@@ -1375,7 +1426,7 @@ function AppViewModel() {
             .sort({ filename: 1 })
             .exec((err, allPwads) => {
                 if (err) {
-                    console.log('load pwad files error: ', err);
+                    console.error('load pwad files error: ', err);
                 } else {
                     let newPwads = [];
                     let newAvailablePwads = [];
@@ -1419,7 +1470,7 @@ function AppViewModel() {
             .sort({ filename: 1 })
             .exec((err, allSourceports) => {
                 if (err) {
-                    console.log('load sourceportfiles error: ', err);
+                    console.error('load sourceportfiles error: ', err);
                 } else {
                     let newSourceports = [];
                     _.forEach(allSourceports, sourceport => {
@@ -1449,7 +1500,7 @@ function AppViewModel() {
     self.loadConfigChains = () => {
         configCollection.find({}, (err, allConfigChains) => {
             if (err) {
-                console.log('loadConfigChains error: ', err);
+                console.error('loadConfigChains error: ', err);
             } else {
                 if (allConfigChains.length < 1) {
                     self.currentConfig().id(1);
@@ -1465,7 +1516,6 @@ function AppViewModel() {
                         configChain.sourceport,
                         configChain.iniFile,
                         configChain.iwad,
-                        configChain.gamemode,
                         configChain.level,
                         configChain.skill,
                         configChain.pwads,
@@ -1483,10 +1533,10 @@ function AppViewModel() {
     self.loadPreviousConfigChains = () => {
         previousConfigCollection
             .find({})
-            .sort({ index: -1 })
+            .sort({ timestamp: -1 })
             .exec((err, allConfigChains) => {
                 if (err) {
-                    console.log('loadPreviousConfigChains error: ', err);
+                    console.error('loadPreviousConfigChains error: ', err);
                 } else {
                     let newConfigChains = [];
                     _.forEach(allConfigChains, configChain => {
@@ -1497,7 +1547,6 @@ function AppViewModel() {
                             configChain.sourceport,
                             configChain.iniFile,
                             configChain.iwad,
-                            configChain.gamemode,
                             configChain.level,
                             configChain.skill,
                             configChain.pwads,
@@ -1528,7 +1577,7 @@ function AppViewModel() {
             .sort({ name: 1 })
             .exec((err, allLevels) => {
                 if (err) {
-                    console.log('levelsCollection error: ', err);
+                    console.error('levelsCollection error: ', err);
                 } else {
                     let newLevels = [];
                     _.forEach(allLevels, level => {
@@ -1557,7 +1606,7 @@ function AppViewModel() {
         query = { iwad: iwadType };
         skillLevelsCollection.find(query, (err, skillLevelSets) => {
             if (err) {
-                console.log('loadSkillLevels error: ', err);
+                console.error('loadSkillLevels error: ', err);
             } else {
                 let newSkillLevels = [];
                 _.forEach(skillLevelSets, skillLevelSet => {
@@ -1590,7 +1639,7 @@ function AppViewModel() {
                 .sort({ value: 1 })
                 .exec((err, dmFlags) => {
                     if (err) {
-                        console.log('load DMFlags error: ', err);
+                        console.error('load DMFlags error: ', err);
                     } else {
                         _.forEach(dmFlags, dmFlag => {
                             let newFlag = new DMFlag(
@@ -1640,35 +1689,38 @@ function AppViewModel() {
         }
         if (sourceportType != null) {
             query = { category: category, sourceports: sourceportType };
-            commandLineCollection.find(query, (err, commandLineOptions) => {
-                if (err) {
-                    console.log('load Command line options error: ', err);
-                } else {
-                    let newOptions = [];
-                    _.forEach(commandLineOptions, option => {
-                        let newOption = new CommandLineOption(
-                            false,
-                            option.name,
-                            option.inputType,
-                            option.description,
-                            option.command,
-                            option.value,
-                            option.sourceports,
-                            option.category,
-                            option.valueRange,
-                            option.valueset,
-                            option.uniqueCommandId
-                        );
-                        newOptions.push(newOption);
-                    });
-                    if (newOptions.length > 0) {
-                        self.currentConfig().sourceportConfigs[category].push.apply(
-                            self.currentConfig().sourceportConfigs[category],
-                            newOptions
-                        );
+            commandLineCollection
+                .find(query)
+                .sort({ _id: 1 })
+                .exec((err, commandLineOptions) => {
+                    if (err) {
+                        console.error('load Command line options error: ', err);
+                    } else {
+                        let newOptions = [];
+                        _.forEach(commandLineOptions, option => {
+                            let newOption = new CommandLineOption(
+                                false,
+                                option.name,
+                                option.inputType,
+                                option.description,
+                                option.command,
+                                option.value,
+                                option.sourceports,
+                                option.category,
+                                option.valueRange,
+                                option.valueset,
+                                option.uniqueCommandId
+                            );
+                            newOptions.push(newOption);
+                        });
+                        if (newOptions.length > 0) {
+                            self.currentConfig().sourceportConfigs[category].push.apply(
+                                self.currentConfig().sourceportConfigs[category],
+                                newOptions
+                            );
+                        }
                     }
-                }
-            });
+                });
         }
     };
     //-------------------------------------------------------------------------
@@ -1747,11 +1799,12 @@ function AppViewModel() {
         } else if (self.chosenFile().filetype() === 'sourceport') {
             rawFileProperties.basetype = self.chosenFile().sourceportBasetype();
         }
-        let directory = path.dirname(self.chosenFile().filepath);
-        let RealFilename = self.chosenFile().filepath.substring(0, self.chosenFile().filepath.lastIndexOf('.'));
+        let filepath = path.resolve(__dirname, self.chosenFile().filepath);
+        let directory = path.dirname(filepath);
+        let RealFilename = filepath.substring(0, filepath.lastIndexOf('.'));
         fs.writeFile(path.resolve(directory, RealFilename + '.json'), JSON.stringify(rawFileProperties), err => {
             if (err) {
-                return console.log('update file error: ', err);
+                return console.error('update file error: ', err);
             }
             switch (self.chosenFile().filetype()) {
                 case 'iwad':
@@ -1808,12 +1861,14 @@ function AppViewModel() {
     // this function will then populate the ini file dropdown on the fly
     self.getIniFilesForGivenSourceport = sourceport => {
         let directory = path.resolve(__dirname, path.dirname(sourceport));
-        console.log(directory);
+        if (dev){
+            console.log(directory);
+        }
         self.iniFiles.removeAll();
         function walk(directory) {
             fs.readdir(directory, (e, files) => {
                 if (e) {
-                    console.log('get ini files for sourceport error: ', e);
+                    console.error('get ini files for sourceport error: ', e);
                     return;
                 }
                 files.forEach(
@@ -1821,7 +1876,7 @@ function AppViewModel() {
                         let fullPath = path.join(directory, file);
                         fs.stat(fullPath, (forEachErr, f) => {
                             if (forEachErr) {
-                                console.log('get ini files for sourceport foreach error: ', forEachErr);
+                                console.error('get ini files for sourceport foreach error: ', forEachErr);
                                 return;
                             }
                             if (f.isDirectory()) {
@@ -1930,7 +1985,7 @@ function AppViewModel() {
                 .sort({ filename: 1 })
                 .exec((err, iwads) => {
                     if (err) {
-                        console.log('findIwad find error: ', err);
+                        console.error('findIwad find error: ', err);
                     } else {
                         handle(iwads);
                     }
@@ -1941,7 +1996,7 @@ function AppViewModel() {
                 .sort({ filename: 1 })
                 .exec((err, iwads) => {
                     if (err) {
-                        console.log('findIwad find error: ', err);
+                        console.error('findIwad find error: ', err);
                     } else {
                         handle(iwads);
                     }
@@ -2021,7 +2076,7 @@ function AppViewModel() {
                 .sort({ filename: 1 })
                 .exec((err, pwads) => {
                     if (err) {
-                        console.log('find Pwad error: ', err);
+                        console.error('find Pwad error: ', err);
                     } else {
                         handle(pwads);
                     }
@@ -2032,7 +2087,7 @@ function AppViewModel() {
                 .sort({ filename: 1 })
                 .exec((err, pwads) => {
                     if (err) {
-                        console.log('find Pwad error: ', err);
+                        console.error('find Pwad error: ', err);
                     } else {
                         handle(pwads);
                     }
@@ -2113,7 +2168,7 @@ function AppViewModel() {
                 .sort({ filename: 1 })
                 .exec((err, sourceports) => {
                     if (err) {
-                        console.log('find sourceport error: ', err);
+                        console.error('find sourceport error: ', err);
                     } else {
                         handle(sourceports);
                     }
@@ -2124,7 +2179,7 @@ function AppViewModel() {
                 .sort({ filename: 1 })
                 .exec((err, sourceports) => {
                     if (err) {
-                        console.log('find sourceport error: ', err);
+                        console.error('find sourceport error: ', err);
                     } else {
                         handle(sourceports);
                     }
@@ -2145,7 +2200,6 @@ function AppViewModel() {
                 null,
                 null,
                 null,
-                'solo',
                 null,
                 null,
                 null,
@@ -2168,7 +2222,6 @@ function AppViewModel() {
                         configChain.sourceport,
                         configChain.iniFile,
                         configChain.iwad,
-                        configChain.gamemode,
                         configChain.level,
                         configChain.skill,
                         configChain.pwads,
@@ -2193,7 +2246,6 @@ function AppViewModel() {
                             this.configDescription != null && this.configDescription.toUpperCase().indexOf(text) > -1;
                         let containsIniFile = this.iniFile != null && this.iniFile.toUpperCase().indexOf(text) > -1;
                         let containsIwad = this.iwad != null && this.iwad.toUpperCase().indexOf(text) > -1;
-                        let containsGamemode = this.gamemode != null && this.gamemode.toUpperCase().indexOf(text) > -1;
                         let containsSkill =
                             this.skill != null &&
                             this.skill
@@ -2219,7 +2271,6 @@ function AppViewModel() {
                             containsPwad() ||
                             containsIwad ||
                             containsIniFile ||
-                            containsGamemode ||
                             containsSkill ||
                             containsLevel
                         );
@@ -2228,7 +2279,7 @@ function AppViewModel() {
                 .sort({ configName: 1 })
                 .exec((err, configs) => {
                     if (err) {
-                        console.log('findConfig error', err);
+                        console.error('findConfig error', err);
                     } else {
                         handle(configs);
                     }
@@ -2239,7 +2290,7 @@ function AppViewModel() {
                 .sort({ configName: 1 })
                 .exec((err, configs) => {
                     if (err) {
-                        console.log('findConfig error', err);
+                        console.error('findConfig error', err);
                     } else {
                         handle(configs);
                     }
@@ -2250,31 +2301,87 @@ function AppViewModel() {
     // it literally runs the generated configuration command
     self.runCurrentConfig = () => {
         let config = ko.mapping.toJS(self.currentConfig);
-        previousConfigCollection.find({}, (err, configs) => {
-            if (err) {
-                console.log('runCurrentConfig error: ', err);
-            } else {
-                if (configs.length === 50) {
-                    previousConfigCollection.remove({ _id: configs[0]._id });
-                }
-                config.index = configs.length;
-                previousConfigCollection.insert(config, (insertErr, newDoc) => {
-                    if (insertErr) {
-                        console.log('runCurrentConfig insert error: ', insertErr);
-                    } else {
-                        previousConfigCollection.persistence.compactDatafile();
-                        self.loadPreviousConfigChains();
-                        exec(self.currentConfig().generatedCommand(), (execErr, stdout, stderr) => {
-                            if (execErr) {
-                                console.log("couldn't execute the command: ", execErr);
+        let finish = () => {
+            config.timestamp = (Date.now() / 1000) | 0;
+            previousConfigCollection.insert(config, (insertErr, newDoc) => {
+                if (insertErr) {
+                    console.error('runCurrentConfig insert error: ', insertErr);
+                } else {
+                    previousConfigCollection.persistence.compactDatafile();
+                    self.loadPreviousConfigChains();
+                    let is3Screen = false;
+                    if (self.currentConfig().sourceportConfigs.advanced()) {
+                        _.forEach(self.currentConfig().sourceportConfigs.advanced(), config => {
+                            if (config.command === '-three-screen-mode' && config.enabled()) {
+                                is3Screen = true;
                             }
-                            console.log(`stdout: ${stdout}`);
-                            console.log(`stdout: ${stderr}`);
                         });
                     }
-                });
-            }
-        });
+                    let command2 = null;
+                    let command3 = null;
+                    if (is3Screen) {
+                        if (self.currentConfig().sourceport()) {
+                            command2 =
+                                '"' +
+                                (self.absolutePaths()
+                                    ? path.resolve(__dirname, self.currentConfig().sourceport())
+                                    : self.currentConfig().sourceport()) +
+                                '" -autojoin -left -window';
+                            command3 =
+                                '"' +
+                                (self.absolutePaths()
+                                    ? path.resolve(__dirname, self.currentConfig().sourceport())
+                                    : self.currentConfig().sourceport()) +
+                                '" -autojoin -right -window';
+                        }
+                    }
+                    exec(self.generatedCommand(), (execErr, stdout, stderr) => {
+                        if (execErr) {
+                            console.error("couldn't execute the command: ", execErr);
+                        }
+                        console.log(`stdout: ${stdout}`);
+                        console.log(`stdout: ${stderr}`);
+                        if (command2) {
+                            exec(command2, (exec2Err, stdout2, stderr2) => {
+                                if (exec2Err) {
+                                    console.error("couldn't execute 3-screen mode left: ", exec2Err);
+                                }
+                                console.log(`stdout: ${stdout2}`);
+                                console.log(`stdout: ${stderr2}`);
+                                if (command3) {
+                                    exec(command3, (exec3Err, stdout3, stderr3) => {
+                                        if (exec3Err) {
+                                            console.error("couldn't execute 3-screen mode right: ", exec3Err);
+                                        }
+                                        console.log(`stdout: ${stdout3}`);
+                                        console.log(`stdout: ${stderr3}`);
+                                    });
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+        };
+        previousConfigCollection
+            .find({})
+            .sort({ timestamp: -1 })
+            .exec((err, configs) => {
+                if (err) {
+                    console.error('runCurrentConfig error: ', err);
+                } else {
+                    if (configs.length === 50) {
+                        previousConfigCollection.remove({ _id: configs[49]._id }, {}, (removeErr, numRemoved) => {
+                            if (removeErr) {
+                                console.error('error removing previous config: ', removeErr);
+                            }
+                            finish();
+                        });
+                    } else {
+                        finish();
+                    }
+                }
+            });
     };
     // This is what the save button calls
     // this saves the current configuration under the name you specified.
@@ -2287,7 +2394,7 @@ function AppViewModel() {
         }
         configCollection.update({ _id: config._id }, config, { upsert: true }, (err, numReplaced) => {
             if (err) {
-                console.log('saveCurrentConfig error: ', err);
+                console.error('saveCurrentConfig error: ', err);
             } else {
                 configCollection.persistence.compactDatafile();
                 self.loadConfigChains();
@@ -2313,13 +2420,13 @@ function AppViewModel() {
             newConfig.configName = newConfig.configName + ' - copy';
             configCollection.insert(newConfig, (err, someNewConfig) => {
                 if (err) {
-                    console.log('cloneConfig error: ', err);
+                    console.error('cloneConfig error: ', err);
                 } else {
                     configCollection.persistence.compactDatafile();
                     someNewConfig.id = someNewConfig._id;
                     configCollection.update({ _id: someNewConfig._id }, someNewConfig, {}, (updateErr, numReplaced) => {
                         if (updateErr) {
-                            console.log('clone config update error: ', updateErr);
+                            console.error('clone config update error: ', updateErr);
                         } else {
                             configCollection.persistence.compactDatafile();
                             self.loadConfigChains();
@@ -2330,7 +2437,6 @@ function AppViewModel() {
                                 someNewConfig.sourceport,
                                 someNewConfig.iniFile,
                                 someNewConfig.iwad,
-                                someNewConfig.gamemode,
                                 someNewConfig.level,
                                 someNewConfig.skill,
                                 someNewConfig.pwads,
@@ -2353,13 +2459,12 @@ function AppViewModel() {
             query = { _id: config.id() };
             configCollection.findOne(query, (err, newConfig) => {
                 if (err) {
-                    console.log('loadConfig error: ', err);
+                    console.error('loadConfig error: ', err);
                 } else {
                     self.currentConfig().configName(newConfig.configName);
                     self.currentConfig().configDescription(newConfig.configDescription);
                     self.currentConfig().sourceport(newConfig.sourceport);
                     self.currentConfig().iwad(newConfig.iwad);
-                    self.currentConfig().gamemode(newConfig.gamemode);
                     self.currentConfig().level(newConfig.level);
                     self.currentConfig().skill(newConfig.skill);
                     self.currentConfig().setPwads(newConfig.pwads);
@@ -2380,13 +2485,12 @@ function AppViewModel() {
         if (self.chosenPreviousConfig()) {
             previousConfigCollection.findOne({ _id: self.chosenPreviousConfig() }, (err, newConfig) => {
                 if (err) {
-                    console.log('loadPreviousConfig error: ', err);
+                    console.error('loadPreviousConfig error: ', err);
                 } else {
                     self.currentConfig().configName(newConfig.configName);
                     self.currentConfig().configDescription(newConfig.configDescription);
                     self.currentConfig().sourceport(newConfig.sourceport);
                     self.currentConfig().iwad(newConfig.iwad);
-                    self.currentConfig().gamemode(newConfig.gamemode);
                     self.currentConfig().level(newConfig.level);
                     self.currentConfig().skill(newConfig.skill);
                     self.currentConfig().setPwads(newConfig.pwads);
@@ -2402,7 +2506,9 @@ function AppViewModel() {
     };
     // the initialization function that starts the whole app going.
     self.init = () => {
-        console.log('init: loading files');
+        if (dev){
+            console.log('init: loading files');
+        }
         self.loadCollections(true);
         self.loadDefaultConfig();
         self.loadPreviousConfigChains();
@@ -2417,14 +2523,14 @@ function AppViewModel() {
     self.walk = directoryName => {
         fs.readdir(directoryName, (e, files) => {
             if (e) {
-                console.log('walk function: ', e);
+                console.error('walk function: ', e);
                 return;
             }
             files.forEach(file => {
                 let fullPath = path.join(directoryName, file);
                 fs.stat(fullPath, (statErr, f) => {
                     if (statErr) {
-                        console.log('walk function foreach error: ', statErr);
+                        console.error('walk function foreach error: ', statErr);
                         return;
                     }
                     if (f.isDirectory()) {
