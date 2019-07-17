@@ -129,7 +129,7 @@
                                                 <span style="width: 32%"
                                                     class="btn btn-xs btn-secondary fa fa-arrow-circle-up"
                                                     data-toggle="tooltip" title="Load Config"
-                                                    data-bind="click: $parent.loadConfig">
+                                                    data-bind="click: $parent.loadConfig.bind($data, id())">
                                                 </span>
                                                 <span style="width: 32%" class="btn btn-xs btn-secondary fa fa-copy"
                                                     data-toggle="tooltip" title="Clone Config"

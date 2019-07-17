@@ -1510,29 +1510,28 @@ function AppViewModel() {
                 console.error('loadConfigChains error: ', err);
             } else {
                 if (allConfigChains.length < 1) {
-                    self.currentConfig().id(1);
-                    self.saveCurrentConfig();
-                    self.loadConfigChains();
+                    self.insertDefaultConfig();
+                } else {
+                    let newConfigChains = [];
+                    _.forEach(allConfigChains, configChain => {
+                        let newConfigChain = new ConfigChain(
+                            configChain._id,
+                            configChain.configName,
+                            configChain.configDescription,
+                            configChain.sourceport,
+                            configChain.iniFile,
+                            configChain.iwad,
+                            configChain.level,
+                            configChain.skill,
+                            configChain.pwads,
+                            configChain.dmFlags,
+                            configChain.sourceportConfigs
+                        );
+                        newConfigChains.push(newConfigChain);
+                    });
+                    self.configChains.removeAll();
+                    self.configChains.push.apply(self.configChains, newConfigChains);
                 }
-                let newConfigChains = [];
-                _.forEach(allConfigChains, configChain => {
-                    let newConfigChain = new ConfigChain(
-                        configChain._id,
-                        configChain.configName,
-                        configChain.configDescription,
-                        configChain.sourceport,
-                        configChain.iniFile,
-                        configChain.iwad,
-                        configChain.level,
-                        configChain.skill,
-                        configChain.pwads,
-                        configChain.dmFlags,
-                        configChain.sourceportConfigs
-                    );
-                    newConfigChains.push(newConfigChain);
-                });
-                self.configChains.removeAll();
-                self.configChains.push.apply(self.configChains, newConfigChains);
             }
         });
     };
@@ -2314,17 +2313,46 @@ function AppViewModel() {
     // if the name already exists, then it overwrites the old one.
     self.saveCurrentConfig = () => {
         let config = ko.mapping.toJS(self.currentConfig);
-        config._id = config.id;
         if (!config.configName) {
             config.configName = '[no name]';
         }
-        configCollection.update({ _id: config._id }, config, { upsert: true }, (err, numReplaced) => {
+        configCollection.update({ configName: config.configName }, config, { upsert: true }, (err, numReplaced) => {
             if (err) {
                 console.error('saveCurrentConfig error: ', err);
             } else {
                 configCollection.persistence.compactDatafile();
                 self.loadConfigChains();
             }
+        });
+    };
+    self.insertDefaultConfig = () => {
+        let config = ko.mapping.toJS(
+            new ConfigChain(
+                null,
+                'Default',
+                'This is the Default Configuration',
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+            )
+        );
+        configCollection.insert(config, (err, someNewConfig) => {
+            configCollection.persistence.compactDatafile();
+            someNewConfig.id = someNewConfig._id;
+            configCollection.update({ _id: someNewConfig._id }, someNewConfig, {}, (updateErr, numReplaced) => {
+                if (updateErr) {
+                    console.error('insert default config update error: ', updateErr);
+                } else {
+                    configCollection.persistence.compactDatafile();
+                    self.loadConfigChains();
+                    self.loadConfig(someNewConfig._id);
+                }
+            });
         });
     };
     // this is what the delete button calls
@@ -2356,20 +2384,7 @@ function AppViewModel() {
                         } else {
                             configCollection.persistence.compactDatafile();
                             self.loadConfigChains();
-                            let newObservableConfig = new ConfigChain(
-                                someNewConfig.id,
-                                someNewConfig.configName,
-                                someNewConfig.configDescription,
-                                someNewConfig.sourceport,
-                                someNewConfig.iniFile,
-                                someNewConfig.iwad,
-                                someNewConfig.level,
-                                someNewConfig.skill,
-                                someNewConfig.pwads,
-                                someNewConfig.dmFlags,
-                                someNewConfig.sourceportConfigs
-                            );
-                            self.loadConfig(newObservableConfig);
+                            self.loadConfig(someNewconfig._id);
                         }
                     });
                 }
@@ -2378,12 +2393,10 @@ function AppViewModel() {
     };
     // this is what the load button calls
     // loads a previously saved or cloned configuration from the database.
-    self.loadConfig = config => {
-        if (config) {
+    self.loadConfig = configID => {
+        if (configID) {
             self.chosenPreviousConfig('');
-            let query = {};
-            query = { _id: config.id() };
-            configCollection.findOne(query, (err, newConfig) => {
+            configCollection.findOne({ _id: configID }, (err, newConfig) => {
                 if (err) {
                     console.error('loadConfig error: ', err);
                 } else {
