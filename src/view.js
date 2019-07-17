@@ -509,6 +509,9 @@ function AppViewModel() {
     self.chosenFile = ko.observable();
     self.chosenPreviousConfig = ko.observable();
 
+    //temporary variable to store the inifile when loading from previous config or something
+    self.iniFile = ko.observable();
+
     self.skillLevels = ko.observableArray();
     self.levels = ko.observableArray();
     self.Allfiles = ko.observableArray();
@@ -671,8 +674,12 @@ function AppViewModel() {
                             .toLowerCase() === 'chocolate';
                 }
                 command += '-file ';
+                let hasDeh = false;
                 _.forEach(self.currentConfig().pwads(), pwad => {
                     let isDeh = pwad.filepath.indexOf('.deh') > -1;
+                    if (isDeh) {
+                        hasDeh = true;
+                    }
                     if (!isChocolate || !isDeh) {
                         command +=
                             '"' +
@@ -680,7 +687,7 @@ function AppViewModel() {
                             '" ';
                     }
                 });
-                if (isChocolate) {
+                if (isChocolate && hasDeh) {
                     command += '-deh ';
                     _.forEach(self.currentConfig().pwads(), pwad => {
                         let isDeh = pwad.filepath.indexOf('.deh') > -1;
@@ -790,7 +797,7 @@ function AppViewModel() {
                                 if (config.value()) {
                                     _.forEach(config.value().split(';'), file => {
                                         let relativePath = path.relative(__dirname, file);
-                                        value += '"' + self.absolutePaths()?relativePath:file + '" ';
+                                        value += '"' + self.absolutePaths() ? relativePath : file + '" ';
                                     });
                                     value = value.substring(0, value.length - 1);
                                 }
@@ -809,7 +816,7 @@ function AppViewModel() {
                                 if (config.value()) {
                                     _.forEach(config.value().split(';'), file => {
                                         let relativePath = path.relative(__dirname, file);
-                                        value += '"' + self.absolutePaths()?relativePath:file + '" ';
+                                        value += '"' + self.absolutePaths() ? relativePath : file + '" ';
                                     });
                                     value = value.substring(0, value.length - 1);
                                 }
@@ -828,7 +835,7 @@ function AppViewModel() {
                                 if (config.value()) {
                                     _.forEach(config.value().split(';'), file => {
                                         let relativePath = path.relative(__dirname, file);
-                                        value += '"' + self.absolutePaths()?relativePath:file + '" ';
+                                        value += '"' + self.absolutePaths() ? relativePath : file + '" ';
                                     });
                                     value = value.substring(0, value.length - 1);
                                 }
@@ -847,7 +854,7 @@ function AppViewModel() {
                                 if (config.value()) {
                                     _.forEach(config.value().split(';'), file => {
                                         let relativePath = path.relative(__dirname, file);
-                                        value += '"' + self.absolutePaths()?relativePath:file + '" ';
+                                        value += '"' + self.absolutePaths() ? relativePath : file + '" ';
                                     });
                                     value = value.substring(0, value.length - 1);
                                 }
@@ -866,7 +873,7 @@ function AppViewModel() {
                                 if (config.value()) {
                                     _.forEach(config.value().split(';'), file => {
                                         let relativePath = path.relative(__dirname, file);
-                                        value += '"' + self.absolutePaths()?relativePath:file + '" ';
+                                        value += '"' + self.absolutePaths() ? relativePath : file + '" ';
                                     });
                                     value = value.substring(0, value.length - 1);
                                 }
@@ -885,7 +892,7 @@ function AppViewModel() {
                                 if (config.value()) {
                                     _.forEach(config.value().split(';'), file => {
                                         let relativePath = path.relative(__dirname, file);
-                                        value += '"' + self.absolutePaths()?relativePath:file + '" ';
+                                        value += '"' + self.absolutePaths() ? relativePath : file + '" ';
                                     });
                                     value = value.substring(0, value.length - 1);
                                 }
@@ -905,7 +912,7 @@ function AppViewModel() {
                                     if (config.value()) {
                                         _.forEach(config.value().split(';'), file => {
                                             let relativePath = path.relative(__dirname, file);
-                                        value += '"' + self.absolutePaths()?relativePath:file + '" ';
+                                            value += '"' + self.absolutePaths() ? relativePath : file + '" ';
                                         });
                                         value = value.substring(0, value.length - 1);
                                     }
@@ -1821,93 +1828,6 @@ function AppViewModel() {
         self.loadLevels();
         self.loadSkillLevels();
     };
-    // sourceport dropdown calls this function on change
-    // this is what kicks off the "getIniFilesForGivenSourceport" function
-    self.chooseSourceport = sourceport => {
-        if (sourceport) {
-            self.getIniFilesForGivenSourceport(sourceport);
-        } else {
-            self.iniFiles.removeAll();
-        }
-    };
-    // get iwad for given filepath
-    // usually utilized to get certain iwad options
-    self.getIwad = filepath => {
-        let iwad = {};
-        for (let i = 0; i < self.files.iwads().length; ++i) {
-            if (self.files.iwads()[i].filepath === filepath) {
-                iwad = self.files.iwads()[i];
-                break;
-            }
-        }
-        return iwad;
-    };
-    // get sourceport for given filepath
-    // usually utilized to get certain sourceport options
-    self.getSourceport = filepath => {
-        let sourceport = {};
-        for (let i = 0; i < self.files.sourceports().length; ++i) {
-            if (self.files.sourceports()[i].filepath === filepath) {
-                sourceport = self.files.sourceports()[i];
-                break;
-            }
-        }
-        return sourceport;
-    };
-    // uses the sourceport's filepath to look for any ini files contained within the same directory.
-    // note: it will not dig into other directories within the sourceport's directory.
-    // if you want this app to load your ini file, then you need to put that ini file in the same place as your
-    // sourceport's executable
-    // this function will then populate the ini file dropdown on the fly
-    self.getIniFilesForGivenSourceport = sourceport => {
-        let directory = path.resolve(__dirname, path.dirname(sourceport));
-        if (dev){
-            console.log(directory);
-        }
-        self.iniFiles.removeAll();
-        function walk(directory) {
-            fs.readdir(directory, (e, files) => {
-                if (e) {
-                    console.error('get ini files for sourceport error: ', e);
-                    return;
-                }
-                files.forEach(
-                    file => {
-                        let fullPath = path.join(directory, file);
-                        fs.stat(fullPath, (forEachErr, f) => {
-                            if (forEachErr) {
-                                console.error('get ini files for sourceport foreach error: ', forEachErr);
-                                return;
-                            }
-                            if (f.isDirectory()) {
-                                if (dev) {
-                                    console.log(
-                                        'getIniFilesForGivenSourceport:: ' + file + ' and is directory: ' + fullPath
-                                    );
-                                }
-                                // walk(fullPath); no need to dive into further directories, if your ini file isn't in
-                                //the same directory as the exe, then I don't care about it.
-                            } else {
-                                let fileExt = file.substring(file.lastIndexOf('.') + 1);
-                                let relativePath = path.relative(__dirname, fullPath);
-                                if (fileExt === 'ini') {
-                                    let iniFile = new IniFile(relativePath, file);
-                                    self.iniFiles.push(iniFile);
-                                    self.iniFiles.sort();
-                                }
-                            }
-                        });
-                    },
-                    err => {
-                        if (err) {
-                            throw err;
-                        }
-                    }
-                );
-            });
-        }
-        walk(directory);
-    };
     //-------------------------------------------------------------------------
     // here are the search functions for iwads, pwads, and sourceports
     //-------------------------------------------------------------------------
@@ -2335,31 +2255,37 @@ function AppViewModel() {
                                 '" -autojoin -right -window';
                         }
                     }
-                    exec("cd "+path.resolve(__dirname)+" && "+self.generatedCommand(), (execErr, stdout, stderr) => {
-                        if (execErr) {
-                            console.error("couldn't execute the command: ", execErr);
-                        }
-                        console.log(`stdout: ${stdout}`);
-                        console.log(`stdout: ${stderr}`);
-                        if (command2) {
-                            exec("cd "+path.resolve(__dirname)+" && "+command2, (exec2Err, stdout2, stderr2) => {
-                                if (exec2Err) {
-                                    console.error("couldn't execute 3-screen mode left: ", exec2Err);
-                                }
-                                console.log(`stdout: ${stdout2}`);
-                                console.log(`stdout: ${stderr2}`);
-                                if ("cd "+path.resolve(__dirname)+" && "+command3) {
-                                    exec(command3, (exec3Err, stdout3, stderr3) => {
-                                        if (exec3Err) {
-                                            console.error("couldn't execute 3-screen mode right: ", exec3Err);
+                    exec(
+                        'cd ' + path.resolve(__dirname) + ' && ' + self.generatedCommand(),
+                        (execErr, stdout, stderr) => {
+                            if (execErr) {
+                                console.error("couldn't execute the command: ", execErr);
+                            }
+                            console.log(`stdout: ${stdout}`);
+                            console.log(`stdout: ${stderr}`);
+                            if (command2) {
+                                exec(
+                                    'cd ' + path.resolve(__dirname) + ' && ' + command2,
+                                    (exec2Err, stdout2, stderr2) => {
+                                        if (exec2Err) {
+                                            console.error("couldn't execute 3-screen mode left: ", exec2Err);
                                         }
-                                        console.log(`stdout: ${stdout3}`);
-                                        console.log(`stdout: ${stderr3}`);
-                                    });
-                                }
-                            });
+                                        console.log(`stdout: ${stdout2}`);
+                                        console.log(`stdout: ${stderr2}`);
+                                        if ('cd ' + path.resolve(__dirname) + ' && ' + command3) {
+                                            exec(command3, (exec3Err, stdout3, stderr3) => {
+                                                if (exec3Err) {
+                                                    console.error("couldn't execute 3-screen mode right: ", exec3Err);
+                                                }
+                                                console.log(`stdout: ${stdout3}`);
+                                                console.log(`stdout: ${stderr3}`);
+                                            });
+                                        }
+                                    }
+                                );
+                            }
                         }
-                    });
+                    );
                 }
             });
         };
@@ -2461,9 +2387,9 @@ function AppViewModel() {
                 if (err) {
                     console.error('loadConfig error: ', err);
                 } else {
+                    self.iniFile(newConfig.chosenIniFile);
                     self.currentConfig().configName(newConfig.configName);
                     self.currentConfig().configDescription(newConfig.configDescription);
-                    self.currentConfig().sourceport(newConfig.sourceport);
                     self.currentConfig().iwad(newConfig.iwad);
                     self.currentConfig().level(newConfig.level);
                     self.currentConfig().skill(newConfig.skill);
@@ -2471,9 +2397,7 @@ function AppViewModel() {
                     self.currentConfig().setDMFlags(newConfig.dmFlags);
                     self.currentConfig().setSourceportConfigs(newConfig.sourceportConfigs);
                     self.currentConfig().id(newConfig.id);
-                    window.setTimeout(() => {
-                        self.currentConfig().chosenIniFile(newConfig.chosenIniFile);
-                    }, 100);
+                    self.currentConfig().sourceport(newConfig.sourceport);
                     self.loadPwadFiles();
                 }
             });
@@ -2487,26 +2411,115 @@ function AppViewModel() {
                 if (err) {
                     console.error('loadPreviousConfig error: ', err);
                 } else {
+                    self.iniFile(newConfig.chosenIniFile);
                     self.currentConfig().configName(newConfig.configName);
                     self.currentConfig().configDescription(newConfig.configDescription);
-                    self.currentConfig().sourceport(newConfig.sourceport);
                     self.currentConfig().iwad(newConfig.iwad);
                     self.currentConfig().level(newConfig.level);
                     self.currentConfig().skill(newConfig.skill);
                     self.currentConfig().setPwads(newConfig.pwads);
                     self.currentConfig().setDMFlags(newConfig.dmFlags);
                     self.currentConfig().setSourceportConfigs(newConfig.sourceportConfigs);
-                    window.setTimeout(() => {
-                        self.currentConfig().chosenIniFile(newConfig.chosenIniFile);
-                    }, 100);
+                    self.currentConfig().sourceport(newConfig.sourceport);
                     self.loadPwadFiles();
                 }
             });
         }
     };
+    // sourceport dropdown calls this function on change
+    // this is what kicks off the "getIniFilesForGivenSourceport" function
+    self.chooseSourceport = sourceport => {
+        if (sourceport) {
+            self.getIniFilesForGivenSourceport(sourceport);
+        } else {
+            self.iniFiles.removeAll();
+        }
+    };
+    // get iwad for given filepath
+    // usually utilized to get certain iwad options
+    self.getIwad = filepath => {
+        let iwad = {};
+        for (let i = 0; i < self.files.iwads().length; ++i) {
+            if (self.files.iwads()[i].filepath === filepath) {
+                iwad = self.files.iwads()[i];
+                break;
+            }
+        }
+        return iwad;
+    };
+    // get sourceport for given filepath
+    // usually utilized to get certain sourceport options
+    self.getSourceport = filepath => {
+        let sourceport = {};
+        for (let i = 0; i < self.files.sourceports().length; ++i) {
+            if (self.files.sourceports()[i].filepath === filepath) {
+                sourceport = self.files.sourceports()[i];
+                break;
+            }
+        }
+        return sourceport;
+    };
+    // uses the sourceport's filepath to look for any ini files contained within the same directory.
+    // note: it will not dig into other directories within the sourceport's directory.
+    // if you want this app to load your ini file, then you need to put that ini file in the same place as your
+    // sourceport's executable
+    // this function will then populate the ini file dropdown on the fly
+    self.getIniFilesForGivenSourceport = sourceport => {
+        let directory = path.resolve(__dirname, path.dirname(sourceport));
+        let currentIniFile = self.iniFile();
+        if (dev) {
+            console.log(directory);
+        }
+        self.iniFiles.removeAll();
+        function walk(directory) {
+            fs.readdir(directory, (e, files) => {
+                if (e) {
+                    console.error('get ini files for sourceport error: ', e);
+                    return;
+                }
+                files.forEach(
+                    file => {
+                        let fullPath = path.join(directory, file);
+                        fs.stat(fullPath, (forEachErr, f) => {
+                            if (forEachErr) {
+                                console.error('get ini files for sourceport foreach error: ', forEachErr);
+                                return;
+                            }
+                            if (f.isDirectory()) {
+                                if (dev) {
+                                    console.log(
+                                        'getIniFilesForGivenSourceport:: ' + file + ' and is directory: ' + fullPath
+                                    );
+                                }
+                                // walk(fullPath); no need to dive into further directories, if your ini file isn't in
+                                //the same directory as the exe, then I don't care about it.
+                            } else {
+                                let fileExt = file.substring(file.lastIndexOf('.') + 1);
+                                let relativePath = path.relative(__dirname, fullPath);
+                                if (fileExt === 'ini') {
+                                    let iniFile = new IniFile(relativePath, file);
+                                    self.iniFiles.push(iniFile);
+                                    self.iniFiles.sort();
+                                    if (relativePath === currentIniFile) {
+                                        self.currentConfig().chosenIniFile(relativePath);
+                                    }
+                                }
+                            }
+                        });
+                    },
+                    err => {
+                        if (err) {
+                            throw err;
+                        }
+                    }
+                );
+            });
+        }
+        walk(directory);
+    };
     // the initialization function that starts the whole app going.
     self.init = () => {
-        if (dev){
+        if (dev) {
             console.log('init: loading files');
         }
         self.loadCollections(true);
