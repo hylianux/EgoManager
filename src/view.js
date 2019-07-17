@@ -2335,20 +2335,20 @@ function AppViewModel() {
                                 '" -autojoin -right -window';
                         }
                     }
-                    exec(self.generatedCommand(), (execErr, stdout, stderr) => {
+                    exec("cd "+path.resolve(__dirname)+" && "+self.generatedCommand(), (execErr, stdout, stderr) => {
                         if (execErr) {
                             console.error("couldn't execute the command: ", execErr);
                         }
                         console.log(`stdout: ${stdout}`);
                         console.log(`stdout: ${stderr}`);
                         if (command2) {
-                            exec(command2, (exec2Err, stdout2, stderr2) => {
+                            exec("cd "+path.resolve(__dirname)+" && "+command2, (exec2Err, stdout2, stderr2) => {
                                 if (exec2Err) {
                                     console.error("couldn't execute 3-screen mode left: ", exec2Err);
                                 }
                                 console.log(`stdout: ${stdout2}`);
                                 console.log(`stdout: ${stderr2}`);
-                                if (command3) {
+                                if ("cd "+path.resolve(__dirname)+" && "+command3) {
                                     exec(command3, (exec3Err, stdout3, stderr3) => {
                                         if (exec3Err) {
                                             console.error("couldn't execute 3-screen mode right: ", exec3Err);
