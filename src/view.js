@@ -12,6 +12,7 @@ const { remote } = require('electron');
 const { Menu, MenuItem } = remote;
 const { exec } = require('child_process');
 const publicIp = require('public-ip');
+const configBuilderHeight = 620;
 let args = require('minimist')(remote.process.argv);
 let dev = args.dev || args.d;
 let rightClickPosition = null;
@@ -337,7 +338,7 @@ function File(
     }
     self.change = () => {
         self.changed(true);
-    }
+    };
     // this is the only place where things get weird.
     // the basetype is what gets sent to the database backend
     // but, for knockout, i need to know, for example, if it's an iwad, then what kind of iwad is it...
@@ -374,7 +375,7 @@ function File(
         if (self.hidden()) {
             displayname = '(hidden) ' + displayname;
         }
-        if (self.changed()){
+        if (self.changed()) {
             displayname += '*';
         }
         return displayname;
@@ -510,6 +511,9 @@ function AppViewModel() {
     self.configSearch = ko.observable('');
     self.chosenFile = ko.observable();
     self.chosenPreviousConfig = ko.observable();
+    self.multiplayerCollapsed = ko.observable(false);
+    self.configCollapsed = ko.observable(false);
+    self.pwadsCollapsed = ko.observable(false);
 
     //temporary variable to store the inifile when loading from previous config or something
     self.iniFile = ko.observable();
@@ -577,6 +581,41 @@ function AppViewModel() {
             description: 'Other'
         }
     ]);
+    //controls height for multiplayer
+    self.multiplayerHeight = ko.computed(() => {
+        let style = { overflow: 'auto' };
+        let height = configBuilderHeight / 3;
+        if (self.configCollapsed() && self.pwadsCollapsed()) {
+            height += configBuilderHeight - height;
+        } else if (self.configCollapsed() || self.pwadsCollapsed()) {
+            height += configBuilderHeight / 2 - height;
+        }
+        style.height = height + 'px';
+        return style;
+    });
+    //controls height for configuration options
+    self.configHeight = ko.computed(() => {
+        let style = { overflow: 'auto' };
+        let height = configBuilderHeight / 3;
+        if (self.multiplayerCollapsed() && self.pwadsCollapsed()) {
+            height += configBuilderHeight - height;
+        } else if (self.multiplayerCollapsed() || self.pwadsCollapsed()) {
+            height += configBuilderHeight / 2 - height;
+        }
+        style.height = height + 'px';
+        return style;
+    });
+    self.pwadsHeight = ko.computed(() => {
+        let style = { overflow: 'auto' };
+        let height = configBuilderHeight / 3;
+        if (self.multiplayerCollapsed() && self.configCollapsed()) {
+            height += configBuilderHeight - height;
+        } else if (self.multiplayerCollapsed() || self.configCollapsed()) {
+            height += configBuilderHeight / 2 - height;
+        }
+        style.height = height + 'px';
+        return style;
+    });
     // gets the address for anyone hosting a game
     self.multiplayerAddress = ko.computed(() => {
         if (self.currentConfig()) {
@@ -624,6 +663,18 @@ function AppViewModel() {
         self.chosenFile().hidden(!isHidden);
         self.updateFile();
     };
+    //collapses multiplayer
+    self.collapseMultiplayer = () => {
+        self.multiplayerCollapsed(!self.multiplayerCollapsed());
+    };
+    //collapses config
+    self.collapseConfig = () => {
+        self.configCollapsed(!self.configCollapsed());
+    };
+    //collapses pwads
+    self.collapsePwads = () => {
+        self.pwadsCollapsed(!self.pwadsCollapsed());
+    };
     // the generated command the app will attempt to use.
     //this will be generated from the current config chain
     self.generatedCommand = ko.computed(() => {
@@ -636,46 +687,35 @@ function AppViewModel() {
                         let value = '';
                         if (config.inputType === 'files' || config.inputType === 'directory') {
                             if (config.value()) {
-                                // filepaths are stored in "relative" paths... 
+                                // filepaths are stored in "relative" paths...
                                 // but when they need to be run, they need to be absolute paths
                                 // so this will convert them back to absolute paths again
                                 // this allows for portability
                                 _.forEach(config.value().split(';'), file => {
-                                    value += '"' + (path.resolve(__dirname, file)) + '" ';
+                                    value += '"' + path.resolve(__dirname, file) + '" ';
                                 });
                                 value = value.substring(0, value.length - 1);
                             }
                         } else if (config.inputType === 'file') {
-                            value = '"'+(path.resolve(__dirname, config.value()))+'"';
+                            value = '"' + path.resolve(__dirname, config.value()) + '"';
                         } else {
                             value = config.value();
                         }
-                        commandAppend+= config.command + (value ? (' '+value) : '') + ' ';
+                        commandAppend += config.command + (value ? ' ' + value : '') + ' ';
                     }
                 });
-            } 
+            }
             return commandAppend;
-        }
+        };
         if (self.currentConfig()) {
             if (self.currentConfig().sourceport()) {
-                command +=
-                    '"' +
-                    (path.resolve(__dirname, self.currentConfig().sourceport())) +
-                    '" ';
+                command += '"' + path.resolve(__dirname, self.currentConfig().sourceport()) + '" ';
             }
             if (self.currentConfig().iwad()) {
-                command +=
-                    '-iwad ' +
-                    '"' +
-                    (path.resolve(__dirname, self.currentConfig().iwad())) +
-                    '" ';
+                command += '-iwad ' + '"' + path.resolve(__dirname, self.currentConfig().iwad()) + '" ';
             }
             if (self.currentConfig().chosenIniFile()) {
-                command +=
-                    '-config ' +
-                    '"' +
-                    (path.resolve(__dirname, self.currentConfig().chosenIniFile())) +
-                    '" ';
+                command += '-config ' + '"' + path.resolve(__dirname, self.currentConfig().chosenIniFile()) + '" ';
             }
             if (self.currentConfig().level()) {
                 command += '-warp ' + self.currentConfig().level() + ' ';
@@ -703,10 +743,7 @@ function AppViewModel() {
                         hasDeh = true;
                     }
                     if (!isChocolate || !isDeh) {
-                        command +=
-                            '"' +
-                            (path.resolve(__dirname, pwad.filepath)) +
-                            '" ';
+                        command += '"' + path.resolve(__dirname, pwad.filepath) + '" ';
                     }
                 });
                 if (isChocolate && hasDeh) {
@@ -714,10 +751,7 @@ function AppViewModel() {
                     _.forEach(self.currentConfig().pwads(), pwad => {
                         let isDeh = pwad.filepath.indexOf('.deh') > -1;
                         if (isDeh) {
-                            command +=
-                                '"' +
-                                (path.resolve(__dirname, pwad.filepath)) +
-                                '" ';
+                            command += '"' + path.resolve(__dirname, pwad.filepath) + '" ';
                         }
                     });
                 }
@@ -1680,9 +1714,7 @@ function AppViewModel() {
     self.clearFileEdit = () => {
         self.chosenFile(null);
     };
-    self.updateHidden = (file) => {
-
-    }
+    self.updateHidden = file => {};
     // this is what gets called every time you click outside of one of the text boxes for editing a file's properties.
     // once initiated, it updates that file's data in the database, then reloads everything.
     // probably a little excessive, but eh, this app's not that big, who cares.
@@ -2139,11 +2171,11 @@ function AppViewModel() {
                         if (self.currentConfig().sourceport()) {
                             command2 =
                                 '"' +
-                                (path.resolve(__dirname, self.currentConfig().sourceport())) +
+                                path.resolve(__dirname, self.currentConfig().sourceport()) +
                                 '" -autojoin -left -window';
                             command3 =
                                 '"' +
-                                (path.resolve(__dirname, self.currentConfig().sourceport())) +
+                                path.resolve(__dirname, self.currentConfig().sourceport()) +
                                 '" -autojoin -right -window';
                         }
                     }

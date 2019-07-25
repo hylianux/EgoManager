@@ -55,19 +55,11 @@
                         data-bind="click: runCurrentConfig" data-toggle="tooltip" title="Run Current Configuration">
                     </div>
                 </div>
-                <!--Generated Command-->
-                <div class="row">
-                    <div class="col-md-12 border border-info" style="padding: 0px;">
-                        <textarea class="form-control"
-                            style="height: 100%; overflow: hidden; resize: none; font-family: 'Ubuntu-Mono'; padding: 0px;"
-                            readonly="true" placeholder="Generated Command Here"
-                            data-bind="textInput: generatedCommand, autoResize: generatedCommand"></textarea>
-                    </div>
-                </div>
+
                 <!--All ConfigChain options-->
                 <div class="row">
                     <!--Configchain Saving/Loading options-->
-                    <div class="col-md-3 border border-secondary">
+                    <div class="col-md-3 border border-secondary" style="overflow: auto; height:900px;">
                         <!--Config Chain previous configs-->
                         <div class="row">
                             <div class="col-md-12 border border-secondary">
@@ -144,7 +136,7 @@
                     <!--Everything Else-->
                     <div class="col-md-9 border border-secondary">
                         <!--select: sourceport, ini file, iwad, map, skill-->
-                        <div class="row">
+                        <div class="row" style="overflow: auto; height:175px;">
                             <div class="col-md-4 border border-secondary">
                                 <div class="row">
                                     <div class="col-md-12">
@@ -217,13 +209,14 @@
                                 <div class="row">
                                     <div class="col-md-12">
                                         <h5>
-                                            <a href="#" data-toggle="collapse" data-target="#pwadStuff">PWads/Mods
+                                            <a href="#" data-toggle="collapse" data-target="#pwadStuff"
+                                                data-bind="click: collapsePwads">PWads/Mods
                                                 Selection</a>
                                         </h5>
                                     </div>
                                 </div>
                                 <div class="row collapse show" id="pwadStuff">
-                                    <div class="col-md-12">
+                                    <div class="col-md-12" data-bind="style: pwadsHeight()">
                                         <div class="row">
                                             <div class="col-md-6">
                                                 Available Pwads
@@ -247,9 +240,7 @@
                                                    </div></script>
                                         </div>
                                     </div>
-
                                 </div>
-
                             </div>
                         </div>
                         <!--multiplayer options -->
@@ -258,13 +249,13 @@
                                 <div class="row">
                                     <div class="col-md-12">
                                         <h5>
-                                            <a href="#" data-toggle="collapse"
-                                                data-target="#multiplayerStuff">Multiplayer Options</a>
+                                            <a href="#" data-toggle="collapse" data-target="#multiplayerStuff"
+                                                data-bind="click: collapseMultiplayer">Multiplayer Options</a>
                                         </h5>
                                     </div>
                                 </div>
                                 <div class="row collapse show" id="multiplayerStuff">
-                                    <div data-bind="hidden: !currentConfig().sourceport()"
+                                    <div data-bind="hidden: !currentConfig().sourceport(), style: multiplayerHeight()"
                                         class="col-md-12 border border-secondary">
                                         <ul class="nav nav-tabs">
                                             <li class="nav-item">
@@ -462,13 +453,14 @@
                                 <div class="row">
                                     <div class="col-md-12">
                                         <h5>
-                                            <a href="#" data-toggle="collapse" data-target="#configStuff">Configuration
+                                            <a href="#" data-toggle="collapse" data-target="#configStuff"
+                                                data-bind="click: collapseConfig">Configuration
                                                 Options</a>
                                         </h5>
                                     </div>
                                 </div>
                                 <div class="row collapse show" id="configStuff">
-                                    <div data-bind="visible: currentConfig().sourceport()"
+                                    <div data-bind="visible: currentConfig().sourceport(), style: configHeight()"
                                         class="col-md-12 border border-secondary">
                                         <!-- Configuration selection-->
                                         <ul class="nav nav-tabs">
@@ -731,6 +723,15 @@
                         </div>
                     </div>
                 </div>
+                <!--Generated Command-->
+                <div class="row">
+                    <div class="col-md-12 border border-info" style="padding: 0px;">
+                        <textarea class="form-control"
+                            style="height: 100%; overflow: hidden; resize: none; font-family: 'Ubuntu-Mono'; padding: 0px;"
+                            readonly="true" placeholder="Generated Command Here"
+                            data-bind="textInput: generatedCommand, autoResize: generatedCommand"></textarea>
+                    </div>
+                </div>
             </div>
             <!--File DB-->
             <div class="col-md-12 tab-pane fade" id="fileDB">
@@ -768,7 +769,7 @@
                                 </a>
                             </li>
                         </ul>
-                        <div class="tab-content" style="overflow: auto; height:900px;">
+                        <div class="tab-content" style="overflow: auto; height:912px;">
                             <div class="tab-pane active" id="Iwads">
                                 <div class="form-group">
                                     <input type="text" class="form-control" placeholder="Search..."
@@ -797,7 +798,7 @@
                                         data-bind="textInput: pwadSearch, event: { keyup: findPwad()}" />
                                 </div>
                                 <table class="table table-hover table-striped">
-                                   <tbody data-bind="foreach: files.pwads">
+                                    <tbody data-bind="foreach: files.pwads">
                                         <tr class="d-flex" data-bind="class: displayClass">
                                             <td data-placement="right" data-html="true"
                                                 data-bind="text: displayName, click: $parent.editFile.bind($data, filetype, $index), class: ('col-12 text-truncate'+($parent.showHiddenFiles()===false && hidden()===true ? ' collapse' : ''))">
@@ -838,7 +839,7 @@
                     </div>
                     <!--File Edit-->
                     <div class="col-md-8 border border-secondary">
-                        <form data-bind="with: chosenFile" style="overflow: auto; height:900px;">
+                        <form data-bind="with: chosenFile" style="overflow: auto; height:953px;">
                             <h5>
                                 File Type:
                                 <span data-bind="text: filetype"></span>
@@ -849,7 +850,9 @@
                                     data-bind="click: $parent.hideFile, class: hideFileClass, tooltip: hideTooltipText()"
                                     aria-hidden="true"></span>
                                 &nbsp;&mdash;&nbsp;Save File
-                                <span class="btn btn-xs btn-primary fa fa-save" data-bind="click: $parent.updateFile" data-toggle="tooltip" title="" data-original-title="Save current configuration"></span>                                    
+                                <span class="btn btn-xs btn-primary fa fa-save" data-bind="click: $parent.updateFile"
+                                    data-toggle="tooltip" title=""
+                                    data-original-title="Save current configuration"></span>
                             </h5>
                             <div class="form-group">
                                 <label class="control-label" for="inputFilename" data-placement="left"
