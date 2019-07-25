@@ -255,6 +255,7 @@ function File(
     let self = this;
     self.filepath = filepath;
     self.filename = filename;
+    self.changed = ko.observable(false);
     self.authors = ko.observableArray(authors);
     self.authorsValid = ko.computed(() => {
         let valid = false;
@@ -334,16 +335,15 @@ function File(
     if (hidden === true) {
         self.hidden(true);
     }
+    self.change = () => {
+        self.changed(true);
+    }
     // this is the only place where things get weird.
     // the basetype is what gets sent to the database backend
     // but, for knockout, i need to know, for example, if it's an iwad, then what kind of iwad is it...
     // is it doom, heretic, hexen, strife?  what kind of iwad is it?  options will change based on this.
     // same thing with sourceport types... zdoom, zandronum, chocolate?  what kind of sourceport is it?
     self.basetype = ko.observable(basetype);
-    self.hideFile = () => {
-        let isHidden = self.hidden();
-        self.hidden(!isHidden);
-    };
 
     self.sourceportBasetype = ko.observable();
     if (filetype === 'sourceport') {
@@ -373,6 +373,9 @@ function File(
         }
         if (self.hidden()) {
             displayname = '(hidden) ' + displayname;
+        }
+        if (self.changed()){
+            displayname += '*';
         }
         return displayname;
     });
@@ -499,7 +502,6 @@ function AppViewModel() {
     self.sourceportDirectory = self.idTechFolder + path.sep + 'sourceports';
     self.ip = ko.observable();
 
-    self.absolutePaths = ko.observable(false);
     self.showHiddenFiles = ko.observable(false);
     self.iwadSearch = ko.observable();
     self.pwadSearch = ko.observable();
@@ -616,43 +618,63 @@ function AppViewModel() {
         });
         return counter === self.files.sourceports.length;
     });
-    // controls class of button used for absolute paths
-    self.absolutePathsClass = ko.computed(() => {
-        if (self.absolutePaths()) {
-            return 'fa fa-expand';
-        } else {
-            return 'fa fa-compress';
-        }
-    });
+    //hides chosenFile
+    self.hideFile = () => {
+        let isHidden = self.chosenFile().hidden();
+        self.chosenFile().hidden(!isHidden);
+        self.updateFile();
+    };
     // the generated command the app will attempt to use.
     //this will be generated from the current config chain
     self.generatedCommand = ko.computed(() => {
         let command = '';
+        let handleConfigCommand = category => {
+            let commandAppend = '';
+            if (self.currentConfig().sourceportConfigs[category]()) {
+                _.forEach(self.currentConfig().sourceportConfigs[category](), config => {
+                    if (config.enabled()) {
+                        let value = '';
+                        if (config.inputType === 'files' || config.inputType === 'directory') {
+                            if (config.value()) {
+                                // filepaths are stored in "relative" paths... 
+                                // but when they need to be run, they need to be absolute paths
+                                // so this will convert them back to absolute paths again
+                                // this allows for portability
+                                _.forEach(config.value().split(';'), file => {
+                                    value += '"' + (path.resolve(__dirname, file)) + '" ';
+                                });
+                                value = value.substring(0, value.length - 1);
+                            }
+                        } else if (config.inputType === 'file') {
+                            value = '"'+(path.resolve(__dirname, config.value()))+'"';
+                        } else {
+                            value = config.value();
+                        }
+                        commandAppend+= config.command + (value ? (' '+value) : '') + ' ';
+                    }
+                });
+            } 
+            return commandAppend;
+        }
         if (self.currentConfig()) {
             if (self.currentConfig().sourceport()) {
                 command +=
                     '"' +
-                    (self.absolutePaths()
-                        ? path.resolve(__dirname, self.currentConfig().sourceport())
-                        : self.currentConfig().sourceport()) +
+                    (path.resolve(__dirname, self.currentConfig().sourceport())) +
                     '" ';
             }
             if (self.currentConfig().iwad()) {
                 command +=
                     '-iwad ' +
                     '"' +
-                    (self.absolutePaths()
-                        ? path.resolve(__dirname, self.currentConfig().iwad())
-                        : self.currentConfig().iwad()) +
+                    (path.resolve(__dirname, self.currentConfig().iwad())) +
                     '" ';
             }
             if (self.currentConfig().chosenIniFile()) {
                 command +=
                     '-config ' +
                     '"' +
-                    (self.absolutePaths()
-                        ? path.resolve(__dirname, self.currentConfig().chosenIniFile())
-                        : self.currentConfig().chosenIniFile()) +
+                    (path.resolve(__dirname, self.currentConfig().chosenIniFile())) +
                     '" ';
             }
             if (self.currentConfig().level()) {
@@ -683,7 +705,7 @@ function AppViewModel() {
                     if (!isChocolate || !isDeh) {
                         command +=
                             '"' +
-                            (self.absolutePaths() ? path.resolve(__dirname, pwad.filepath) : pwad.filepath) +
+                            (path.resolve(__dirname, pwad.filepath)) +
                             '" ';
                     }
                 });
@@ -694,7 +716,7 @@ function AppViewModel() {
                         if (isDeh) {
                             command +=
                                 '"' +
-                                (self.absolutePaths() ? path.resolve(__dirname, pwad.filepath) : pwad.filepath) +
+                                (path.resolve(__dirname, pwad.filepath)) +
                                 '" ';
                         }
                     });
@@ -789,141 +811,13 @@ function AppViewModel() {
                         }
                     });
                 }
-                if (self.currentConfig().sourceportConfigs.config()) {
-                    _.forEach(self.currentConfig().sourceportConfigs.config(), config => {
-                        if (config.enabled()) {
-                            let value = '';
-                            if (config.inputType === 'files' || config.inputType === 'directory') {
-                                if (config.value()) {
-                                    _.forEach(config.value().split(';'), file => {
-                                        let relativePath = path.relative(__dirname, file);
-                                        value += '"' + self.absolutePaths() ? relativePath : file + '" ';
-                                    });
-                                    value = value.substring(0, value.length - 1);
-                                }
-                            } else {
-                                value = config.value();
-                            }
-                            command += config.command + ' ' + (value ? value : '') + ' ';
-                        }
-                    });
-                }
-                if (self.currentConfig().sourceportConfigs.multiplayer()) {
-                    _.forEach(self.currentConfig().sourceportConfigs.multiplayer(), config => {
-                        if (config.enabled()) {
-                            let value = '';
-                            if (config.inputType === 'files' || config.inputType === 'directory') {
-                                if (config.value()) {
-                                    _.forEach(config.value().split(';'), file => {
-                                        let relativePath = path.relative(__dirname, file);
-                                        value += '"' + self.absolutePaths() ? relativePath : file + '" ';
-                                    });
-                                    value = value.substring(0, value.length - 1);
-                                }
-                            } else {
-                                value = config.value();
-                            }
-                            command += config.command + ' ' + (value ? value : '') + ' ';
-                        }
-                    });
-                }
-                if (self.currentConfig().sourceportConfigs.networking()) {
-                    _.forEach(self.currentConfig().sourceportConfigs.networking(), config => {
-                        if (config.enabled()) {
-                            let value = '';
-                            if (config.inputType === 'files' || config.inputType === 'directory') {
-                                if (config.value()) {
-                                    _.forEach(config.value().split(';'), file => {
-                                        let relativePath = path.relative(__dirname, file);
-                                        value += '"' + self.absolutePaths() ? relativePath : file + '" ';
-                                    });
-                                    value = value.substring(0, value.length - 1);
-                                }
-                            } else {
-                                value = config.value();
-                            }
-                            command += config.command + ' ' + (value ? value : '') + ' ';
-                        }
-                    });
-                }
-                if (self.currentConfig().sourceportConfigs.debug()) {
-                    _.forEach(self.currentConfig().sourceportConfigs.debug(), config => {
-                        if (config.enabled()) {
-                            let value = '';
-                            if (config.inputType === 'files' || config.inputType === 'directory') {
-                                if (config.value()) {
-                                    _.forEach(config.value().split(';'), file => {
-                                        let relativePath = path.relative(__dirname, file);
-                                        value += '"' + self.absolutePaths() ? relativePath : file + '" ';
-                                    });
-                                    value = value.substring(0, value.length - 1);
-                                }
-                            } else {
-                                value = config.value();
-                            }
-                            command += config.command + ' ' + (value ? value : '') + ' ';
-                        }
-                    });
-                }
-                if (self.currentConfig().sourceportConfigs.display()) {
-                    _.forEach(self.currentConfig().sourceportConfigs.display(), config => {
-                        if (config.enabled()) {
-                            let value = '';
-                            if (config.inputType === 'files' || config.inputType === 'directory') {
-                                if (config.value()) {
-                                    _.forEach(config.value().split(';'), file => {
-                                        let relativePath = path.relative(__dirname, file);
-                                        value += '"' + self.absolutePaths() ? relativePath : file + '" ';
-                                    });
-                                    value = value.substring(0, value.length - 1);
-                                }
-                            } else {
-                                value = config.value();
-                            }
-                            command += config.command + ' ' + (value ? value : '') + ' ';
-                        }
-                    });
-                }
-                if (self.currentConfig().sourceportConfigs.recording()) {
-                    _.forEach(self.currentConfig().sourceportConfigs.recording(), config => {
-                        if (config.enabled()) {
-                            let value = '';
-                            if (config.inputType === 'files' || config.inputType === 'directory') {
-                                if (config.value()) {
-                                    _.forEach(config.value().split(';'), file => {
-                                        let relativePath = path.relative(__dirname, file);
-                                        value += '"' + self.absolutePaths() ? relativePath : file + '" ';
-                                    });
-                                    value = value.substring(0, value.length - 1);
-                                }
-                            } else {
-                                value = config.value();
-                            }
-                            command += config.command + ' ' + (value ? value : '') + ' ';
-                        }
-                    });
-                }
-                if (self.currentConfig().sourceportConfigs.advanced()) {
-                    _.forEach(self.currentConfig().sourceportConfigs.advanced(), config => {
-                        if (config.command != '-three-screen-mode') {
-                            if (config.enabled()) {
-                                let value = '';
-                                if (config.inputType === 'files' || config.inputType === 'directory') {
-                                    if (config.value()) {
-                                        _.forEach(config.value().split(';'), file => {
-                                            let relativePath = path.relative(__dirname, file);
-                                            value += '"' + self.absolutePaths() ? relativePath : file + '" ';
-                                        });
-                                        value = value.substring(0, value.length - 1);
-                                    }
-                                } else {
-                                    value = config.value();
-                                }
-                                command += config.command + ' ' + (value ? value : '') + ' ';
-                            }
-                        }
-                    });
-                }
+                command += handleConfigCommand('config');
+                command += handleConfigCommand('multiplayer');
+                command += handleConfigCommand('networking');
+                command += handleConfigCommand('debug');
+                command += handleConfigCommand('display');
+                command += handleConfigCommand('recording');
+                command += handleConfigCommand('advanced');
             }
         }
         return command;
@@ -1430,7 +1324,7 @@ function AppViewModel() {
     self.loadPwadFiles = () => {
         pwadCollection
             .find({})
-            .sort({ filename: 1 })
+            .sort({ name: 1, filename: 1 })
             .exec((err, allPwads) => {
                 if (err) {
                     console.error('load pwad files error: ', err);
@@ -1458,7 +1352,7 @@ function AppViewModel() {
                                     inchosen = true;
                                 }
                             });
-                            if (!inchosen) {
+                            if (!inchosen && !newPwad.hidden()) {
                                 newAvailablePwads.push(newPwad);
                             }
                         }
@@ -1786,6 +1680,9 @@ function AppViewModel() {
     self.clearFileEdit = () => {
         self.chosenFile(null);
     };
+    self.updateHidden = (file) => {
+
+    }
     // this is what gets called every time you click outside of one of the text boxes for editing a file's properties.
     // once initiated, it updates that file's data in the database, then reloads everything.
     // probably a little excessive, but eh, this app's not that big, who cares.
@@ -1992,7 +1889,7 @@ function AppViewModel() {
                         );
                     }
                 })
-                .sort({ filename: 1 })
+                .sort({ name: 1, filename: 1 })
                 .exec((err, pwads) => {
                     if (err) {
                         console.error('find Pwad error: ', err);
@@ -2242,15 +2139,11 @@ function AppViewModel() {
                         if (self.currentConfig().sourceport()) {
                             command2 =
                                 '"' +
-                                (self.absolutePaths()
-                                    ? path.resolve(__dirname, self.currentConfig().sourceport())
-                                    : self.currentConfig().sourceport()) +
+                                (path.resolve(__dirname, self.currentConfig().sourceport())) +
                                 '" -autojoin -left -window';
                             command3 =
                                 '"' +
-                                (self.absolutePaths()
-                                    ? path.resolve(__dirname, self.currentConfig().sourceport())
-                                    : self.currentConfig().sourceport()) +
+                                (path.resolve(__dirname, self.currentConfig().sourceport())) +
                                 '" -autojoin -right -window';
                         }
                     }
@@ -2639,8 +2532,10 @@ ready(() => {
             let value = valueAccessor();
             ko.utils.registerEventHandler(element, 'change', () => {
                 if (element.files.length > 0) {
+                    //files are stored initially as absolute paths
+                    //this changes that storage to relative paths for portability
                     let filepath = element.files[0].path;
-                    value(filepath);
+                    value(path.relative(__dirname, filepath));
                 }
             });
         }
@@ -2652,8 +2547,10 @@ ready(() => {
                 let files = element.files;
                 if (files.length > 0) {
                     let filepaths = '';
+                    //files are stored initially as absolute paths
+                    //this changes that storage to relative paths for portability
                     _.forEach(files, file => {
-                        filepaths += file.path + ';';
+                        filepaths += path.relative(__dirname, file.path) + ';';
                     });
                     filepaths = filepaths.substring(0, filepaths.length - 1);
                     value(filepaths);
@@ -2668,8 +2565,10 @@ ready(() => {
                 let files = element.files;
                 if (files.length > 0) {
                     let filepaths = '';
+                    //files are stored initially as absolute paths
+                    //this changes that storage to relative paths for portability
                     _.forEach(files, file => {
-                        filepaths += file.path + ';';
+                        filepaths += path.relative(__dirname, file.path) + ';';
                     });
                     filepaths = filepaths.substring(0, filepaths.length - 1);
                     value(filepaths);

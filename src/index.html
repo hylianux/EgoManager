@@ -27,9 +27,6 @@
                     <li class="nav-item">
                         <a class="nav-link active" data-toggle="tab" href="#configBuilder">Configuration Builder
                             &nbsp;&nbsp;
-                            <i data-toggle="tooltip"
-                                data-bind="click: absolutePaths.bind($data, !absolutePaths()), class: absolutePathsClass"
-                                title="Click to switch between absolute and relative paths"></i>
                         </a>
                     </li>
                     <li class="nav-item">
@@ -771,29 +768,17 @@
                                 </a>
                             </li>
                         </ul>
-                        <div class="tab-content">
+                        <div class="tab-content" style="overflow: auto; height:900px;">
                             <div class="tab-pane active" id="Iwads">
                                 <div class="form-group">
                                     <input type="text" class="form-control" placeholder="Search..."
                                         data-bind="textInput: iwadSearch, event: { keyup: findIwad()}" />
                                 </div>
                                 <table class="table table-hover table-striped">
-                                    <thead>
-                                        <tr class="d-flex">
-                                            <th class="col-10">Iwad</th>
-                                            <th class="col-2"></th>
-                                        </tr>
-                                    </thead>
                                     <tbody data-bind="foreach: files.iwads">
-                                        <tr class="d-flex"
-                                            data-bind="class: displayClass, style: { visibility : $parent.showHiddenFiles()===false && hidden()===true ? 'collapse' : ''}">
-                                            <td class="col-10 text-truncate" data-placement="right" data-html="true"
-                                                data-bind="text: displayName, click: $parent.editFile.bind($data, filetype, $index)">
-                                            </td>
-                                            <td class="col-2">
-                                                <span class="btn btn-xs btn-secondary"
-                                                    data-bind="click: hideFile, class: hideFileClass, tooltip: hideTooltipText()"
-                                                    aria-hidden="true"></span>
+                                        <tr class="d-flex" data-bind="class: displayClass">
+                                            <td data-placement="right" data-html="true"
+                                                data-bind="text: displayName, click: $parent.editFile.bind($data, filetype, $index), class: ('col-12 text-truncate'+($parent.showHiddenFiles()===false && hidden()===true ? ' collapse' : ''))">
                                             </td>
                                         </tr>
                                     </tbody>
@@ -812,22 +797,10 @@
                                         data-bind="textInput: pwadSearch, event: { keyup: findPwad()}" />
                                 </div>
                                 <table class="table table-hover table-striped">
-                                    <thead>
-                                        <tr class="d-flex">
-                                            <th class="col-10">Pwad</th>
-                                            <th class="col-2"></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody data-bind="foreach: files.pwads">
-                                        <tr class="d-flex"
-                                            data-bind="class: displayClass, style: { visibility : $parent.showHiddenFiles()===false && hidden()===true ? 'collapse' : ''}">
-                                            <td class="col-10 text-truncate" data-placement="right" data-html="true"
-                                                data-bind="text: displayName, click: $parent.editFile.bind($data, filetype, $index)">
-                                            </td>
-                                            <td class="col-2">
-                                                <span class="btn btn-xs btn-secondary"
-                                                    data-bind="click: hideFile, class: hideFileClass, tooltip: hideTooltipText()"
-                                                    aria-hidden="true"></span>
+                                   <tbody data-bind="foreach: files.pwads">
+                                        <tr class="d-flex" data-bind="class: displayClass">
+                                            <td data-placement="right" data-html="true"
+                                                data-bind="text: displayName, click: $parent.editFile.bind($data, filetype, $index), class: ('col-12 text-truncate'+($parent.showHiddenFiles()===false && hidden()===true ? ' collapse' : ''))">
                                             </td>
                                         </tr>
                                     </tbody>
@@ -846,22 +819,10 @@
                                         data-bind="textInput: sourceportSearch, event: { keyup: findSourceport()}" />
                                 </div>
                                 <table class="table table-hover table-striped">
-                                    <thead>
-                                        <tr class="d-flex">
-                                            <th class="col-10">Sourceport</th>
-                                            <th class="col-2"></th>
-                                        </tr>
-                                    </thead>
                                     <tbody data-bind="foreach: files.sourceports">
-                                        <tr class="d-flex"
-                                            data-bind="class: displayClass, style: { visibility : $parent.showHiddenFiles()===false && hidden()===true ? 'collapse' : ''}">
-                                            <td class="col-10 text-truncate" data-placement="right" data-html="true"
-                                                data-bind="text: displayName, click: $parent.editFile.bind($data, filetype, $index)">
-                                            </td>
-                                            <td class="col-2">
-                                                <span class="btn btn-xs btn-secondary"
-                                                    data-bind="click: hideFile, class: hideFileClass, tooltip: hideTooltipText()"
-                                                    aria-hidden="true"></span>
+                                        <tr class="d-flex" data-bind="class: displayClass">
+                                            <td data-placement="right" data-html="true"
+                                                data-bind="text: displayName, click: $parent.editFile.bind($data, filetype, $index), class: ('col-12 text-truncate'+($parent.showHiddenFiles()===false && hidden()===true ? ' collapse' : ''))">
                                             </td>
                                         </tr>
                                     </tbody>
@@ -877,12 +838,18 @@
                     </div>
                     <!--File Edit-->
                     <div class="col-md-8 border border-secondary">
-                        <form data-bind="with: chosenFile">
+                        <form data-bind="with: chosenFile" style="overflow: auto; height:900px;">
                             <h5>
                                 File Type:
                                 <span data-bind="text: filetype"></span>
                                 &nbsp;&mdash;&nbsp;Filename:
                                 <span data-bind="text: filename"></span>
+                                &nbsp;&mdash;&nbsp;Hide File?
+                                <span class="btn btn-xs btn-secondary"
+                                    data-bind="click: $parent.hideFile, class: hideFileClass, tooltip: hideTooltipText()"
+                                    aria-hidden="true"></span>
+                                &nbsp;&mdash;&nbsp;Save File
+                                <span class="btn btn-xs btn-primary fa fa-save" data-bind="click: $parent.updateFile" data-toggle="tooltip" title="" data-original-title="Save current configuration"></span>                                    
                             </h5>
                             <div class="form-group">
                                 <label class="control-label" for="inputFilename" data-placement="left"
@@ -895,7 +862,7 @@
                                 </div>
                                 <input type="text" id="inputFilename" class="form-control"
                                     placeHolder="Human-readable name"
-                                    data-bind="textInput: name, event: {blur: $parent.updateFile}" />
+                                    data-bind="textInput: name, event: {change: change}" />
                             </div>
                             <div class="form-group" data-bind="visible: filetype()==='sourceport'">
                                 <label class="control-label" for="sourceportFileType" data-placement="left"
@@ -904,7 +871,7 @@
                                     Sourceport Type
                                 </label>
                                 <select id="sourceportFileType" class="form-control"
-                                    data-bind="options: $parent.sourceportTypes, event: {blur: $parent.updateFile}, value: sourceportBasetype, optionsCaption: 'Choose...'"></select>
+                                    data-bind="options: $parent.sourceportTypes, event: {change: change}, value: sourceportBasetype, optionsCaption: 'Choose...'"></select>
                             </div>
                             <div class="form-group" data-bind="visible: filetype()==='iwad'">
                                 <label class="control-label" for="iwadFileType" data-placement="left"
@@ -913,7 +880,7 @@
                                     IWad Type
                                 </label>
                                 <select class="form-control" id="iwadFileType"
-                                    data-bind="options: $parent.iwadTypes, optionsText: 'description', event: {blur: $parent.updateFile}, value: iwadBasetype, optionsValue:'name', optionsCaption: 'Choose...'"></select>
+                                    data-bind="options: $parent.iwadTypes, optionsText: 'description', event: {change: change}, value: iwadBasetype, optionsValue:'name', optionsCaption: 'Choose...'"></select>
                             </div>
                             <div class="form-group">
                                 <label class="control-label" data-placement="left" for="inputAuthor"
@@ -928,7 +895,7 @@
                                 </div>
                                 <input type="text" class="form-control" id="inputAuthor"
                                     placeholder="Author1,Author2,Author3,..."
-                                    data-bind="textInput: authorInput, event: {blur: $parent.updateFile}" />
+                                    data-bind="textInput: authorInput, event: {change: change}" />
                             </div>
                             <div class="form-group">
                                 <label class="control-label" data-placement="left" for="inputMeta" data-toggle="tooltip"
@@ -943,7 +910,7 @@
                                 </div>
                                 <input type="text" class="form-control"
                                     placeholder="Music,Levels,Textures,Gameplay,etc..." id="inputMeta"
-                                    data-bind="textInput: metaInput, event: {blur: $parent.updateFile}" />
+                                    data-bind="textInput: metaInput, event: {change: change}" />
                             </div>
                             <div class="form-group">
                                 <label class="control-label" data-placement="left" for="inputSource"
@@ -959,7 +926,7 @@
 
                                 <input type="text" class="form-control" id="inputSource"
                                     placeholder="http://somesite.com/someplace"
-                                    data-bind="textInput: source, event: {blur: $parent.updateFile}" />
+                                    data-bind="textInput: source, event: {change: change}" />
                             </div>
                             <div class="form-group">
                                 <label class="control-label" data-placement="left" for="inputQuickDescription"
@@ -976,7 +943,7 @@
                                 <input type="text" class="form-control col"
                                     placeholder="This file adds levels, music, sounds, textures, gameplay, etc. changes."
                                     id="inputQuickDescription"
-                                    data-bind="textInput: quickDescription, event: {blur: $parent.updateFile}" />
+                                    data-bind="textInput: quickDescription, event: {change: change}" />
                             </div>
                             <div class="form-group">
                                 <label class="control-label" data-placement="left" for="inputLongDescription"
@@ -989,7 +956,7 @@
         oh my yes, this is going to be long.
         
         Hello?  You still here?  yeah, long stuff in here..."
-                                    data-bind="textInput: longDescription, event: {blur: $parent.updateFile}"></textarea>
+                                    data-bind="textInput: longDescription, event: {change: change}"></textarea>
                             </div>
                         </form>
                     </div>
