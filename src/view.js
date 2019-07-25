@@ -502,6 +502,7 @@ function AppViewModel() {
     self.pwadDirectory = self.idTechFolder + path.sep + 'pwads';
     self.sourceportDirectory = self.idTechFolder + path.sep + 'sourceports';
     self.ip = ko.observable();
+    self.configPwadSearch = ko.observable();
 
     self.showHiddenFiles = ko.observable(false);
     self.iwadSearch = ko.observable();
@@ -1393,6 +1394,7 @@ function AppViewModel() {
                     });
                     self.files.pwads.removeAll();
                     self.availablePwads.removeAll();
+                    self.configPwadSearch('');
                     self.files.pwads.push.apply(self.files.pwads, newPwads);
                     self.availablePwads.push.apply(self.availablePwads, newAvailablePwads);
                 }
@@ -1759,6 +1761,105 @@ function AppViewModel() {
     //-------------------------------------------------------------------------
     // here are the search functions for iwads, pwads, and sourceports
     //-------------------------------------------------------------------------
+    self.findConfigPwad = () => {
+        let handle = pwads => {
+            let newPwads = [];
+            if (pwads && pwads.length > 0) {
+                _.forEach(pwads, pwad => {
+                    let newPwad = new File(
+                        pwad.filepath,
+                        pwad.filename,
+                        pwad.authors,
+                        pwad.metaTags,
+                        pwad.source,
+                        pwad.name,
+                        pwad.quickDescription,
+                        pwad.longDescription,
+                        'pwad',
+                        pwad.hidden
+                    );
+                    let inchosen = false;
+                    _.forEach(self.currentConfig().pwads(), pwad => {
+                        if (newPwad.filepath === pwad.filepath) {
+                            inchosen = true;
+                        }
+                    });
+                    if (!inchosen && !newPwad.hidden()) {
+                        newPwads.push(newPwad);
+                    }
+                });
+            }
+            self.availablePwads.removeAll();
+            if (newPwads.length > 0) {
+                self.availablePwads.push.apply(self.availablePwads, newPwads);
+            }
+        };
+        if (self.configPwadSearch() && self.configPwadSearch().trim() != '') {
+            let text = self.configPwadSearch().toUpperCase();
+            pwadCollection
+                .find({
+                    $where: function() {
+                        let containsName = this.name != null && this.name.toUpperCase().indexOf(text) > -1;
+                        let containsFilename = this.filename != null && this.filename.toUpperCase().indexOf(text) > -1;
+                        let containsMetaTag = () => {
+                            let doesContain = false;
+                            if (this.metaTags != null) {
+                                _.forEach(this.metaTags, tag => {
+                                    if (!doesContain) {
+                                        doesContain = tag.toUpperCase().indexOf(text) > -1;
+                                    }
+                                });
+                            }
+                            return doesContain;
+                        };
+                        let containsAuthor = () => {
+                            let doesContain = false;
+                            if (this.authors != null) {
+                                _.forEach(this.authors, author => {
+                                    if (!doesContain) {
+                                        doesContain = author.toUpperCase().indexOf(text) > -1;
+                                    }
+                                });
+                            }
+                            return doesContain;
+                        };
+                        let containsSource = this.source != null && this.source.toUpperCase().indexOf(text) > -1;
+                        let containsQuickDescription =
+                            this.quickDescription != null && this.quickDescription.toUpperCase().indexOf(text) > -1;
+                        let containsLongDescription =
+                            this.longDescription != null && this.longDescription.toUpperCase().indexOf(text) > -1;
+                        return (
+                            containsName ||
+                            containsFilename ||
+                            containsMetaTag() ||
+                            containsAuthor() ||
+                            containsSource ||
+                            containsQuickDescription ||
+                            containsLongDescription
+                        );
+                    }
+                })
+                .sort({ name: 1, filename: 1 })
+                .exec((err, pwads) => {
+                    if (err) {
+                        console.error('find Pwad error: ', err);
+                    } else {
+                        handle(pwads);
+                    }
+                });
+        } else {
+            pwadCollection
+                .find({})
+                .sort({ name: 1, filename: 1 })
+                .exec((err, pwads) => {
+                    if (err) {
+                        console.error('find Pwad error: ', err);
+                    } else {
+                        handle(pwads);
+                    }
+                });
+        }
+    };
     self.findIwad = () => {
         let handle = iwads => {
             let newIwads = [];
@@ -1932,7 +2033,7 @@ function AppViewModel() {
         } else {
             pwadCollection
                 .find({})
-                .sort({ filename: 1 })
+                .sort({ name: 1, filename: 1 })
                 .exec((err, pwads) => {
                     if (err) {
                         console.error('find Pwad error: ', err);
@@ -2055,6 +2156,7 @@ function AppViewModel() {
                 null
             )
         );
+        self.loadPwadFiles();
     };
     // this is for the search function in finding a previously saved config.
     // it doesn't look in "previous configs"

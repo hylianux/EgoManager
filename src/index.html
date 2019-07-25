@@ -219,7 +219,11 @@
                                     <div class="col-md-12" data-bind="style: pwadsHeight()">
                                         <div class="row">
                                             <div class="col-md-6">
-                                                Available Pwads
+                                                <div class="float-left">Available Pwads</div>
+                                                <div class="float-right"> <input type="text" class="form-control"
+                                                        placeholder="Search..."
+                                                        data-bind="textInput: configPwadSearch, event: {keyup: findConfigPwad}" />
+                                                </div>
                                             </div>
                                             <div class="col-md-6">
                                                 Chosen Pwads
