@@ -1,11 +1,11 @@
 'use strict';
 const ko = require('knockout');
 const path = require('path');
-const fs = require('fs');
+const fs = require('fs').promises;
 const titlebar = require('custom-electron-titlebar');
-const Datastore = require('nedb');
+const Datastore = require('nedb-promises');
 const _ = require('lodash');
-const pwadTypes = ['wad', 'pk3', 'deh', 'bex'];
+const pwadFileTypes = ['wad', 'pk3', 'deh', 'bex'];
 const iwadFileTypes = ['wad', 'pk3'];
 // Importing this adds a right-click menu with 'Inspect Element' option
 const { remote } = require('electron');
@@ -46,21 +46,27 @@ if (dev) {
 //TODO: create custom commands for WAD merging in chocolate doom
 
 // These are all the collections loaded from the nedb databases
-let iwadCollection = new Datastore({ filename: path.resolve(__dirname, '../../iwads.db'), autoload: true });
-let pwadCollection = new Datastore({ filename: path.resolve(__dirname, '../../pwads.db'), autoload: true });
-let sourceportCollection = new Datastore({ filename: path.resolve(__dirname, '../../sourceports.db'), autoload: true });
-let configCollection = new Datastore({ filename: path.resolve(__dirname, '../../configs.db'), autoload: true });
-let previousConfigCollection = new Datastore({
+let iwadCollection = Datastore.create({ filename: path.resolve(__dirname, '../../iwads.db'), autoload: true });
+let pwadCollection = Datastore.create({ filename: path.resolve(__dirname, '../../pwads.db'), autoload: true });
+let sourceportCollection = Datastore.create({
+    filename: path.resolve(__dirname, '../../sourceports.db'),
+    autoload: true
+});
+let configCollection = Datastore.create({ filename: path.resolve(__dirname, '../../configs.db'), autoload: true });
+let previousConfigCollection = Datastore.create({
     filename: path.resolve(__dirname, '../../previousConfigs.db'),
     autoload: true
 });
-let commandLineCollection = new Datastore({ filename: path.resolve(__dirname, '../../commands.db'), autoload: true });
-let DMFlagsCollection = new Datastore({
+let commandLineCollection = Datastore.create({
+    filename: path.resolve(__dirname, '../../commands.db'),
+    autoload: true
+});
+let DMFlagsCollection = Datastore.create({
     filename: path.resolve(__dirname, '../../deathmatchFlags.db'),
     autoload: true
 });
-let levelsCollection = new Datastore({ filename: path.resolve(__dirname, '../../gameLevels.db'), autoload: true });
-let skillLevelsCollection = new Datastore({
+let levelsCollection = Datastore.create({ filename: path.resolve(__dirname, '../../gameLevels.db'), autoload: true });
+let skillLevelsCollection = Datastore.create({
     filename: path.resolve(__dirname, '../../gameSkillLevels.db'),
     autoload: true
 });
@@ -256,6 +262,7 @@ function File(
     let self = this;
     self.filepath = filepath;
     self.filename = filename;
+    self.editing = ko.observable(false);
     self.changed = ko.observable(false);
     self.authors = ko.observableArray(authors);
     self.authorsValid = ko.computed(() => {
@@ -510,24 +517,26 @@ function AppViewModel() {
     self.sourceportSearch = ko.observable();
     self.currentConfig = ko.observable();
     self.configSearch = ko.observable('');
-    self.chosenFile = ko.observable();
     self.chosenPreviousConfig = ko.observable();
     self.multiplayerCollapsed = ko.observable(false);
     self.configCollapsed = ko.observable(false);
     self.pwadsCollapsed = ko.observable(false);
+    self.sourceportsLoaded = ko.observable(false);
+    self.iwadsLoaded = ko.observable(false);
+    self.pwadsLoaded = ko.observable(false);
 
     //temporary variable to store the inifile when loading from previous config or something
     self.iniFile = ko.observable();
 
     self.skillLevels = ko.observableArray();
     self.levels = ko.observableArray();
-    self.Allfiles = ko.observableArray();
     self.iniFiles = ko.observableArray();
     self.files = {
         iwads: ko.observableArray(),
         pwads: ko.observableArray(),
         sourceports: ko.observableArray()
     };
+
     self.previousConfigChains = ko.observableArray();
     self.configChains = ko.observableArray();
     self.availablePwads = ko.observableArray();
@@ -658,11 +667,24 @@ function AppViewModel() {
         });
         return counter === self.files.sourceports.length;
     });
-    //hides chosenFile
-    self.hideFile = () => {
-        let isHidden = self.chosenFile().hidden();
-        self.chosenFile().hidden(!isHidden);
-        self.updateFile();
+    //hides the given file
+    self.hideFile = (filetype, index) => {
+        let isHidden = false;
+        switch (filetype) {
+            case 'iwad':
+                isHidden = self.files['iwads']()[index].hidden();
+                self.files['iwads']()[index].hidden(!isHidden);
+                break;
+            case 'pwad':
+                isHidden = self.files['pwads']()[index].hidden();
+                self.files['pwads']()[index].hidden(!isHidden);
+                break;
+            case 'sourceport':
+                isHidden = self.files['sourceports']()[index].hidden();
+                self.files['sourceports']()[index].hidden(!isHidden);
+                break;
+        }
+        self.updateFile(filetype, index);
     };
     //collapses multiplayer
     self.collapseMultiplayer = () => {
@@ -869,30 +891,23 @@ function AppViewModel() {
     };
     // loads the iwad database by checking all the iwad files in the idTech/iwads directory
     self.buildIwadCollection = reloadFiles => {
-        let directoryName = self.iwadDirectory;
-        iwadCollection.remove({}, { multi: true }, (removeErr, numRemoved) => {
-            if (removeErr) {
-                console.error('buildIwadCollection removal error: ', removeErr);
-            } else {
-                function walk(directory) {
-                    fs.readdir(directory, (e, files) => {
-                        if (e) {
-                            console.error('buildIwadCollection error: ', e);
-                            return;
-                        }
-                        files.forEach(
-                            file => {
+        (async () => {
+            let directoryName = self.iwadDirectory;
+            try {
+                let numRemoved = await iwadCollection.remove({}, { multi: true });
+                async function walk(directory) {
+                    try {
+                        let files = await fs.readdir(directory);
+                        await Promise.all(
+                            files.map(async file => {
                                 let fullPath = path.join(directory, file);
-                                fs.stat(fullPath, (foreachErr, f) => {
-                                    if (foreachErr) {
-                                        console.error('buildIwadCollection foreach error: ', foreachErr);
-                                        return;
-                                    }
+                                try {
+                                    let f = await fs.stat(fullPath);
                                     if (f.isDirectory()) {
                                         if (dev) {
                                             console.log('buildIwad:: ' + file + ' and is directory: ' + fullPath);
                                         }
-                                        walk(fullPath);
+                                        await walk(fullPath);
                                     } else {
                                         let fileExt = file.substring(file.lastIndexOf('.') + 1);
                                         let relativePath = path.relative(__dirname, fullPath);
@@ -906,39 +921,33 @@ function AppViewModel() {
                                                 console.log('buildIwad:: adding ' + fullPath);
                                                 console.log('reloadFiles: ' + reloadFiles);
                                             }
-                                            iwadCollection.update(
-                                                { filename: iwad.filename },
-                                                {
-                                                    $set: {
-                                                        filepath: iwad.filepath
-                                                    }
-                                                },
-                                                { upsert: true },
-                                                (updateErr, numReplaced) => {
-                                                    if (updateErr) {
-                                                        console.error(
-                                                            'buildIwadCollection updatingCollection error: ',
-                                                            updateErr
-                                                        );
-                                                    } else {
-                                                        iwadCollection.persistence.compactDatafile();
-                                                        if (reloadFiles) {
-                                                            self.loadIwadFiles();
+                                            try {
+                                                let numReplaced = await iwadCollection.update(
+                                                    { filename: iwad.filename },
+                                                    {
+                                                        $set: {
+                                                            filepath: iwad.filepath
                                                         }
-                                                    }
-                                                }
-                                            );
+                                                    },
+                                                    { upsert: true }
+                                                );
+                                                iwadCollection.persistence.compactDatafile();
+                                            } catch (updateErr) {
+                                                console.error(
+                                                    'buildIwadCollection updatingCollection error: ',
+                                                    updateErr
+                                                );
+                                            }
                                         } else if (fileExt === 'json') {
-                                            fs.readFile(fullPath, 'utf8', (err, data) => {
-                                                if (err) {
-                                                    console.error('buildIwadCollection json file read error!', err);
-                                                } else {
-                                                    let iwad = JSON.parse(data);
-                                                    if (dev) {
-                                                        console.log('buildIwad:: adding ' + fullPath);
-                                                        console.log('reloadFiles: ' + reloadFiles);
-                                                    }
-                                                    iwadCollection.update(
+                                            try {
+                                                let data = await fs.readFile(fullPath, 'utf8');
+                                                let iwad = JSON.parse(data);
+                                                if (dev) {
+                                                    console.log('buildIwad:: adding ' + fullPath);
+                                                    console.log('reloadFiles: ' + reloadFiles);
+                                                }
+                                                try {
+                                                    let numReplaced = await iwadCollection.update(
                                                         { filename: iwad.filename },
                                                         {
                                                             $set: {
@@ -952,118 +961,99 @@ function AppViewModel() {
                                                                 basetype: iwad.basetype
                                                             }
                                                         },
-                                                        { upsert: true },
-                                                        (updateErr, numReplaced) => {
-                                                            if (updateErr) {
-                                                                console.error(
-                                                                    'buildIwadCollection updatingCollection with json file error: ',
-                                                                    updateErr
-                                                                );
-                                                            } else {
-                                                                iwadCollection.persistence.compactDatafile();
-                                                                if (reloadFiles) {
-                                                                    self.loadIwadFiles();
-                                                                }
-                                                            }
-                                                        }
+                                                        { upsert: true }
                                                     );
-                                                }
-                                            });
-                                        } else if (fileExt === 'txt') {
-                                            iwadCollection.findOne({ filename: f }, (findErr, iwad) => {
-                                                if (findErr) {
+                                                    iwadCollection.persistence.compactDatafile();
+                                                } catch (updateErr) {
                                                     console.error(
-                                                        'buildIwadCollection txt collection.find error: ',
-                                                        findErr
+                                                        'buildIwadCollection updatingCollection with json file error: ',
+                                                        updateErr
                                                     );
-                                                } else {
-                                                    fs.readFile(fullPath, 'utf8', (err, data) => {
-                                                        if (err) {
-                                                            console.error(
-                                                                'buildIwadCollection txt file read error!',
-                                                                err
-                                                            );
-                                                        } else {
-                                                            let longDescription = data;
-                                                            if (iwad && longDescription !== iwad.longDescription) {
-                                                                if (dev) {
-                                                                    console.log(
-                                                                        'buildIwad:: adding ' +
-                                                                            longDescription +
-                                                                            ' to ' +
-                                                                            fullPath
-                                                                    );
-                                                                    console.log('reloadFiles: ' + reloadFiles);
-                                                                }
-                                                                iwadCollection.update(
-                                                                    { filename: f },
-                                                                    { $set: { longDescription: longDescription } },
-                                                                    {},
-                                                                    (updateErr, numReplaced) => {
-                                                                        if (updateErr) {
-                                                                            console.error(
-                                                                                'buildIwadCollection txt updatingCollection error: ',
-                                                                                updateErr
-                                                                            );
-                                                                        } else {
-                                                                            iwadCollection.persistence.compactDatafile();
-                                                                            if (reloadFiles) {
-                                                                                self.loadIwadFiles();
-                                                                            }
-                                                                        }
-                                                                    }
-                                                                );
-                                                            }
-                                                        }
-                                                    });
                                                 }
-                                            });
+                                            } catch (readFileErr) {
+                                                console.error('buildIwadCollection json file read error!', readFileErr);
+                                            }
+                                        } else if (fileExt === 'txt') {
+                                            try {
+                                                let iwad = await iwadCollection.findOne({ filename: f });
+                                                try {
+                                                    let data = await fs.readFile(fullPath, 'utf8');
+                                                    let longDescription = data;
+                                                    if (iwad && longDescription !== iwad.longDescription) {
+                                                        if (dev) {
+                                                            console.log(
+                                                                'buildIwad:: adding ' +
+                                                                longDescription +
+                                                                ' to ' +
+                                                                fullPath
+                                                            );
+                                                            console.log('reloadFiles: ' + reloadFiles);
+                                                        }
+                                                        try {
+                                                            let numReplaced = await iwadCollection.update(
+                                                                { filename: f },
+                                                                { $set: { longDescription: longDescription } },
+                                                                {}
+                                                            );
+                                                            iwadCollection.persistence.compactDatafile();
+                                                        } catch (updateErr) {
+                                                            console.error(
+                                                                'buildIwadCollection txt updatingCollection error: ',
+                                                                updateErr
+                                                            );
+                                                        }
+                                                    }
+                                                } catch (readErr) {
+                                                    console.error('buildIwadCollection txt file read error!', err);
+                                                }
+                                            } catch (findErr) {
+                                                console.error(
+                                                    'buildIwadCollection txt collection.find error: ',
+                                                    findErr
+                                                );
+                                            }
                                         }
                                     }
-                                });
-                            },
-                            forErr => {
-                                if (forErr) {
-                                    throw forErr;
+                                } catch (statErr) {
+                                    console.error('buildIwad statError, ', statErr);
                                 }
-                            }
+                            })
                         );
-                    });
+                    } catch (readdirErr) {
+                        console.error('buildIwadCollection error: ', readdirErr);
+                    }
                 }
-                walk(directoryName);
+                await walk(directoryName);
+                self.loadIwadFiles();
+            } catch (removeErr) {
+                console.error('buildIwadCollection removal error: ', removeErr);
             }
-        });
+        })();
     };
     // loads the pwads database by checking all the pwad files in the idTech/pwads directory
     self.buildPwadCollection = reloadFiles => {
-        let directoryName = self.pwadDirectory;
-        pwadCollection.remove({}, { multi: true }, (removeErr, numRemoved) => {
-            if (removeErr) {
-                console.error('buildIwadCollection removal error: ', removeErr);
-            } else {
-                function walk(directory) {
-                    fs.readdir(directory, (e, files) => {
-                        if (e) {
-                            console.error('buildPwadCollection error:', e);
-                            return;
-                        }
-                        files.forEach(
-                            file => {
+        (async () => {
+            let directoryName = self.pwadDirectory;
+            try {
+                let numRemoved = await pwadCollection.remove({}, { multi: true });
+                async function walk(directory) {
+                    try {
+                        let files = await fs.readdir(directory);
+                        await Promise.all(
+                            files.map(async file => {
                                 let fullPath = path.join(directory, file);
-                                fs.stat(fullPath, (statErr, f) => {
-                                    if (statErr) {
-                                        console.error('buildPwadCollection statError error', statErr);
-                                        return;
-                                    }
+                                try {
+                                    let f = await fs.stat(fullPath);
                                     if (f.isDirectory()) {
                                         if (dev) {
                                             console.log('buildPwad:: ' + file + ' and is directory: ' + fullPath);
                                         }
-                                        walk(fullPath);
+                                        await walk(fullPath);
                                     } else {
                                         let fileExt = file.substring(file.lastIndexOf('.') + 1);
-                                        if (pwadTypes.indexOf(fileExt.toLowerCase()) > -1) {
-                                            let relativePath = path.relative(__dirname, fullPath);
+                                        let relativePath = path.relative(__dirname, fullPath);
+
+                                        if (pwadFileTypes.indexOf(fileExt.toLowerCase()) > -1) {
                                             let pwad = {
                                                 filename: file,
                                                 filepath: relativePath
@@ -1072,35 +1062,33 @@ function AppViewModel() {
                                                 console.log('buildPwad:: adding ' + fullPath);
                                                 console.log('reloadFiles: ' + reloadFiles);
                                             }
-                                            pwadCollection.update(
-                                                { filename: pwad.filename },
-                                                { $set: { filepath: pwad.filepath } },
-                                                { upsert: true },
-                                                (updateErr, numReplaced) => {
-                                                    if (updateErr) {
-                                                        console.error(
-                                                            'buildPwadCollection updatingCollection error',
-                                                            updateErr
-                                                        );
-                                                    } else {
-                                                        pwadCollection.persistence.compactDatafile();
-                                                        if (reloadFiles) {
-                                                            self.loadPwadFiles();
+                                            try {
+                                                let numReplaced = await pwadCollection.update(
+                                                    { filename: pwad.filename },
+                                                    {
+                                                        $set: {
+                                                            filepath: pwad.filepath
                                                         }
-                                                    }
-                                                }
-                                            );
+                                                    },
+                                                    { upsert: true }
+                                                );
+                                                pwadCollection.persistence.compactDatafile();
+                                            } catch (updateErr) {
+                                                console.error(
+                                                    'buildPwadCollection updatingCollection error: ',
+                                                    updateErr
+                                                );
+                                            }
                                         } else if (fileExt === 'json') {
-                                            fs.readFile(fullPath, 'utf8', (err, data) => {
-                                                if (err) {
-                                                    console.error('buildPWadCollection json file read error!', err);
-                                                } else {
-                                                    let pwad = JSON.parse(data);
-                                                    if (dev) {
-                                                        console.log('buildPwad:: adding json' + fullPath);
-                                                        console.log('reloadFiles: ' + reloadFiles);
-                                                    }
-                                                    pwadCollection.update(
+                                            try {
+                                                let data = await fs.readFile(fullPath, 'utf8');
+                                                let pwad = JSON.parse(data);
+                                                if (dev) {
+                                                    console.log('buildPwad:: adding ' + fullPath);
+                                                    console.log('reloadFiles: ' + reloadFiles);
+                                                }
+                                                try {
+                                                    let numReplaced = await pwadCollection.update(
                                                         { filename: pwad.filename },
                                                         {
                                                             $set: {
@@ -1110,125 +1098,103 @@ function AppViewModel() {
                                                                 name: pwad.name,
                                                                 quickDescription: pwad.quickDescription,
                                                                 longDescription: pwad.longDescription,
-                                                                hidden: pwad.hidden
+                                                                hidden: pwad.hidden,
+                                                                basetype: pwad.basetype
                                                             }
                                                         },
-                                                        { upsert: true },
-                                                        (updateErr, numReplaced) => {
-                                                            if (updateErr) {
-                                                                console.error(
-                                                                    'buildPwadCollection updatingCollection json error: ',
-                                                                    updateErr
-                                                                );
-                                                            } else {
-                                                                pwadCollection.persistence.compactDatafile();
-                                                                if (reloadFiles) {
-                                                                    self.loadPwadFiles();
-                                                                }
-                                                            }
-                                                        }
+                                                        { upsert: true }
                                                     );
-                                                }
-                                            });
-                                        } else if (fileExt === 'txt') {
-                                            pwadCollection.findOne({ filename: f }, (findErr, pwad) => {
-                                                if (findErr) {
+                                                    pwadCollection.persistence.compactDatafile();
+                                                } catch (updateErr) {
                                                     console.error(
-                                                        'buildPwadCollection findingCollection txt error: ',
-                                                        findErr
+                                                        'buildPwadCollection updatingCollection with json file error: ',
+                                                        updateErr
                                                     );
-                                                } else {
-                                                    fs.readFile(fullPath, 'utf8', (err, data) => {
-                                                        if (err) {
-                                                            console.error(
-                                                                'buildPwadCollection txt file read error!',
-                                                                err
-                                                            );
-                                                        } else {
-                                                            let longDescription = data;
-                                                            if (pwad && longDescription !== pwad.longDescription) {
-                                                                if (dev) {
-                                                                    console.log(
-                                                                        'buildPwad:: adding ' +
-                                                                            longDescription +
-                                                                            ' to ' +
-                                                                            fullPath
-                                                                    );
-                                                                    console.log('reloadFiles: ' + reloadFiles);
-                                                                }
-                                                                pwadCollection.update(
-                                                                    { filename: f },
-                                                                    {
-                                                                        $set: {
-                                                                            longDescription: longDescription
-                                                                        }
-                                                                    },
-                                                                    {},
-                                                                    (updateErr, numReplaced) => {
-                                                                        if (updateErr) {
-                                                                            console.error(
-                                                                                'buildPwadCollection updatingCollection txt error: ',
-                                                                                updateErr
-                                                                            );
-                                                                        } else {
-                                                                            pwadCollection.persistence.compactDatafile();
-                                                                            if (reloadFiles) {
-                                                                                self.loadPwadFiles();
-                                                                            }
-                                                                        }
-                                                                    }
-                                                                );
-                                                            }
-                                                        }
-                                                    });
                                                 }
-                                            });
+                                            } catch (readFileErr) {
+                                                console.error('buildPwadCollection json file read error!', readFileErr);
+                                            }
+                                        } else if (fileExt === 'txt') {
+                                            try {
+                                                let pwad = await pwadCollection.findOne({ filename: f });
+                                                try {
+                                                    let data = await fs.readFile(fullPath, 'utf8');
+                                                    let longDescription = data;
+                                                    if (pwad && longDescription !== pwad.longDescription) {
+                                                        if (dev) {
+                                                            console.log(
+                                                                'buildPwad:: adding ' +
+                                                                longDescription +
+                                                                ' to ' +
+                                                                fullPath
+                                                            );
+                                                            console.log('reloadFiles: ' + reloadFiles);
+                                                        }
+                                                        try {
+                                                            let numReplaced = await pwadCollection.update(
+                                                                { filename: f },
+                                                                { $set: { longDescription: longDescription } },
+                                                                {}
+                                                            );
+                                                            pwadCollection.persistence.compactDatafile();
+                                                        } catch (updateErr) {
+                                                            console.error(
+                                                                'buildPwadCollection txt updatingCollection error: ',
+                                                                updateErr
+                                                            );
+                                                        }
+                                                    }
+                                                } catch (readErr) {
+                                                    console.error('buildPwadCollection txt file read error!', err);
+                                                }
+                                            } catch (findErr) {
+                                                console.error(
+                                                    'buildPwadCollection txt collection.find error: ',
+                                                    findErr
+                                                );
+                                            }
                                         }
                                     }
-                                });
-                            },
-                            forErr => {
-                                if (forErr) {
-                                    throw forErr;
+                                } catch (statErr) {
+                                    console.error('buildPwad statError, ', statErr);
                                 }
-                            }
+                            })
                         );
-                    });
+                    } catch (readdirErr) {
+                        console.error('buildPwadCollection error: ', readdirErr);
+                    }
                 }
-                walk(directoryName);
+                await walk(directoryName);
+                self.loadPwadFiles();
+            } catch (removeErr) {
+                console.error('buildPwadCollection removal error: ', removeErr);
             }
-        });
+        })();
     };
     // loads the sourceports by checking all the sourceports in the idTech/sourceports directory
     self.buildSourceportCollection = reloadFiles => {
-        let directoryName = self.sourceportDirectory;
-        sourceportCollection.remove({}, { multi: true }, (removeErr, numRemoved) => {
-            if (removeErr) {
-                console.error('buildIwadCollection removal error: ', removeErr);
-            } else {
-                function walk(directory) {
-                    fs.readdir(directory, (e, files) => {
-                        if (e) {
-                            console.error('Error: ', e);
-                            return;
-                        }
-                        files.forEach(
-                            file => {
+        (async () => {
+            let directoryName = self.sourceportDirectory;
+            try {
+                let numRemoved = await sourceportCollection.remove({}, { multi: true });
+                async function walk(directory) {
+                    try {
+                        let files = await fs.readdir(directory);
+                        await Promise.all(
+                            files.map(async file => {
                                 let fullPath = path.join(directory, file);
-                                fs.stat(fullPath, (forEachErr, f) => {
-                                    if (forEachErr) {
-                                        console.error('buildSourceportCollection stat error: ', forEachErr);
-                                        return;
-                                    }
+                                try {
+                                    let f = await fs.stat(fullPath);
                                     if (f.isDirectory()) {
                                         if (dev) {
-                                            console.log('buildSourceport:: ' + file + ' and is directory: ' + fullPath);
+                                            console.log('buildPwad:: ' + file + ' and is directory: ' + fullPath);
                                         }
-                                        walk(fullPath);
+                                        await walk(fullPath);
                                     } else {
                                         let fileExt = file.substring(file.lastIndexOf('.') + 1);
+                                        let relativePath = path.relative(__dirname, fullPath);
+
                                         if (fileExt === 'exe') {
-                                            let relativePath = path.relative(__dirname, fullPath);
                                             let sourceport = {
                                                 filename: file,
                                                 filepath: relativePath
@@ -1237,42 +1203,33 @@ function AppViewModel() {
                                                 console.log('buildSourceport:: adding ' + fullPath);
                                                 console.log('reloadFiles: ' + reloadFiles);
                                             }
-                                            sourceportCollection.update(
-                                                { filename: sourceport.filename },
-                                                {
-                                                    $set: {
-                                                        filepath: sourceport.filepath
-                                                    }
-                                                },
-                                                { upsert: true },
-                                                (updateErr, numReplaced) => {
-                                                    if (updateErr) {
-                                                        console.error(
-                                                            'buildSourceportCollection update error: ',
-                                                            updateErr
-                                                        );
-                                                    } else {
-                                                        sourceportCollection.persistence.compactDatafile();
-                                                        if (reloadFiles) {
-                                                            self.loadSourceportFiles();
+                                            try {
+                                                let numReplaced = await sourceportCollection.update(
+                                                    { filename: sourceport.filename },
+                                                    {
+                                                        $set: {
+                                                            filepath: sourceport.filepath
                                                         }
-                                                    }
-                                                }
-                                            );
+                                                    },
+                                                    { upsert: true }
+                                                );
+                                                sourceportCollection.persistence.compactDatafile();
+                                            } catch (updateErr) {
+                                                console.error(
+                                                    'buildSourceportCollection updatingCollection error: ',
+                                                    updateErr
+                                                );
+                                            }
                                         } else if (fileExt === 'json') {
-                                            fs.readFile(fullPath, 'utf8', (err, data) => {
-                                                if (err) {
-                                                    console.error(
-                                                        'buildSourceportCollection json file read error!',
-                                                        err
-                                                    );
-                                                } else {
-                                                    let sourceport = JSON.parse(data);
-                                                    if (dev) {
-                                                        console.log('buildSourceport:: adding ' + fullPath);
-                                                        console.log('reloadFiles: ' + reloadFiles);
-                                                    }
-                                                    sourceportCollection.update(
+                                            try {
+                                                let data = await fs.readFile(fullPath, 'utf8');
+                                                let sourceport = JSON.parse(data);
+                                                if (dev) {
+                                                    console.log('buildSourceport:: adding ' + fullPath);
+                                                    console.log('reloadFiles: ' + reloadFiles);
+                                                }
+                                                try {
+                                                    let numReplaced = await sourceportCollection.update(
                                                         { filename: sourceport.filename },
                                                         {
                                                             $set: {
@@ -1286,159 +1243,149 @@ function AppViewModel() {
                                                                 basetype: sourceport.basetype
                                                             }
                                                         },
-                                                        { upsert: true },
-                                                        (updateErr, numReplaced) => {
-                                                            if (updateErr) {
-                                                                console.error(
-                                                                    'buildSourceportCollection update json error: ',
-                                                                    updateErr
-                                                                );
-                                                            } else {
-                                                                sourceportCollection.persistence.compactDatafile();
-                                                                if (reloadFiles) {
-                                                                    self.loadSourceportFiles();
-                                                                }
-                                                            }
-                                                        }
+                                                        { upsert: true }
+                                                    );
+                                                    sourceportCollection.persistence.compactDatafile();
+                                                } catch (updateErr) {
+                                                    console.error(
+                                                        'buildSourceportCollection updatingCollection with json file error: ',
+                                                        updateErr
                                                     );
                                                 }
-                                            });
+                                            } catch (readFileErr) {
+                                                console.error('buildSourceportCollection json file read error!', readFileErr);
+                                            }
                                         }
                                     }
-                                });
-                            },
-                            forErr => {
-                                if (forErr) {
-                                    throw forErr;
+                                } catch (statErr) {
+                                    console.error('buildSourceport statError, ', statErr);
                                 }
-                            }
+                            })
                         );
-                    });
+                    } catch (readdirErr) {
+                        console.error('buildSourceportCollection error: ', readdirErr);
+                    }
                 }
-                walk(directoryName);
+                await walk(directoryName);
+                self.loadSourceportFiles();
+            } catch (removeErr) {
+                console.error('buildSourceportCollection removal error: ', removeErr);
             }
-        });
+        })();
     };
     // loads iwads from the database into the app's viewmodel, then loads the maps and difficulty's
     self.loadIwadFiles = () => {
-        iwadCollection
-            .find({})
-            .sort({ filename: 1 })
-            .exec((err, allIwads) => {
-                if (err) {
-                    console.error('load iwad files error: ', err);
-                } else {
-                    let newIwads = [];
-                    _.forEach(allIwads, iwad => {
-                        let newIwad = new File(
-                            iwad.filepath,
-                            iwad.filename,
-                            iwad.authors,
-                            iwad.metaTags,
-                            iwad.source,
-                            iwad.name,
-                            iwad.quickDescription,
-                            iwad.longDescription,
-                            'iwad',
-                            iwad.hidden,
-                            iwad.basetype
-                        );
-                        if (newIwad.filepath) {
-                            newIwads.push(newIwad);
-                        }
-                    });
-                    self.files.iwads.removeAll();
-                    self.files.iwads.push.apply(self.files.iwads, newIwads);
-                    self.loadLevels();
-                    self.loadSkillLevels();
-                }
-            });
+        (async () => {
+            try {
+                let allIwads = await iwadCollection.find({}).sort({ filename: 1 });
+                let newIwads = [];
+                _.forEach(allIwads, iwad => {
+                    let newIwad = new File(
+                        iwad.filepath,
+                        iwad.filename,
+                        iwad.authors,
+                        iwad.metaTags,
+                        iwad.source,
+                        iwad.name,
+                        iwad.quickDescription,
+                        iwad.longDescription,
+                        'iwad',
+                        iwad.hidden,
+                        iwad.basetype
+                    );
+                    if (newIwad.filepath) {
+                        newIwads.push(newIwad);
+                    }
+                });
+                self.files.iwads.removeAll();
+                self.files.iwads.push.apply(self.files.iwads, newIwads);
+                self.loadLevels();
+                self.loadSkillLevels();
+            } catch (err) {
+                console.error('load iwad files error: ', err);
+            }
+        })();
     };
     // loads pwads from the database into the app's viewmodel
     // takes the current configuration into account for loading the pwad drag-drop selector
     self.loadPwadFiles = () => {
-        pwadCollection
-            .find({})
-            .sort({ name: 1, filename: 1 })
-            .exec((err, allPwads) => {
-                if (err) {
-                    console.error('load pwad files error: ', err);
-                } else {
-                    let newPwads = [];
-                    let newAvailablePwads = [];
-                    _.forEach(allPwads, pwad => {
-                        let newPwad = new File(
-                            pwad.filepath,
-                            pwad.filename,
-                            pwad.authors,
-                            pwad.metaTags,
-                            pwad.source,
-                            pwad.name,
-                            pwad.quickDescription,
-                            pwad.longDescription,
-                            'pwad',
-                            pwad.hidden
-                        );
-                        if (newPwad.filepath) {
-                            newPwads.push(newPwad);
-                            let inchosen = false;
-                            _.forEach(self.currentConfig().pwads(), pwad => {
-                                if (newPwad.filepath === pwad.filepath) {
-                                    inchosen = true;
-                                }
-                            });
-                            if (!inchosen && !newPwad.hidden()) {
-                                newAvailablePwads.push(newPwad);
+        (async () => {
+            try {
+                let allPwads = await pwadCollection.find({}).sort({ name: 1, filename: 1 });
+                let newPwads = [];
+                let newAvailablePwads = [];
+                _.forEach(allPwads, pwad => {
+                    let newPwad = new File(
+                        pwad.filepath,
+                        pwad.filename,
+                        pwad.authors,
+                        pwad.metaTags,
+                        pwad.source,
+                        pwad.name,
+                        pwad.quickDescription,
+                        pwad.longDescription,
+                        'pwad',
+                        pwad.hidden
+                    );
+                    if (newPwad.filepath) {
+                        newPwads.push(newPwad);
+                        let inchosen = false;
+                        _.forEach(self.currentConfig().pwads(), pwad => {
+                            if (newPwad.filepath === pwad.filepath) {
+                                inchosen = true;
                             }
+                        });
+                        if (!inchosen && !newPwad.hidden()) {
+                            newAvailablePwads.push(newPwad);
                         }
-                    });
-                    self.files.pwads.removeAll();
-                    self.availablePwads.removeAll();
-                    self.configPwadSearch('');
-                    self.files.pwads.push.apply(self.files.pwads, newPwads);
-                    self.availablePwads.push.apply(self.availablePwads, newAvailablePwads);
-                }
-            });
+                    }
+                });
+                self.files.pwads.removeAll();
+                self.availablePwads.removeAll();
+                self.configPwadSearch('');
+                self.files.pwads.push.apply(self.files.pwads, newPwads);
+                self.availablePwads.push.apply(self.availablePwads, newAvailablePwads);
+            } catch (err) {
+                console.error('load pwad files error: ', err);
+            }
+        })();
     };
     // loads sourceports from the database into the app's viewmodel
     self.loadSourceportFiles = () => {
-        sourceportCollection
-            .find({})
-            .sort({ filename: 1 })
-            .exec((err, allSourceports) => {
-                if (err) {
-                    console.error('load sourceportfiles error: ', err);
-                } else {
-                    let newSourceports = [];
-                    _.forEach(allSourceports, sourceport => {
-                        let newSourceport = new File(
-                            sourceport.filepath,
-                            sourceport.filename,
-                            sourceport.authors,
-                            sourceport.metaTags,
-                            sourceport.source,
-                            sourceport.name,
-                            sourceport.quickDescription,
-                            sourceport.longDescription,
-                            'sourceport',
-                            sourceport.hidden,
-                            sourceport.basetype
-                        );
-                        if (newSourceport.filepath) {
-                            newSourceports.push(newSourceport);
-                        }
-                    });
-                    self.files.sourceports.removeAll();
-                    self.files.sourceports.push.apply(self.files.sourceports, newSourceports);
-                }
-            });
+        (async () => {
+            try {
+                let allSourceports = await sourceportCollection.find({}).sort({ filename: 1 });
+                let newSourceports = [];
+                _.forEach(allSourceports, sourceport => {
+                    let newSourceport = new File(
+                        sourceport.filepath,
+                        sourceport.filename,
+                        sourceport.authors,
+                        sourceport.metaTags,
+                        sourceport.source,
+                        sourceport.name,
+                        sourceport.quickDescription,
+                        sourceport.longDescription,
+                        'sourceport',
+                        sourceport.hidden,
+                        sourceport.basetype
+                    );
+                    if (newSourceport.filepath) {
+                        newSourceports.push(newSourceport);
+                    }
+                });
+                self.files.sourceports.removeAll();
+                self.files.sourceports.push.apply(self.files.sourceports, newSourceports);
+            } catch (err) {
+                console.error('load sourceportfiles error: ', err);
+            }
+        })();
     };
     // loads all SAVED config chains from the databse into the app's viewmodel
     self.loadConfigChains = () => {
-        configCollection.find({}, (err, allConfigChains) => {
-            if (err) {
-                console.error('loadConfigChains error: ', err);
-            } else {
+        (async () => {
+            try {
+                let allConfigChains = await configCollection.find({});
                 if (allConfigChains.length < 1) {
                     self.insertDefaultConfig();
                 } else {
@@ -1462,88 +1409,85 @@ function AppViewModel() {
                     self.configChains.removeAll();
                     self.configChains.push.apply(self.configChains, newConfigChains);
                 }
+            } catch (err) {
+                console.error('loadConfigChains error: ', err);
             }
-        });
+        })();
     };
     // loads only the previous configs from the database into the app's viewmodel
     self.loadPreviousConfigChains = () => {
-        previousConfigCollection
-            .find({})
-            .sort({ timestamp: -1 })
-            .exec((err, allConfigChains) => {
-                if (err) {
-                    console.error('loadPreviousConfigChains error: ', err);
-                } else {
-                    let newConfigChains = [];
-                    _.forEach(allConfigChains, configChain => {
-                        let newConfigChain = new ConfigChain(
-                            configChain._id,
-                            configChain.configName,
-                            configChain.configDescription,
-                            configChain.sourceport,
-                            configChain.iniFile,
-                            configChain.iwad,
-                            configChain.level,
-                            configChain.skill,
-                            configChain.pwads,
-                            configChain.dmFlags,
-                            configChain.sourceportConfigs
-                        );
-                        newConfigChains.push(newConfigChain);
-                    });
-                    self.previousConfigChains.removeAll();
-                    self.previousConfigChains.push.apply(self.previousConfigChains, newConfigChains);
-                }
-            });
+        (async () => {
+            try {
+                let allConfigChains = await previousConfigCollection.find({}).sort({ timestamp: -1 });
+                let newConfigChains = [];
+                _.forEach(allConfigChains, configChain => {
+                    let newConfigChain = new ConfigChain(
+                        configChain._id,
+                        configChain.configName,
+                        configChain.configDescription,
+                        configChain.sourceport,
+                        configChain.iniFile,
+                        configChain.iwad,
+                        configChain.level,
+                        configChain.skill,
+                        configChain.pwads,
+                        configChain.dmFlags,
+                        configChain.sourceportConfigs
+                    );
+                    newConfigChains.push(newConfigChain);
+                });
+                self.previousConfigChains.removeAll();
+                self.previousConfigChains.push.apply(self.previousConfigChains, newConfigChains);
+            } catch (err) {
+                console.error('loadPreviousConfigChains error: ', err);
+            }
+        })();
     };
     // loads all the maps/map names from the database into the app's viewmodel
     // will attempt to take the current config's iwad choice into account for loading the map's names
     // if not available, then will just assume the eXmY AND the mapXY variants, without nice names.
     self.loadLevels = () => {
-        self.levels.removeAll();
-        let query = null;
-        let basetype = null;
-        if (self.currentConfig().iwad() != null) {
-            let iwad = self.getIwad(self.currentConfig().iwad());
-            basetype = iwad.iwadBasetype();
-            query = { [basetype]: { $exists: true, $ne: null } };
-        }
-        levelsCollection
-            .find(query)
-            .sort({ name: 1 })
-            .exec((err, allLevels) => {
-                if (err) {
-                    console.error('levelsCollection error: ', err);
-                } else {
-                    let newLevels = [];
-                    _.forEach(allLevels, level => {
-                        let newLevel = new Level(level, basetype);
-                        newLevels.push(newLevel);
-                    });
-                    if (newLevels.length > 0) {
-                        self.levels.push.apply(self.levels, newLevels);
-                    }
+        (async () => {
+            self.levels.removeAll();
+            let query = null;
+            let basetype = null;
+            if (self.currentConfig().iwad() != null) {
+                let iwad = self.getIwad(self.currentConfig().iwad());
+                basetype = iwad.iwadBasetype();
+                query = { [basetype]: { $exists: true, $ne: null } };
+            }
+            try {
+                let allLevels = await levelsCollection.find(query).sort({ name: 1 });
+                let newLevels = [];
+                _.forEach(allLevels, level => {
+                    let newLevel = new Level(level, basetype);
+                    newLevels.push(newLevel);
+                });
+                if (newLevels.length > 0) {
+                    self.levels.push.apply(self.levels, newLevels);
                 }
-            });
+            } catch (err) {
+                console.error('levelsCollection error: ', err);
+            }
+        })();
     };
     // loads all difficulty levels from the database into the app's viewmodel
     // will attempt to take the current config's iwad choice into account for loading the text of the difficulty
     // if not available, will just default to doom's text
     self.loadSkillLevels = () => {
-        self.skillLevels.removeAll();
-        let query = null;
-        let iwadType = null;
-        if (self.currentConfig().iwad() != null) {
-            let iwad = self.getIwad(self.currentConfig().iwad());
-            iwadType = iwad.iwadBasetype();
-        } else {
-            iwadType = 'doom';
-        }
-        query = { iwad: iwadType };
-        skillLevelsCollection.find(query, (err, skillLevelSets) => {
-            if (err) {
-                console.error('loadSkillLevels error: ', err);
+        (async () => {
+            self.skillLevels.removeAll();
+            let query = null;
+            let iwadType = null;
+            if (self.currentConfig().iwad() != null) {
+                let iwad = self.getIwad(self.currentConfig().iwad());
+                iwadType = iwad.iwadBasetype();
             } else {
+                iwadType = 'doom';
+            }
+            query = { iwad: iwadType };
+            try {
+                let skillLevelSets = await skillLevelsCollection.find(query);
                 let newSkillLevels = [];
                 _.forEach(skillLevelSets, skillLevelSet => {
                     _.forEach(skillLevelSet.skillLevels, skillLevel => {
@@ -1554,46 +1498,48 @@ function AppViewModel() {
                 if (newSkillLevels.length > 0) {
                     self.skillLevels.push.apply(self.skillLevels, newSkillLevels);
                 }
+            } catch (err) {
+                console.error('loadSkillLevels error: ', err);
             }
-        });
+        })();
     };
     // loads all dmflags from the database into the app's viewmodel
     // will take current sourceport into account, otherwise it won't load anything
     self.loadDMFlags = () => {
-        self.currentConfig().dmFlags.removeAll();
-        let sourceportType = null;
-        if (self.currentConfig().sourceport() != null) {
-            let sourceport = self.getSourceport(self.currentConfig().sourceport());
-            sourceportType = sourceport.sourceportBasetype();
-            if (sourceportType) {
-                sourceportType = sourceportType.toLowerCase();
+        (async () => {
+            self.currentConfig().dmFlags.removeAll();
+            let sourceportType = null;
+            if (self.currentConfig().sourceport() != null) {
+                let sourceport = self.getSourceport(self.currentConfig().sourceport());
+                sourceportType = sourceport.sourceportBasetype();
+                if (sourceportType) {
+                    sourceportType = sourceportType.toLowerCase();
+                }
             }
-        }
-        if (sourceportType != null) {
-            let newDMFlags = [];
-            DMFlagsCollection.find({ sourceport: sourceportType })
-                .sort({ value: 1 })
-                .exec((err, dmFlags) => {
-                    if (err) {
-                        console.error('load DMFlags error: ', err);
-                    } else {
-                        _.forEach(dmFlags, dmFlag => {
-                            let newFlag = new DMFlag(
-                                false,
-                                dmFlag.name,
-                                dmFlag.value,
-                                dmFlag.description,
-                                dmFlag.command,
-                                dmFlag.sourceport
-                            );
-                            newDMFlags.push(newFlag);
-                        });
-                        if (newDMFlags.length > 0) {
-                            self.currentConfig().dmFlags.push.apply(self.currentConfig().dmFlags, newDMFlags);
-                        }
+            if (sourceportType != null) {
+                let newDMFlags = [];
+                try {
+                    let dmFlags = await DMFlagsCollection.find({ sourceport: sourceportType }).sort({ value: 1 });
+                    _.forEach(dmFlags, dmFlag => {
+                        let newFlag = new DMFlag(
+                            false,
+                            dmFlag.name,
+                            dmFlag.value,
+                            dmFlag.description,
+                            dmFlag.command,
+                            dmFlag.sourceport
+                        );
+                        newDMFlags.push(newFlag);
+                    });
+                    if (newDMFlags.length > 0) {
+                        self.currentConfig().dmFlags.push.apply(self.currentConfig().dmFlags, newDMFlags);
                     }
-                });
-        }
+                } catch (err) {
+                    console.error('load DMFlags error: ', err);
+                }
+
+            }
+        })();
     };
     // loads all command line options from the database into the app's viewmodel
     // will take current sourceport into account, otherwise it won't load anything
@@ -1613,51 +1559,50 @@ function AppViewModel() {
     // will take current sourceport into account, otherwise it won't load anything
     // this is a convenience function to load all the command line options from one function call.
     self.loadCommandLineOptions = category => {
-        self.currentConfig().sourceportConfigs[category].removeAll();
-        let query = null;
-        let sourceportType = null;
-        if (self.currentConfig().sourceport() != null) {
-            let sourceport = self.getSourceport(self.currentConfig().sourceport());
-            sourceportType = sourceport.sourceportBasetype();
-            if (sourceportType) {
-                sourceportType = sourceportType.toLowerCase();
+        (async () => {
+            self.currentConfig().sourceportConfigs[category].removeAll();
+            let query = null;
+            let sourceportType = null;
+            if (self.currentConfig().sourceport() != null) {
+                let sourceport = self.getSourceport(self.currentConfig().sourceport());
+                sourceportType = sourceport.sourceportBasetype();
+                if (sourceportType) {
+                    sourceportType = sourceportType.toLowerCase();
+                }
             }
-        }
-        if (sourceportType != null) {
-            query = { category: category, sourceports: sourceportType };
-            commandLineCollection
-                .find(query)
-                .sort({ _id: 1 })
-                .exec((err, commandLineOptions) => {
-                    if (err) {
-                        console.error('load Command line options error: ', err);
-                    } else {
-                        let newOptions = [];
-                        _.forEach(commandLineOptions, option => {
-                            let newOption = new CommandLineOption(
-                                false,
-                                option.name,
-                                option.inputType,
-                                option.description,
-                                option.command,
-                                option.value,
-                                option.sourceports,
-                                option.category,
-                                option.valueRange,
-                                option.valueset,
-                                option.uniqueCommandId
-                            );
-                            newOptions.push(newOption);
-                        });
-                        if (newOptions.length > 0) {
-                            self.currentConfig().sourceportConfigs[category].push.apply(
-                                self.currentConfig().sourceportConfigs[category],
-                                newOptions
-                            );
-                        }
+            if (sourceportType != null) {
+                query = { category: category, sourceports: sourceportType };
+                try {
+                    let commandLineOptions = await commandLineCollection.find(query).sort({ _id: 1 });
+                    let newOptions = [];
+                    _.forEach(commandLineOptions, option => {
+                        let newOption = new CommandLineOption(
+                            false,
+                            option.name,
+                            option.inputType,
+                            option.description,
+                            option.command,
+                            option.value,
+                            option.sourceports,
+                            option.category,
+                            option.valueRange,
+                            option.valueset,
+                            option.uniqueCommandId
+                        );
+                        newOptions.push(newOption);
+                    });
+                    if (newOptions.length > 0) {
+                        self.currentConfig().sourceportConfigs[category].push.apply(
+                            self.currentConfig().sourceportConfigs[category],
+                            newOptions
+                        );
                     }
-                });
-        }
+                } catch (err) {
+                    console.error('load Command line options error: ', err);
+                }
+            }
+        })();
+
     };
     //-------------------------------------------------------------------------
     // All functions for editing files in the file database section
@@ -1665,16 +1610,50 @@ function AppViewModel() {
     // when you click a file in the list on the left side, this is what loads that file's options
     // in the right pane for you to edit.
     self.editFile = (filetype, index) => {
-        let file = {};
-        switch (filetype()) {
+        self.clearFileEdit();
+        switch (filetype) {
             case 'iwad':
-                file = self.files.iwads()[index()];
+                self.files['iwads']()[index].editing(true);
                 break;
             case 'pwad':
-                file = self.files.pwads()[index()];
+                self.files['pwads']()[index].editing(true);
                 break;
             case 'sourceport':
-                file = self.files.sourceports()[index()];
+                self.files['sourceports']()[index].editing(true);
+                break;
+        }
+    };
+    // every time you click one of the categories "iwads, pwads, sourceports", this basically clears out the right pane
+    // whatever file you were looking at, if you click another category, it clears it out for you.
+    self.clearFileEdit = () => {
+        _.forEach(self.files.iwads(), iwad => {
+            iwad.editing(false);
+        });
+        _.forEach(self.files.pwads(), pwad => {
+            pwad.editing(false);
+        });
+        _.forEach(self.files.sourceports(), sourceport => {
+            sourceport.editing(false);
+        });
+    };
+    self.updateHidden = file => { };
+    // this is what gets called every time you click outside of one of the text boxes for editing a file's properties.
+    // once initiated, it updates that file's data in the database, then reloads everything.
+    // probably a little excessive, but eh, this app's not that big, who cares.
+    // update: i left the old comments there as a reminder of how stupid short-sightedness can make you look.
+    // it's a small app, who cares... yeah, well, small though it may be, sometimes disks are freakin' slow.
+    // so now this function gets called only when the user clicks the save button.
+    self.updateFile = (filetype, index) => {
+        let file = {};
+        switch (filetype) {
+            case 'iwad':
+                file = self.files['iwads']()[index];
+                break;
+            case 'pwad':
+                file = self.files['pwads']()[index];
+                break;
+            case 'sourceport':
+                file = self.files['sourceports']()[index];
                 break;
         }
         let rawFileProperties = {
@@ -1685,78 +1664,40 @@ function AppViewModel() {
             name: file.name(),
             quickDescription: file.quickDescription(),
             longDescription: file.longDescription(),
-            hidden: file.hidden(),
-            basetype: file.basetype(),
-            filepath: file.filepath,
-            filetype: file.filetype()
+            hidden: file.hidden()
         };
-        self.chosenFile(
-            new File(
-                rawFileProperties.filepath,
-                rawFileProperties.filename,
-                rawFileProperties.authors,
-                rawFileProperties.metaTags,
-                rawFileProperties.source,
-                rawFileProperties.name,
-                rawFileProperties.quickDescription,
-                rawFileProperties.longDescription,
-                rawFileProperties.filetype,
-                rawFileProperties.hidden,
-                rawFileProperties.basetype
-            )
-        );
-        if (self.chosenFile().filetype() === 'iwad') {
-            self.chosenFile().iwadBasetype = ko.observable(self.chosenFile().basetype());
-        } else if (self.chosenFile().filetype() === 'sourceport') {
-            self.chosenFile().sourceportBasetype = ko.observable(self.chosenFile().basetype());
+        if (filetype === 'iwad') {
+            rawFileProperties.basetype = file.iwadBasetype();
+        } else if (filetype === 'sourceport') {
+            rawFileProperties.basetype = file.sourceportBasetype();
         }
-    };
-    // every time you click one of the categories "iwads, pwads, sourceports", this basically clears out the right pane
-    // whatever file you were looking at, if you click another category, it clears it out for you.
-    self.clearFileEdit = () => {
-        self.chosenFile(null);
-    };
-    self.updateHidden = file => {};
-    // this is what gets called every time you click outside of one of the text boxes for editing a file's properties.
-    // once initiated, it updates that file's data in the database, then reloads everything.
-    // probably a little excessive, but eh, this app's not that big, who cares.
-    self.updateFile = () => {
-        let rawFileProperties = {
-            filename: self.chosenFile().filename,
-            authors: self.chosenFile().authors(),
-            metaTags: self.chosenFile().metaTags(),
-            source: self.chosenFile().source(),
-            name: self.chosenFile().name(),
-            quickDescription: self.chosenFile().quickDescription(),
-            longDescription: self.chosenFile().longDescription(),
-            hidden: self.chosenFile().hidden()
-        };
-        if (self.chosenFile().filetype() === 'iwad') {
-            rawFileProperties.basetype = self.chosenFile().iwadBasetype();
-        } else if (self.chosenFile().filetype() === 'sourceport') {
-            rawFileProperties.basetype = self.chosenFile().sourceportBasetype();
-        }
-        let filepath = path.resolve(__dirname, self.chosenFile().filepath);
+        let filepath = path.resolve(__dirname, file.filepath);
         let directory = path.dirname(filepath);
         let RealFilename = filepath.substring(0, filepath.lastIndexOf('.'));
-        fs.writeFile(path.resolve(directory, RealFilename + '.json'), JSON.stringify(rawFileProperties), err => {
-            if (err) {
+        (async () => {
+            try {
+                await fs.writeFile(path.resolve(directory, RealFilename + '.json'), JSON.stringify(rawFileProperties));
+                switch (filetype) {
+                    case 'iwad':
+                        self.files['iwads']()[index].changed(false);
+                        self.buildIwadCollection(true);
+                        break;
+                    case 'pwad':
+                        self.files['pwads']()[index].changed(false);
+                        self.buildPwadCollection(true);
+                        break;
+                    case 'sourceport':
+                        self.files['sourceports']()[index].changed(false);
+                        self.buildSourceportCollection(true);
+                        break;
+                }
+                self.loadLevels();
+                self.loadSkillLevels();
+            } catch (err) {
                 return console.error('update file error: ', err);
             }
-            switch (self.chosenFile().filetype()) {
-                case 'iwad':
-                    self.buildIwadCollection(true);
-                    break;
-                case 'pwad':
-                    self.buildPwadCollection(true);
-                    break;
-                case 'sourceport':
-                    self.buildSourceportCollection(true);
-                    break;
-            }
-        });
-        self.loadLevels();
-        self.loadSkillLevels();
+        })();
+
     };
     //-------------------------------------------------------------------------
     // here are the search functions for iwads, pwads, and sourceports
@@ -1798,7 +1739,7 @@ function AppViewModel() {
             let text = self.configPwadSearch().toUpperCase();
             pwadCollection
                 .find({
-                    $where: function() {
+                    $where: function () {
                         let containsName = this.name != null && this.name.toUpperCase().indexOf(text) > -1;
                         let containsFilename = this.filename != null && this.filename.toUpperCase().indexOf(text) > -1;
                         let containsMetaTag = () => {
@@ -1890,7 +1831,7 @@ function AppViewModel() {
             let text = self.iwadSearch().toUpperCase();
             iwadCollection
                 .find({
-                    $where: function() {
+                    $where: function () {
                         let containsName = this.name != null && this.name.toUpperCase().indexOf(text) > -1;
                         let containsFilename = this.filename != null && this.filename.toUpperCase().indexOf(text) > -1;
                         let containsMetaTag = () => {
@@ -1981,7 +1922,7 @@ function AppViewModel() {
             let text = self.pwadSearch().toUpperCase();
             pwadCollection
                 .find({
-                    $where: function() {
+                    $where: function () {
                         let containsName = this.name != null && this.name.toUpperCase().indexOf(text) > -1;
                         let containsFilename = this.filename != null && this.filename.toUpperCase().indexOf(text) > -1;
                         let containsMetaTag = () => {
@@ -2073,7 +2014,7 @@ function AppViewModel() {
             let text = self.sourceportSearch().toUpperCase();
             sourceportCollection
                 .find({
-                    $where: function() {
+                    $where: function () {
                         let containsName = this.name != null && this.name.toUpperCase().indexOf(text) > -1;
                         let containsFilename = this.filename != null && this.filename.toUpperCase().indexOf(text) > -1;
                         let containsMetaTag = () => {
@@ -2190,7 +2131,7 @@ function AppViewModel() {
             let text = self.configSearch().toUpperCase();
             configCollection
                 .find({
-                    $where: function() {
+                    $where: function () {
                         let containsName = this.configName != null && this.configName.toUpperCase().indexOf(text) > -1;
                         let containsDescription =
                             this.configDescription != null && this.configDescription.toUpperCase().indexOf(text) > -1;
@@ -2250,13 +2191,12 @@ function AppViewModel() {
     // this is the function that big blue play button calls
     // it literally runs the generated configuration command
     self.runCurrentConfig = () => {
-        let config = ko.mapping.toJS(self.currentConfig);
-        let finish = () => {
-            config.timestamp = (Date.now() / 1000) | 0;
-            previousConfigCollection.insert(config, (insertErr, newDoc) => {
-                if (insertErr) {
-                    console.error('runCurrentConfig insert error: ', insertErr);
-                } else {
+        (async () => {
+            let config = ko.mapping.toJS(self.currentConfig);
+            let finish = async () => {
+                config.timestamp = (Date.now() / 1000) | 0;
+                try {
+                    let newDoc = await previousConfigCollection.insert(config);
                     previousConfigCollection.persistence.compactDatafile();
                     self.loadPreviousConfigChains();
                     let is3Screen = false;
@@ -2312,121 +2252,125 @@ function AppViewModel() {
                             }
                         }
                     );
+                } catch (insertErr) {
+                    console.error('runCurrentConfig insert error: ', insertErr);
                 }
-            });
-        };
-        previousConfigCollection
-            .find({})
-            .sort({ timestamp: -1 })
-            .exec((err, configs) => {
-                if (err) {
-                    console.error('runCurrentConfig error: ', err);
-                } else {
-                    if (configs.length === 50) {
-                        previousConfigCollection.remove({ _id: configs[49]._id }, {}, (removeErr, numRemoved) => {
-                            if (removeErr) {
-                                console.error('error removing previous config: ', removeErr);
-                            }
-                            finish();
-                        });
-                    } else {
-                        finish();
+            };
+            try {
+                let configs = await previousConfigCollection.find({}).sort({ timestamp: -1 });
+                if (configs.length === 50) {
+                    try {
+                        let numRemoved = previousConfigCollection.remove({ _id: configs[49]._id }, {});
+                        await finish();
+                    } catch (removeErr) {
+                        console.error('error removing previous config: ', removeErr);
                     }
+                } else {
+                    await finish();
                 }
-            });
+            } catch (err) {
+                console.error('runCurrentConfig error: ', err);
+            }
+        })();
     };
     // This is what the save button calls
     // this saves the current configuration under the name you specified.
     // if the name already exists, then it overwrites the old one.
     self.saveCurrentConfig = () => {
-        let config = ko.mapping.toJS(self.currentConfig);
-        if (!config.configName) {
-            config.configName = '[no name]';
-        }
-        configCollection.update({ configName: config.configName }, config, { upsert: true }, (err, numReplaced) => {
-            if (err) {
-                console.error('saveCurrentConfig error: ', err);
-            } else {
+        (async () => {
+            let config = ko.mapping.toJS(self.currentConfig);
+            if (!config.configName) {
+                config.configName = '[no name]';
+            }
+            try {
+                let numReplaced = await configCollection.update({ configName: config.configName }, config, { upsert: true });
                 configCollection.persistence.compactDatafile();
                 self.loadConfigChains();
+            } catch (err) {
+                console.error('saveCurrentConfig error: ', err);
             }
         });
     };
     self.insertDefaultConfig = () => {
-        let config = ko.mapping.toJS(
-            new ConfigChain(
-                null,
-                'Default',
-                'This is the Default Configuration',
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null
-            )
-        );
-        configCollection.insert(config, (err, someNewConfig) => {
-            configCollection.persistence.compactDatafile();
-            someNewConfig.id = someNewConfig._id;
-            configCollection.update({ _id: someNewConfig._id }, someNewConfig, {}, (updateErr, numReplaced) => {
-                if (updateErr) {
-                    console.error('insert default config update error: ', updateErr);
-                } else {
+        (async () => {
+            let config = ko.mapping.toJS(
+                new ConfigChain(
+                    null,
+                    'Default',
+                    'This is the Default Configuration',
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null
+                )
+            );
+            try {
+                let someNewConfig = await configCollection.insert(config);
+                configCollection.persistence.compactDatafile();
+                someNewConfig.id = someNewConfig._id;
+                try {
+                    let numReplaced = await configCollection.update({ _id: someNewConfig._id }, someNewConfig, {});
                     configCollection.persistence.compactDatafile();
                     self.loadConfigChains();
                     self.loadConfig(someNewConfig._id);
+                } catch (updateErr) {
+                    console.error('insert default config update error: ', updateErr);
                 }
-            });
+            } catch (insertErr) {
+                console.error('insert default error: ', insertErr);
+            }
         });
     };
     // this is what the delete button calls
     // deletes the current configuration from the database
     self.deleteConfig = config => {
-        if (config) {
-            let toJS = ko.mapping.toJS(config);
-            configCollection.remove({ _id: toJS.id });
-            sourceportCollection.persistence.compactDatafile();
-            self.loadConfigChains();
-        }
+        (async () => {
+            if (config) {
+                let toJS = ko.mapping.toJS(config);
+                await configCollection.remove({ _id: toJS.id });
+                configCollection.persistence.compactDatafile();
+                self.loadConfigChains();
+            }
+        })();
     };
     // this is what the clone button calls
     // this will make a copy of a configuration and append " - copy" to the end of its name.
     // it'll immediately load the cloned configuration for you to change
     self.cloneConfig = config => {
-        if (config) {
-            let newConfig = ko.mapping.toJS(config);
-            newConfig.configName = newConfig.configName + ' - copy';
-            configCollection.insert(newConfig, (err, someNewConfig) => {
-                if (err) {
-                    console.error('cloneConfig error: ', err);
-                } else {
+        (async () => {
+            if (config) {
+                let newConfig = ko.mapping.toJS(config);
+                newConfig.configName = newConfig.configName + ' - copy';
+                try {
+                    let someNewConfig = await configCollection.insert(newConfig);
                     configCollection.persistence.compactDatafile();
                     someNewConfig.id = someNewConfig._id;
-                    configCollection.update({ _id: someNewConfig._id }, someNewConfig, {}, (updateErr, numReplaced) => {
-                        if (updateErr) {
-                            console.error('clone config update error: ', updateErr);
-                        } else {
-                            configCollection.persistence.compactDatafile();
-                            self.loadConfigChains();
-                            self.loadConfig(someNewconfig._id);
-                        }
-                    });
+                    try {
+                        let numReplaced = await configCollection.update({ _id: someNewConfig._id }, someNewConfig, {});
+                        configCollection.persistence.compactDatafile();
+                        self.loadConfigChains();
+                        self.loadConfig(someNewconfig._id);
+                    } catch (updateErr) {
+                        console.error('clone config update error: ', updateErr);
+                    }
+                } catch (insertErr) {
+                    console.error('cloneConfig error: ', insertErr);
                 }
-            });
-        }
+            }
+        })();
     };
     // this is what the load button calls
     // loads a previously saved or cloned configuration from the database.
     self.loadConfig = configID => {
-        if (configID) {
-            self.chosenPreviousConfig('');
-            configCollection.findOne({ _id: configID }, (err, newConfig) => {
-                if (err) {
-                    console.error('loadConfig error: ', err);
-                } else {
+        (async () => {
+            if (configID) {
+                self.chosenPreviousConfig('');
+                try {
+                    let newConfig = configCollection.findOne({ _id: configID });
                     self.iniFile(newConfig.chosenIniFile);
                     self.currentConfig().configName(newConfig.configName);
                     self.currentConfig().configDescription(newConfig.configDescription);
@@ -2439,18 +2383,19 @@ function AppViewModel() {
                     self.currentConfig().id(newConfig.id);
                     self.currentConfig().sourceport(newConfig.sourceport);
                     self.loadPwadFiles();
+                } catch (err) {
+                    console.error('loadConfig error: ', err);
                 }
-            });
-        }
+            }
+        })();
     };
     // this is what the previous configuration dropdown box calls
     // as soon as you select a previous configuration, it loads the configuration from the database.
     self.loadPreviousConfig = () => {
-        if (self.chosenPreviousConfig()) {
-            previousConfigCollection.findOne({ _id: self.chosenPreviousConfig() }, (err, newConfig) => {
-                if (err) {
-                    console.error('loadPreviousConfig error: ', err);
-                } else {
+        (async () => {
+            if (self.chosenPreviousConfig()) {
+                try {
+                    let newConfig = await previousConfigCollection.findOne({ _id: self.chosenPreviousConfig() });
                     self.iniFile(newConfig.chosenIniFile);
                     self.currentConfig().configName(newConfig.configName);
                     self.currentConfig().configDescription(newConfig.configDescription);
@@ -2462,9 +2407,11 @@ function AppViewModel() {
                     self.currentConfig().setSourceportConfigs(newConfig.sourceportConfigs);
                     self.currentConfig().sourceport(newConfig.sourceport);
                     self.loadPwadFiles();
+                } catch (err) {
+                    console.error('loadPreviousConfig error: ', err);
                 }
-            });
-        }
+            }
+        })();
     };
     // sourceport dropdown calls this function on change
     // this is what kicks off the "getIniFilesForGivenSourceport" function
@@ -2505,57 +2452,51 @@ function AppViewModel() {
     // sourceport's executable
     // this function will then populate the ini file dropdown on the fly
     self.getIniFilesForGivenSourceport = sourceport => {
-        let directory = path.resolve(__dirname, path.dirname(sourceport));
-        let currentIniFile = self.iniFile();
-        if (dev) {
-            console.log(directory);
-        }
-        self.iniFiles.removeAll();
-        function walk(directory) {
-            fs.readdir(directory, (e, files) => {
-                if (e) {
-                    console.error('get ini files for sourceport error: ', e);
-                    return;
-                }
-                files.forEach(
-                    file => {
-                        let fullPath = path.join(directory, file);
-                        fs.stat(fullPath, (forEachErr, f) => {
-                            if (forEachErr) {
-                                console.error('get ini files for sourceport foreach error: ', forEachErr);
-                                return;
-                            }
-                            if (f.isDirectory()) {
-                                if (dev) {
-                                    console.log(
-                                        'getIniFilesForGivenSourceport:: ' + file + ' and is directory: ' + fullPath
-                                    );
-                                }
-                                // walk(fullPath); no need to dive into further directories, if your ini file isn't in
-                                //the same directory as the exe, then I don't care about it.
-                            } else {
-                                let fileExt = file.substring(file.lastIndexOf('.') + 1);
-                                let relativePath = path.relative(__dirname, fullPath);
-                                if (fileExt === 'ini') {
-                                    let iniFile = new IniFile(relativePath, file);
-                                    self.iniFiles.push(iniFile);
-                                    self.iniFiles.sort();
-                                    if (relativePath === currentIniFile) {
-                                        self.currentConfig().chosenIniFile(relativePath);
+        (async () => {
+            let directory = path.resolve(__dirname, path.dirname(sourceport));
+            let currentIniFile = self.iniFile();
+            if (dev) {
+                console.log(directory);
+            }
+            self.iniFiles.removeAll();
+            async function walk(directory) {
+                try {
+                    let files = await fs.readdir(directory);
+                    await Promise.all(
+                        files.map(async file => {
+                            let fullPath = path.join(directory, file);
+                            try {
+                                let f = await fs.stat(fullPath);
+                                if (f.isDirectory()) {
+                                    if (dev) {
+                                        console.log(
+                                            'getIniFilesForGivenSourceport:: ' + file + ' and is directory: ' + fullPath
+                                        );
+                                    }
+                                    // walk(fullPath); no need to dive into further directories, if your ini file isn't in
+                                    //the same directory as the exe, then I don't care about it.
+                                } else {
+                                    let fileExt = file.substring(file.lastIndexOf('.') + 1);
+                                    let relativePath = path.relative(__dirname, fullPath);
+                                    if (fileExt === 'ini') {
+                                        let iniFile = new IniFile(relativePath, file);
+                                        self.iniFiles.push(iniFile);
+                                        self.iniFiles.sort();
+                                        if (relativePath === currentIniFile) {
+                                            self.currentConfig().chosenIniFile(relativePath);
+                                        }
                                     }
                                 }
+                            } catch (statErr) {
+                                console.error('get ini files for sourceport foreach error: ', statErr);
                             }
-                        });
-                    },
-                    err => {
-                        if (err) {
-                            throw err;
-                        }
-                    }
-                );
-            });
-        }
-        walk(directory);
+                        }));
+                } catch (readDirErr) {
+                    console.error('get ini files for sourceport error: ', e);
+                }
+            }
+            await walk(directory);
+        })();
     };
     // the initialization function that starts the whole app going.
     self.init = () => {
@@ -2569,34 +2510,6 @@ function AppViewModel() {
         (async () => {
             self.ip(await publicIp.v4());
         })();
-        //TODO: remove this when you can start loading configs from files.
-    };
-    // this is used by the debug function
-    // it's just designed to load all files and display them so you can easily see what files the app can see.
-    self.walk = directoryName => {
-        fs.readdir(directoryName, (e, files) => {
-            if (e) {
-                console.error('walk function: ', e);
-                return;
-            }
-            files.forEach(file => {
-                let fullPath = path.join(directoryName, file);
-                fs.stat(fullPath, (statErr, f) => {
-                    if (statErr) {
-                        console.error('walk function foreach error: ', statErr);
-                        return;
-                    }
-                    if (f.isDirectory()) {
-                        console.log(fullPath);
-                        self.walk(fullPath);
-                    } else {
-                        self.Allfiles.push(fullPath);
-                        self.Allfiles.sort();
-                        console.log(fullPath);
-                    }
-                });
-            });
-        });
     };
     // here at the end, calling the initialization function.
     self.init();
@@ -2711,8 +2624,8 @@ ready(() => {
         }
     };
     ko.bindingHandlers.autoResize = {
-        init: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
-            ko.computed(function() {
+        init: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
+            ko.computed(function () {
                 ko.unwrap(valueAccessor());
                 resizeToFitContent(element);
             });
@@ -2725,7 +2638,7 @@ ready(() => {
     //jqAutoSourceInputValue -- the property that should be displayed in the input box
     //jqAutoSourceValue -- the property to use for the value
     ko.bindingHandlers.jqAuto = {
-        init: function(element, valueAccessor, allBindingsAccessor, viewModel) {
+        init: function (element, valueAccessor, allBindingsAccessor, viewModel) {
             var options = valueAccessor() || {},
                 allBindings = allBindingsAccessor(),
                 unwrap = ko.utils.unwrapObservable,
@@ -2747,14 +2660,14 @@ ready(() => {
             }
 
             //on a selection write the proper value to the model
-            options.select = function(event, ui) {
+            options.select = function (event, ui) {
                 writeValueToModel(ui.item ? ui.item.actualValue : null);
             };
 
             //on a change, make sure that it is a valid value or clear out the model value
-            options.change = function(event, ui) {
+            options.change = function (event, ui) {
                 var currentValue = $(element).val();
-                var matchingItem = ko.utils.arrayFirst(unwrap(source), function(item) {
+                var matchingItem = ko.utils.arrayFirst(unwrap(source), function (item) {
                     return unwrap(item[inputValueProp]) === currentValue;
                 });
 
@@ -2764,8 +2677,8 @@ ready(() => {
             };
 
             //handle the choices being updated in a DO, to decouple value updates from source (options) updates
-            var mappedSource = ko.dependentObservable(function() {
-                let mapped = ko.utils.arrayMap(unwrap(source), function(item) {
+            var mappedSource = ko.dependentObservable(function () {
+                let mapped = ko.utils.arrayMap(unwrap(source), function (item) {
                     var result = {};
                     result.label = labelProp ? unwrap(item[labelProp]) : unwrap(item).toString(); //show in pop-up choices
                     result.value = inputValueProp ? unwrap(item[inputValueProp]) : unwrap(item).toString(); //show in input box
@@ -2776,7 +2689,7 @@ ready(() => {
             });
 
             //whenever the items that make up the source are updated, make sure that autocomplete knows it
-            mappedSource.subscribe(function(newValue) {
+            mappedSource.subscribe(function (newValue) {
                 $(element).autocomplete('option', 'source', newValue);
             });
 
@@ -2785,7 +2698,7 @@ ready(() => {
             //initialize autocomplete
             $(element).autocomplete(options);
         },
-        update: function(element, valueAccessor, allBindingsAccessor, viewModel) {
+        update: function (element, valueAccessor, allBindingsAccessor, viewModel) {
             //update value based on a model change
             var allBindings = allBindingsAccessor(),
                 unwrap = ko.utils.unwrapObservable,
@@ -2797,7 +2710,7 @@ ready(() => {
             if (valueProp && inputValueProp !== valueProp) {
                 var source = unwrap(allBindings.jqAutoSource) || [];
                 var modelValue =
-                    ko.utils.arrayFirst(source, function(item) {
+                    ko.utils.arrayFirst(source, function (item) {
                         return unwrap(item[valueProp]) === modelValue;
                     }) || {}; //probably don't need the || {}, but just protect against a bad value
             }
@@ -2810,10 +2723,10 @@ ready(() => {
     };
 
     ko.bindingHandlers.jqAutoCombo = {
-        init: function(element, valueAccessor) {
+        init: function (element, valueAccessor) {
             var autoEl = $('#' + valueAccessor());
 
-            $(element).click(function() {
+            $(element).click(function () {
                 // close if already visible
                 if (autoEl.autocomplete('widget').is(':visible')) {
                     console.log('close');
@@ -2830,10 +2743,10 @@ ready(() => {
     };
 
     ko.bindingHandlers.visibleAndSelect = {
-        update: function(element, valueAccessor) {
+        update: function (element, valueAccessor) {
             ko.bindingHandlers.visible.update(element, valueAccessor);
             if (valueAccessor()) {
-                setTimeout(function() {
+                setTimeout(function () {
                     $(element)
                         .find('input')
                         .focus()

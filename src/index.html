@@ -783,7 +783,7 @@
                                     <tbody data-bind="foreach: files.iwads">
                                         <tr class="d-flex" data-bind="class: displayClass">
                                             <td data-placement="right" data-html="true"
-                                                data-bind="text: displayName, click: $parent.editFile.bind($data, filetype, $index), class: ('col-12 text-truncate'+($parent.showHiddenFiles()===false && hidden()===true ? ' collapse' : ''))">
+                                                data-bind="text: displayName, click: $parent.editFile.bind($data, filetype(), $index()), class: ('col-12 text-truncate'+($parent.showHiddenFiles()===false && hidden()===true ? ' collapse' : ''))">
                                             </td>
                                         </tr>
                                     </tbody>
@@ -805,7 +805,7 @@
                                     <tbody data-bind="foreach: files.pwads">
                                         <tr class="d-flex" data-bind="class: displayClass">
                                             <td data-placement="right" data-html="true"
-                                                data-bind="text: displayName, click: $parent.editFile.bind($data, filetype, $index), class: ('col-12 text-truncate'+($parent.showHiddenFiles()===false && hidden()===true ? ' collapse' : ''))">
+                                                data-bind="text: displayName, click: $parent.editFile.bind($data, filetype(), $index()), class: ('col-12 text-truncate'+($parent.showHiddenFiles()===false && hidden()===true ? ' collapse' : ''))">
                                             </td>
                                         </tr>
                                     </tbody>
@@ -827,7 +827,7 @@
                                     <tbody data-bind="foreach: files.sourceports">
                                         <tr class="d-flex" data-bind="class: displayClass">
                                             <td data-placement="right" data-html="true"
-                                                data-bind="text: displayName, click: $parent.editFile.bind($data, filetype, $index), class: ('col-12 text-truncate'+($parent.showHiddenFiles()===false && hidden()===true ? ' collapse' : ''))">
+                                                data-bind="text: displayName, click: $parent.editFile.bind($data, filetype(), $index()), class: ('col-12 text-truncate'+($parent.showHiddenFiles()===false && hidden()===true ? ' collapse' : ''))">
                                             </td>
                                         </tr>
                                     </tbody>
@@ -843,129 +843,393 @@
                     </div>
                     <!--File Edit-->
                     <div class="col-md-8 border border-secondary">
-                        <form data-bind="with: chosenFile" style="overflow: auto; height:953px;">
-                            <h5>
-                                File Type:
-                                <span data-bind="text: filetype"></span>
-                                &nbsp;&mdash;&nbsp;Filename:
-                                <span data-bind="text: filename"></span>
-                                &nbsp;&mdash;&nbsp;Hide File?
-                                <span class="btn btn-xs btn-secondary"
-                                    data-bind="click: $parent.hideFile, class: hideFileClass, tooltip: hideTooltipText()"
-                                    aria-hidden="true"></span>
-                                &nbsp;&mdash;&nbsp;Save File
-                                <span class="btn btn-xs btn-primary fa fa-save" data-bind="click: $parent.updateFile"
-                                    data-toggle="tooltip" title=""
-                                    data-original-title="Save current configuration"></span>
-                            </h5>
-                            <div class="form-group">
-                                <label class="control-label" for="inputFilename" data-placement="left"
-                                    data-toggle="tooltip" title="A human readable name for your file.">
-                                    Title
-                                </label>
-                                <div data-bind="hidden: nameValid" class="col alert alert-warning">
-                                    <strong>Warning:</strong>
-                                    You should provide a human-readable name for this file.
+                        <span data-bind="foreach: files.iwads">
+                            <form data-bind="visible: editing" style="overflow: auto; height:953px;">
+                                <h5>
+                                    File Type:
+                                    <span data-bind="text: filetype"></span>
+                                    &nbsp;&mdash;&nbsp;Filename:
+                                    <span data-bind="text: filename"></span>
+                                    &nbsp;&mdash;&nbsp;Hide File?
+                                    <span class="btn btn-xs btn-secondary"
+                                        data-bind="click: $parent.hideFile.bind($data, filetype(), $index()), class: hideFileClass, tooltip: hideTooltipText()"
+                                        aria-hidden="true"></span>
+                                    <!-- ko if: changed()===true -->
+                                    &nbsp;&mdash;&nbsp;Save File
+                                    <span class="btn btn-xs btn-primary fa fa-save"
+                                        data-bind="click: $parent.updateFile.bind($data, filetype(), $index())"
+                                        data-toggle="tooltip"
+                                        title="This file has unsaved changes.  Click here to save them"></span>
+                                    <!-- /ko -->
+                                </h5>
+                                <div class="form-group">
+                                    <label class="control-label" for="inputFilename" data-placement="left"
+                                        data-toggle="tooltip" title="A human readable name for your file.">
+                                        Title
+                                    </label>
+                                    <div data-bind="hidden: nameValid" class="col alert alert-warning">
+                                        <strong>Warning:</strong>
+                                        You should provide a human-readable name for this file.
+                                    </div>
+                                    <input type="text" id="inputFilename" class="form-control"
+                                        placeHolder="Human-readable name"
+                                        data-bind="textInput: name, event: {change: change, keyup: change}" />
                                 </div>
-                                <input type="text" id="inputFilename" class="form-control"
-                                    placeHolder="Human-readable name"
-                                    data-bind="textInput: name, event: {change: change}" />
-                            </div>
-                            <div class="form-group" data-bind="visible: filetype()==='sourceport'">
-                                <label class="control-label" for="sourceportFileType" data-placement="left"
-                                    data-toggle="tooltip"
-                                    title="This launcher has special support depending on the sourceport.  Selecting the right sourceport type here will greatly assist you later in building configurations based on that sourceport type.  Currently, the sourceport types this launcher supports are Zandronum, Chocolate Doom, and all ZDoom-based sourceports (e.g. GZDoom, QZDoom, or even plain ZDoom itself).">
-                                    Sourceport Type
-                                </label>
-                                <select id="sourceportFileType" class="form-control"
-                                    data-bind="options: $parent.sourceportTypes, event: {change: change}, value: sourceportBasetype, optionsCaption: 'Choose...'"></select>
-                            </div>
-                            <div class="form-group" data-bind="visible: filetype()==='iwad'">
-                                <label class="control-label" for="iwadFileType" data-placement="left"
-                                    data-toggle="tooltip"
-                                    title="Selecting an IWad type from the known game types can help with some configuration options (such as selecting maps/levels)">
-                                    IWad Type
-                                </label>
-                                <select class="form-control" id="iwadFileType"
-                                    data-bind="options: $parent.iwadTypes, optionsText: 'description', event: {change: change}, value: iwadBasetype, optionsValue:'name', optionsCaption: 'Choose...'"></select>
-                            </div>
-                            <div class="form-group">
-                                <label class="control-label" data-placement="left" for="inputAuthor"
-                                    data-toggle="tooltip" title="Comma-separated list of authors.">
-                                    Authors
-                                </label>
-                                <div data-bind="hidden: authorsValid" class="col alert alert-danger">
-                                    <strong>Required:</strong>
-                                    If you wish to use this file, you'll need to give credit to the person(s)
-                                    who
-                                    made it.
+                                <div class="form-group" data-bind="visible: filetype()==='sourceport'">
+                                    <label class="control-label" for="sourceportFileType" data-placement="left"
+                                        data-toggle="tooltip"
+                                        title="This launcher has special support depending on the sourceport.  Selecting the right sourceport type here will greatly assist you later in building configurations based on that sourceport type.  Currently, the sourceport types this launcher supports are Zandronum, Chocolate Doom, and all ZDoom-based sourceports (e.g. GZDoom, QZDoom, or even plain ZDoom itself).">
+                                        Sourceport Type
+                                    </label>
+                                    <select id="sourceportFileType" class="form-control"
+                                        data-bind="options: $parent.sourceportTypes, event: {change: change, keyup: change}, value: sourceportBasetype, optionsCaption: 'Choose...'"></select>
                                 </div>
-                                <input type="text" class="form-control" id="inputAuthor"
-                                    placeholder="Author1,Author2,Author3,..."
-                                    data-bind="textInput: authorInput, event: {change: change}" />
-                            </div>
-                            <div class="form-group">
-                                <label class="control-label" data-placement="left" for="inputMeta" data-toggle="tooltip"
-                                    title="Comma-separated list of meta tags (kinda like hash tags, they're ways to find this file).">
-                                    Meta Tags
-                                </label>
-                                <div data-bind="hidden: metaTagsValid" class="col alert alert-warning">
-                                    <strong>Warning:</strong>
-                                    It's extremely helpful to have some tags to use so you can find this file
-                                    more
-                                    easily, both here and in the Configuration Builder.
+                                <div class="form-group" data-bind="visible: filetype()==='iwad'">
+                                    <label class="control-label" for="iwadFileType" data-placement="left"
+                                        data-toggle="tooltip"
+                                        title="Selecting an IWad type from the known game types can help with some configuration options (such as selecting maps/levels)">
+                                        IWad Type
+                                    </label>
+                                    <select class="form-control" id="iwadFileType"
+                                        data-bind="options: $parent.iwadTypes, optionsText: 'description', event: {change: change, keyup: change}, value: iwadBasetype, optionsValue:'name', optionsCaption: 'Choose...'"></select>
                                 </div>
-                                <input type="text" class="form-control"
-                                    placeholder="Music,Levels,Textures,Gameplay,etc..." id="inputMeta"
-                                    data-bind="textInput: metaInput, event: {change: change}" />
-                            </div>
-                            <div class="form-group">
-                                <label class="control-label" data-placement="left" for="inputSource"
-                                    data-toggle="tooltip" title="Where did you find this file?">
-                                    Source
-                                </label>
-                                <div data-bind="hidden: sourceValid" class="col alert alert-danger">
-                                    <strong>Required:</strong>
-                                    You'll need to post a link as to where you got this file, or where this file
-                                    can
-                                    be found.
+                                <div class="form-group">
+                                    <label class="control-label" data-placement="left" for="inputAuthor"
+                                        data-toggle="tooltip" title="Comma-separated list of authors.">
+                                        Authors
+                                    </label>
+                                    <div data-bind="hidden: authorsValid" class="col alert alert-danger">
+                                        <strong>Required:</strong>
+                                        If you wish to use this file, you'll need to give credit to the person(s)
+                                        who
+                                        made it.
+                                    </div>
+                                    <input type="text" class="form-control" id="inputAuthor"
+                                        placeholder="Author1,Author2,Author3,..."
+                                        data-bind="textInput: authorInput, event: {change: change, keyup: change}" />
                                 </div>
+                                <div class="form-group">
+                                    <label class="control-label" data-placement="left" for="inputMeta"
+                                        data-toggle="tooltip"
+                                        title="Comma-separated list of meta tags (kinda like hash tags, they're ways to find this file).">
+                                        Meta Tags
+                                    </label>
+                                    <div data-bind="hidden: metaTagsValid" class="col alert alert-warning">
+                                        <strong>Warning:</strong>
+                                        It's extremely helpful to have some tags to use so you can find this file
+                                        more
+                                        easily, both here and in the Configuration Builder.
+                                    </div>
+                                    <input type="text" class="form-control"
+                                        placeholder="Music,Levels,Textures,Gameplay,etc..." id="inputMeta"
+                                        data-bind="textInput: metaInput, event: {change: change, keyup: change}" />
+                                </div>
+                                <div class="form-group">
+                                    <label class="control-label" data-placement="left" for="inputSource"
+                                        data-toggle="tooltip" title="Where did you find this file?">
+                                        Source
+                                    </label>
+                                    <div data-bind="hidden: sourceValid" class="col alert alert-danger">
+                                        <strong>Required:</strong>
+                                        You'll need to post a link as to where you got this file, or where this file
+                                        can
+                                        be found.
+                                    </div>
 
-                                <input type="text" class="form-control" id="inputSource"
-                                    placeholder="http://somesite.com/someplace"
-                                    data-bind="textInput: source, event: {change: change}" />
-                            </div>
-                            <div class="form-group">
-                                <label class="control-label" data-placement="left" for="inputQuickDescription"
-                                    data-toggle="tooltip"
-                                    title="Just a quick description of the file, not very long.  Just something that pops up real quick so you know more about it.">
-                                    Quick Description
-                                </label>
-                                <div data-bind="hidden: quickDescriptionValid" class="col alert alert-warning">
-                                    <strong>Warning:</strong>
-                                    You really should provide a nice quick description. When you hover over the
-                                    file, it'll pop up helping you remember what it does.
+                                    <input type="text" class="form-control" id="inputSource"
+                                        placeholder="http://somesite.com/someplace"
+                                        data-bind="textInput: source, event: {change: change, keyup: change}" />
                                 </div>
+                                <div class="form-group">
+                                    <label class="control-label" data-placement="left" for="inputQuickDescription"
+                                        data-toggle="tooltip"
+                                        title="Just a quick description of the file, not very long.  Just something that pops up real quick so you know more about it.">
+                                        Quick Description
+                                    </label>
+                                    <div data-bind="hidden: quickDescriptionValid" class="col alert alert-warning">
+                                        <strong>Warning:</strong>
+                                        You really should provide a nice quick description. When you hover over the
+                                        file, it'll pop up helping you remember what it does.
+                                    </div>
 
-                                <input type="text" class="form-control col"
-                                    placeholder="This file adds levels, music, sounds, textures, gameplay, etc. changes."
-                                    id="inputQuickDescription"
-                                    data-bind="textInput: quickDescription, event: {change: change}" />
-                            </div>
-                            <div class="form-group">
-                                <label class="control-label" data-placement="left" for="inputLongDescription"
-                                    data-toggle="tooltip"
-                                    title="Here's where you can basically go nuts in long detail about the file.  Most files have a .txt packaged with them... this is a great place to paste that content (if your file comes with a .txt file of the same name, it'll get autoloaded into this field for you)">
-                                    Long Description
-                                </label>
-                                <textarea class="form-control" rows="20" id="inputLongDescription" placeholder="====== Blahblahblah=====
+                                    <input type="text" class="form-control col"
+                                        placeholder="This file adds levels, music, sounds, textures, gameplay, etc. changes."
+                                        id="inputQuickDescription"
+                                        data-bind="textInput: quickDescription, event: {change: change, keyup: change}" />
+                                </div>
+                                <div class="form-group">
+                                    <label class="control-label" data-placement="left" for="inputLongDescription"
+                                        data-toggle="tooltip"
+                                        title="Here's where you can basically go nuts in long detail about the file.  Most files have a .txt packaged with them... this is a great place to paste that content (if your file comes with a .txt file of the same name, it'll get autoloaded into this field for you)">
+                                        Long Description
+                                    </label>
+                                    <textarea class="form-control" rows="20" id="inputLongDescription" placeholder="====== Blahblahblah=====
         This is very long
         oh my yes, this is going to be long.
         
         Hello?  You still here?  yeah, long stuff in here..."
-                                    data-bind="textInput: longDescription, event: {change: change}"></textarea>
-                            </div>
-                        </form>
+                                        data-bind="textInput: longDescription, event: {change: change, keyup: change}"></textarea>
+                                </div>
+                            </form>
+                        </span>
+                        <span data-bind='foreach: files.pwads'>
+                            <form data-bind="visible: editing" style="overflow: auto; height:953px;">
+                                <h5>
+                                    File Type:
+                                    <span data-bind="text: filetype"></span>
+                                    &nbsp;&mdash;&nbsp;Filename:
+                                    <span data-bind="text: filename"></span>
+                                    &nbsp;&mdash;&nbsp;Hide File?
+                                    <span class="btn btn-xs btn-secondary"
+                                        data-bind="click: $parent.hideFile.bind($data, filetype(), $index()), class: hideFileClass, tooltip: hideTooltipText()"
+                                        aria-hidden="true"></span>
+                                    <!-- ko if: changed()===true -->
+                                    &nbsp;&mdash;&nbsp;Save File
+                                    <span class="btn btn-xs btn-primary fa fa-save"
+                                        data-bind="click: $parent.updateFile.bind($data, filetype(), $index())"
+                                        data-toggle="tooltip"
+                                        title="This file has unsaved changes.  Click here to save them"></span>
+                                    <!-- /ko -->
+                                </h5>
+                                <div class="form-group">
+                                    <label class="control-label" for="inputFilename" data-placement="left"
+                                        data-toggle="tooltip" title="A human readable name for your file.">
+                                        Title
+                                    </label>
+                                    <div data-bind="hidden: nameValid" class="col alert alert-warning">
+                                        <strong>Warning:</strong>
+                                        You should provide a human-readable name for this file.
+                                    </div>
+                                    <input type="text" id="inputFilename" class="form-control"
+                                        placeHolder="Human-readable name"
+                                        data-bind="textInput: name, event: {change: change, keyup: change}" />
+                                </div>
+                                <div class="form-group" data-bind="visible: filetype()==='sourceport'">
+                                    <label class="control-label" for="sourceportFileType" data-placement="left"
+                                        data-toggle="tooltip"
+                                        title="This launcher has special support depending on the sourceport.  Selecting the right sourceport type here will greatly assist you later in building configurations based on that sourceport type.  Currently, the sourceport types this launcher supports are Zandronum, Chocolate Doom, and all ZDoom-based sourceports (e.g. GZDoom, QZDoom, or even plain ZDoom itself).">
+                                        Sourceport Type
+                                    </label>
+                                    <select id="sourceportFileType" class="form-control"
+                                        data-bind="options: $parent.sourceportTypes, event: {change: change, keyup: change}, value: sourceportBasetype, optionsCaption: 'Choose...'"></select>
+                                </div>
+                                <div class="form-group" data-bind="visible: filetype()==='iwad'">
+                                    <label class="control-label" for="iwadFileType" data-placement="left"
+                                        data-toggle="tooltip"
+                                        title="Selecting an IWad type from the known game types can help with some configuration options (such as selecting maps/levels)">
+                                        IWad Type
+                                    </label>
+                                    <select class="form-control" id="iwadFileType"
+                                        data-bind="options: $parent.iwadTypes, optionsText: 'description', event: {change: change, keyup: change}, value: iwadBasetype, optionsValue:'name', optionsCaption: 'Choose...'"></select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="control-label" data-placement="left" for="inputAuthor"
+                                        data-toggle="tooltip" title="Comma-separated list of authors.">
+                                        Authors
+                                    </label>
+                                    <div data-bind="hidden: authorsValid" class="col alert alert-danger">
+                                        <strong>Required:</strong>
+                                        If you wish to use this file, you'll need to give credit to the person(s)
+                                        who
+                                        made it.
+                                    </div>
+                                    <input type="text" class="form-control" id="inputAuthor"
+                                        placeholder="Author1,Author2,Author3,..."
+                                        data-bind="textInput: authorInput, event: {change: change, keyup: change}" />
+                                </div>
+                                <div class="form-group">
+                                    <label class="control-label" data-placement="left" for="inputMeta"
+                                        data-toggle="tooltip"
+                                        title="Comma-separated list of meta tags (kinda like hash tags, they're ways to find this file).">
+                                        Meta Tags
+                                    </label>
+                                    <div data-bind="hidden: metaTagsValid" class="col alert alert-warning">
+                                        <strong>Warning:</strong>
+                                        It's extremely helpful to have some tags to use so you can find this file
+                                        more
+                                        easily, both here and in the Configuration Builder.
+                                    </div>
+                                    <input type="text" class="form-control"
+                                        placeholder="Music,Levels,Textures,Gameplay,etc..." id="inputMeta"
+                                        data-bind="textInput: metaInput, event: {change: change, keyup: change}" />
+                                </div>
+                                <div class="form-group">
+                                    <label class="control-label" data-placement="left" for="inputSource"
+                                        data-toggle="tooltip" title="Where did you find this file?">
+                                        Source
+                                    </label>
+                                    <div data-bind="hidden: sourceValid" class="col alert alert-danger">
+                                        <strong>Required:</strong>
+                                        You'll need to post a link as to where you got this file, or where this file
+                                        can
+                                        be found.
+                                    </div>
+
+                                    <input type="text" class="form-control" id="inputSource"
+                                        placeholder="http://somesite.com/someplace"
+                                        data-bind="textInput: source, event: {change: change, keyup: change}" />
+                                </div>
+                                <div class="form-group">
+                                    <label class="control-label" data-placement="left" for="inputQuickDescription"
+                                        data-toggle="tooltip"
+                                        title="Just a quick description of the file, not very long.  Just something that pops up real quick so you know more about it.">
+                                        Quick Description
+                                    </label>
+                                    <div data-bind="hidden: quickDescriptionValid" class="col alert alert-warning">
+                                        <strong>Warning:</strong>
+                                        You really should provide a nice quick description. When you hover over the
+                                        file, it'll pop up helping you remember what it does.
+                                    </div>
+
+                                    <input type="text" class="form-control col"
+                                        placeholder="This file adds levels, music, sounds, textures, gameplay, etc. changes."
+                                        id="inputQuickDescription"
+                                        data-bind="textInput: quickDescription, event: {change: change, keyup: change}" />
+                                </div>
+                                <div class="form-group">
+                                    <label class="control-label" data-placement="left" for="inputLongDescription"
+                                        data-toggle="tooltip"
+                                        title="Here's where you can basically go nuts in long detail about the file.  Most files have a .txt packaged with them... this is a great place to paste that content (if your file comes with a .txt file of the same name, it'll get autoloaded into this field for you)">
+                                        Long Description
+                                    </label>
+                                    <textarea class="form-control" rows="20" id="inputLongDescription" placeholder="====== Blahblahblah=====
+        This is very long
+        oh my yes, this is going to be long.
+        
+        Hello?  You still here?  yeah, long stuff in here..."
+                                        data-bind="textInput: longDescription, event: {change: change, keyup: change}"></textarea>
+                                </div>
+                            </form>
+                        </span>
+                        <span data-bind="foreach: files.sourceports">
+                            <form data-bind="visible: editing" style="overflow: auto; height:953px;">
+                                <h5>
+                                    File Type:
+                                    <span data-bind="text: filetype"></span>
+                                    &nbsp;&mdash;&nbsp;Filename:
+                                    <span data-bind="text: filename"></span>
+                                    &nbsp;&mdash;&nbsp;Hide File?
+                                    <span class="btn btn-xs btn-secondary"
+                                        data-bind="click: $parent.hideFile.bind($data, filetype(), $index()), class: hideFileClass, tooltip: hideTooltipText()"
+                                        aria-hidden="true"></span>
+                                    <!-- ko if: changed()===true -->
+                                    &nbsp;&mdash;&nbsp;Save File
+                                    <span class="btn btn-xs btn-primary fa fa-save"
+                                        data-bind="click: $parent.updateFile.bind($data, filetype(), $index())"
+                                        data-toggle="tooltip"
+                                        title="This file has unsaved changes.  Click here to save them"></span>
+                                    <!-- /ko -->
+                                </h5>
+                                <div class="form-group">
+                                    <label class="control-label" for="inputFilename" data-placement="left"
+                                        data-toggle="tooltip" title="A human readable name for your file.">
+                                        Title
+                                    </label>
+                                    <div data-bind="hidden: nameValid" class="col alert alert-warning">
+                                        <strong>Warning:</strong>
+                                        You should provide a human-readable name for this file.
+                                    </div>
+                                    <input type="text" id="inputFilename" class="form-control"
+                                        placeHolder="Human-readable name"
+                                        data-bind="textInput: name, event: {change: change, keyup: change}" />
+                                </div>
+                                <div class="form-group" data-bind="visible: filetype()==='sourceport'">
+                                    <label class="control-label" for="sourceportFileType" data-placement="left"
+                                        data-toggle="tooltip"
+                                        title="This launcher has special support depending on the sourceport.  Selecting the right sourceport type here will greatly assist you later in building configurations based on that sourceport type.  Currently, the sourceport types this launcher supports are Zandronum, Chocolate Doom, and all ZDoom-based sourceports (e.g. GZDoom, QZDoom, or even plain ZDoom itself).">
+                                        Sourceport Type
+                                    </label>
+                                    <select id="sourceportFileType" class="form-control"
+                                        data-bind="options: $parent.sourceportTypes, event: {change: change, keyup: change}, value: sourceportBasetype, optionsCaption: 'Choose...'"></select>
+                                </div>
+                                <div class="form-group" data-bind="visible: filetype()==='iwad'">
+                                    <label class="control-label" for="iwadFileType" data-placement="left"
+                                        data-toggle="tooltip"
+                                        title="Selecting an IWad type from the known game types can help with some configuration options (such as selecting maps/levels)">
+                                        IWad Type
+                                    </label>
+                                    <select class="form-control" id="iwadFileType"
+                                        data-bind="options: $parent.iwadTypes, optionsText: 'description', event: {change: change, keyup: change}, value: iwadBasetype, optionsValue:'name', optionsCaption: 'Choose...'"></select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="control-label" data-placement="left" for="inputAuthor"
+                                        data-toggle="tooltip" title="Comma-separated list of authors.">
+                                        Authors
+                                    </label>
+                                    <div data-bind="hidden: authorsValid" class="col alert alert-danger">
+                                        <strong>Required:</strong>
+                                        If you wish to use this file, you'll need to give credit to the person(s)
+                                        who
+                                        made it.
+                                    </div>
+                                    <input type="text" class="form-control" id="inputAuthor"
+                                        placeholder="Author1,Author2,Author3,..."
+                                        data-bind="textInput: authorInput, event: {change: change, keyup: change}" />
+                                </div>
+                                <div class="form-group">
+                                    <label class="control-label" data-placement="left" for="inputMeta"
+                                        data-toggle="tooltip"
+                                        title="Comma-separated list of meta tags (kinda like hash tags, they're ways to find this file).">
+                                        Meta Tags
+                                    </label>
+                                    <div data-bind="hidden: metaTagsValid" class="col alert alert-warning">
+                                        <strong>Warning:</strong>
+                                        It's extremely helpful to have some tags to use so you can find this file
+                                        more
+                                        easily, both here and in the Configuration Builder.
+                                    </div>
+                                    <input type="text" class="form-control"
+                                        placeholder="Music,Levels,Textures,Gameplay,etc..." id="inputMeta"
+                                        data-bind="textInput: metaInput, event: {change: change, keyup: change}" />
+                                </div>
+                                <div class="form-group">
+                                    <label class="control-label" data-placement="left" for="inputSource"
+                                        data-toggle="tooltip" title="Where did you find this file?">
+                                        Source
+                                    </label>
+                                    <div data-bind="hidden: sourceValid" class="col alert alert-danger">
+                                        <strong>Required:</strong>
+                                        You'll need to post a link as to where you got this file, or where this file
+                                        can
+                                        be found.
+                                    </div>
+
+                                    <input type="text" class="form-control" id="inputSource"
+                                        placeholder="http://somesite.com/someplace"
+                                        data-bind="textInput: source, event: {change: change, keyup: change}" />
+                                </div>
+                                <div class="form-group">
+                                    <label class="control-label" data-placement="left" for="inputQuickDescription"
+                                        data-toggle="tooltip"
+                                        title="Just a quick description of the file, not very long.  Just something that pops up real quick so you know more about it.">
+                                        Quick Description
+                                    </label>
+                                    <div data-bind="hidden: quickDescriptionValid" class="col alert alert-warning">
+                                        <strong>Warning:</strong>
+                                        You really should provide a nice quick description. When you hover over the
+                                        file, it'll pop up helping you remember what it does.
+                                    </div>
+
+                                    <input type="text" class="form-control col"
+                                        placeholder="This file adds levels, music, sounds, textures, gameplay, etc. changes."
+                                        id="inputQuickDescription"
+                                        data-bind="textInput: quickDescription, event: {change: change, keyup: change}" />
+                                </div>
+                                <div class="form-group">
+                                    <label class="control-label" data-placement="left" for="inputLongDescription"
+                                        data-toggle="tooltip"
+                                        title="Here's where you can basically go nuts in long detail about the file.  Most files have a .txt packaged with them... this is a great place to paste that content (if your file comes with a .txt file of the same name, it'll get autoloaded into this field for you)">
+                                        Long Description
+                                    </label>
+                                    <textarea class="form-control" rows="20" id="inputLongDescription" placeholder="====== Blahblahblah=====
+        This is very long
+        oh my yes, this is going to be long.
+        
+        Hello?  You still here?  yeah, long stuff in here..."
+                                        data-bind="textInput: longDescription, event: {change: change, keyup: change}"></textarea>
+                                </div>
+                            </form>
+                        </span>
                     </div>
                 </div>
             </div>
@@ -985,16 +1249,6 @@
                 <br />
                 You'll find the idTech folder in
                 <span data-bind="text: idTechFolder"></span>
-                <br />
-                <a href="#" class="btn btn-secondary" data-bind="click: ()=>{ Allfiles([]); walk(idTechFolder)}">
-                    Click to list all files
-                </a>
-                <br />
-                Here's all the files:
-                <br />
-                <div data-bind="foreach:Allfiles">
-                    <div data-bind="text: $data"></div>
-                </div>
                 <br />
                 And just to reiterate, their directories are:
                 <br />
