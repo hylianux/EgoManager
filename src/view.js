@@ -2370,7 +2370,7 @@ function AppViewModel() {
             if (configID) {
                 self.chosenPreviousConfig('');
                 try {
-                    let newConfig = configCollection.findOne({ _id: configID });
+                    let newConfig = await configCollection.findOne({ _id: configID });
                     self.iniFile(newConfig.chosenIniFile);
                     self.currentConfig().configName(newConfig.configName);
                     self.currentConfig().configDescription(newConfig.configDescription);
