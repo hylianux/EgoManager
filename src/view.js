@@ -1636,13 +1636,13 @@ function AppViewModel() {
             sourceport.editing(false);
         });
     };
-    self.updateHidden = file => { };
     // this is what gets called every time you click outside of one of the text boxes for editing a file's properties.
     // once initiated, it updates that file's data in the database, then reloads everything.
     // probably a little excessive, but eh, this app's not that big, who cares.
     // update: i left the old comments there as a reminder of how stupid short-sightedness can make you look.
     // it's a small app, who cares... yeah, well, small though it may be, sometimes disks are freakin' slow.
     // so now this function gets called only when the user clicks the save button.
+    // update 2: stop reloading all the files after you save... it's just ... bad.  stop it.
     self.updateFile = (filetype, index) => {
         let file = {};
         switch (filetype) {
@@ -1677,33 +1677,51 @@ function AppViewModel() {
         (async () => {
             try {
                 await fs.writeFile(path.resolve(directory, RealFilename + '.json'), JSON.stringify(rawFileProperties));
+                let collectionToUpdate = {};
                 switch (filetype) {
                     case 'iwad':
                         self.files['iwads']()[index].changed(false);
-                        self.buildIwadCollection(true);
+                        collectionToUpdate = iwadCollection;
                         break;
                     case 'pwad':
                         self.files['pwads']()[index].changed(false);
-                        self.buildPwadCollection(true);
+                        collectionToUpdate = pwadCollection;
                         break;
                     case 'sourceport':
                         self.files['sourceports']()[index].changed(false);
-                        self.buildSourceportCollection(true);
+                        collectionToUpdate = sourceportCollection;
                         break;
                 }
-                self.loadLevels();
-                self.loadSkillLevels();
+                try {
+
+                    let numReplaced = await collectionToUpdate.update({ filepath: file.filepath }, {
+                        $set: {
+                            authors: rawFileProperties.authors,
+                            metaTags: rawFileProperties.metaTags,
+                            source: rawFileProperties.source,
+                            name: rawFileProperties.name,
+                            quickDescription: rawFileProperties.quickDescription,
+                            longDescription: rawFileProperties.longDescription,
+                            hidden: rawFileProperties.hidden,
+                            basetype: rawFileProperties.basetype
+                        }
+                    }, { upsert: true });
+                    collectionToUpdate.persistence.compactDatafile();
+                    self.loadLevels();
+                    self.loadSkillLevels();
+                } catch (fileUpdateErr) {
+                    console.error('Error when updating file ', fileUpdateErr);
+                }
             } catch (err) {
                 return console.error('update file error: ', err);
             }
         })();
-
     };
     //-------------------------------------------------------------------------
     // here are the search functions for iwads, pwads, and sourceports
     //-------------------------------------------------------------------------
     self.findConfigPwad = () => {
-        let handle = pwads => {
+        let handle = async pwads => {
             let newPwads = [];
             if (pwads && pwads.length > 0) {
                 _.forEach(pwads, pwad => {
@@ -1737,72 +1755,68 @@ function AppViewModel() {
         };
         if (self.configPwadSearch() && self.configPwadSearch().trim() != '') {
             let text = self.configPwadSearch().toUpperCase();
-            pwadCollection
-                .find({
-                    $where: function () {
-                        let containsName = this.name != null && this.name.toUpperCase().indexOf(text) > -1;
-                        let containsFilename = this.filename != null && this.filename.toUpperCase().indexOf(text) > -1;
-                        let containsMetaTag = () => {
-                            let doesContain = false;
-                            if (this.metaTags != null) {
-                                _.forEach(this.metaTags, tag => {
-                                    if (!doesContain) {
-                                        doesContain = tag.toUpperCase().indexOf(text) > -1;
-                                    }
-                                });
-                            }
-                            return doesContain;
-                        };
-                        let containsAuthor = () => {
-                            let doesContain = false;
-                            if (this.authors != null) {
-                                _.forEach(this.authors, author => {
-                                    if (!doesContain) {
-                                        doesContain = author.toUpperCase().indexOf(text) > -1;
-                                    }
-                                });
-                            }
-                            return doesContain;
-                        };
-                        let containsSource = this.source != null && this.source.toUpperCase().indexOf(text) > -1;
-                        let containsQuickDescription =
-                            this.quickDescription != null && this.quickDescription.toUpperCase().indexOf(text) > -1;
-                        let containsLongDescription =
-                            this.longDescription != null && this.longDescription.toUpperCase().indexOf(text) > -1;
-                        return (
-                            containsName ||
-                            containsFilename ||
-                            containsMetaTag() ||
-                            containsAuthor() ||
-                            containsSource ||
-                            containsQuickDescription ||
-                            containsLongDescription
-                        );
-                    }
-                })
-                .sort({ name: 1, filename: 1 })
-                .exec((err, pwads) => {
-                    if (err) {
-                        console.error('find Pwad error: ', err);
-                    } else {
-                        handle(pwads);
-                    }
-                });
+            (async () => {
+                try {
+                    let pwads = await pwadCollection.find({
+                        $where: function () {
+                            let containsName = this.name != null && this.name.toUpperCase().indexOf(text) > -1;
+                            let containsFilename = this.filename != null && this.filename.toUpperCase().indexOf(text) > -1;
+                            let containsMetaTag = () => {
+                                let doesContain = false;
+                                if (this.metaTags != null) {
+                                    _.forEach(this.metaTags, tag => {
+                                        if (!doesContain) {
+                                            doesContain = tag.toUpperCase().indexOf(text) > -1;
+                                        }
+                                    });
+                                }
+                                return doesContain;
+                            };
+                            let containsAuthor = () => {
+                                let doesContain = false;
+                                if (this.authors != null) {
+                                    _.forEach(this.authors, author => {
+                                        if (!doesContain) {
+                                            doesContain = author.toUpperCase().indexOf(text) > -1;
+                                        }
+                                    });
+                                }
+                                return doesContain;
+                            };
+                            let containsSource = this.source != null && this.source.toUpperCase().indexOf(text) > -1;
+                            let containsQuickDescription =
+                                this.quickDescription != null && this.quickDescription.toUpperCase().indexOf(text) > -1;
+                            let containsLongDescription =
+                                this.longDescription != null && this.longDescription.toUpperCase().indexOf(text) > -1;
+                            return (
+                                containsName ||
+                                containsFilename ||
+                                containsMetaTag() ||
+                                containsAuthor() ||
+                                containsSource ||
+                                containsQuickDescription ||
+                                containsLongDescription
+                            );
+                        }
+                    }).sort({ name: 1, filename: 1 });
+                    await handle(pwads);
+                } catch (err) {
+                    console.error('find Pwad error: ', err);
+                }
+            })();
         } else {
-            pwadCollection
-                .find({})
-                .sort({ name: 1, filename: 1 })
-                .exec((err, pwads) => {
-                    if (err) {
-                        console.error('find Pwad error: ', err);
-                    } else {
-                        handle(pwads);
-                    }
-                });
+            (async () => {
+                try {
+                    let pwads = await pwadCollection.find({}).sort({ name: 1, filename: 1 });
+                    await handle(pwads);
+                } catch (err) {
+                    console.error('find Pwad error: ', err);
+                }
+            })();
         }
     };
     self.findIwad = () => {
-        let handle = iwads => {
+        let handle = async iwads => {
             let newIwads = [];
             if (iwads && iwads.length > 0) {
                 _.forEach(iwads, iwad => {
@@ -1829,72 +1843,68 @@ function AppViewModel() {
         };
         if (self.iwadSearch() && self.iwadSearch().trim() != '') {
             let text = self.iwadSearch().toUpperCase();
-            iwadCollection
-                .find({
-                    $where: function () {
-                        let containsName = this.name != null && this.name.toUpperCase().indexOf(text) > -1;
-                        let containsFilename = this.filename != null && this.filename.toUpperCase().indexOf(text) > -1;
-                        let containsMetaTag = () => {
-                            let doesContain = false;
-                            if (this.metaTags != null) {
-                                _.forEach(this.metaTags, tag => {
-                                    if (!doesContain) {
-                                        doesContain = tag.toUpperCase().indexOf(text) > -1;
-                                    }
-                                });
-                            }
-                            return doesContain;
-                        };
-                        let containsAuthor = () => {
-                            let doesContain = false;
-                            if (this.authors != null) {
-                                _.forEach(this.authors, author => {
-                                    if (!doesContain) {
-                                        doesContain = author.toUpperCase().indexOf(text) > -1;
-                                    }
-                                });
-                            }
-                            return doesContain;
-                        };
-                        let containsSource = this.source != null && this.source.toUpperCase().indexOf(text) > -1;
-                        let containsQuickDescription =
-                            this.quickDescription != null && this.quickDescription.toUpperCase().indexOf(text) > -1;
-                        let containsLongDescription =
-                            this.longDescription != null && this.longDescription.toUpperCase().indexOf(text) > -1;
-                        return (
-                            containsName ||
-                            containsFilename ||
-                            containsMetaTag() ||
-                            containsAuthor() ||
-                            containsSource ||
-                            containsQuickDescription ||
-                            containsLongDescription
-                        );
-                    }
-                })
-                .sort({ filename: 1 })
-                .exec((err, iwads) => {
-                    if (err) {
-                        console.error('findIwad find error: ', err);
-                    } else {
-                        handle(iwads);
-                    }
-                });
+            (async () => {
+                try {
+                    let iwads = await iwadCollection.find({
+                        $where: function () {
+                            let containsName = this.name != null && this.name.toUpperCase().indexOf(text) > -1;
+                            let containsFilename = this.filename != null && this.filename.toUpperCase().indexOf(text) > -1;
+                            let containsMetaTag = () => {
+                                let doesContain = false;
+                                if (this.metaTags != null) {
+                                    _.forEach(this.metaTags, tag => {
+                                        if (!doesContain) {
+                                            doesContain = tag.toUpperCase().indexOf(text) > -1;
+                                        }
+                                    });
+                                }
+                                return doesContain;
+                            };
+                            let containsAuthor = () => {
+                                let doesContain = false;
+                                if (this.authors != null) {
+                                    _.forEach(this.authors, author => {
+                                        if (!doesContain) {
+                                            doesContain = author.toUpperCase().indexOf(text) > -1;
+                                        }
+                                    });
+                                }
+                                return doesContain;
+                            };
+                            let containsSource = this.source != null && this.source.toUpperCase().indexOf(text) > -1;
+                            let containsQuickDescription =
+                                this.quickDescription != null && this.quickDescription.toUpperCase().indexOf(text) > -1;
+                            let containsLongDescription =
+                                this.longDescription != null && this.longDescription.toUpperCase().indexOf(text) > -1;
+                            return (
+                                containsName ||
+                                containsFilename ||
+                                containsMetaTag() ||
+                                containsAuthor() ||
+                                containsSource ||
+                                containsQuickDescription ||
+                                containsLongDescription
+                            );
+                        }
+                    }).sort({ filename: 1 });
+                    await handle(iwads);
+                } catch (err) {
+                    console.error('findIwad find error: ', err);
+                }
+            })();
         } else {
-            iwadCollection
-                .find({})
-                .sort({ filename: 1 })
-                .exec((err, iwads) => {
-                    if (err) {
-                        console.error('findIwad find error: ', err);
-                    } else {
-                        handle(iwads);
-                    }
-                });
+            (async () => {
+                try {
+                    let iwads = await iwadCollection.find({}).sort({ filename: 1 });
+                    await handle(iwads);
+                } catch (err) {
+                    console.error('findIwad find error: ', err);
+                }
+            })();
         }
     };
     self.findPwad = () => {
-        let handle = pwads => {
+        let handle = async pwads => {
             let newPwads = [];
             if (pwads && pwads.length > 0) {
                 _.forEach(pwads, pwad => {
@@ -1920,72 +1930,70 @@ function AppViewModel() {
         };
         if (self.pwadSearch() && self.pwadSearch().trim() != '') {
             let text = self.pwadSearch().toUpperCase();
-            pwadCollection
-                .find({
-                    $where: function () {
-                        let containsName = this.name != null && this.name.toUpperCase().indexOf(text) > -1;
-                        let containsFilename = this.filename != null && this.filename.toUpperCase().indexOf(text) > -1;
-                        let containsMetaTag = () => {
-                            let doesContain = false;
-                            if (this.metaTags != null) {
-                                _.forEach(this.metaTags, tag => {
-                                    if (!doesContain) {
-                                        doesContain = tag.toUpperCase().indexOf(text) > -1;
+            (async () => {
+                try {
+                    let pwads = await pwadCollection
+                        .find({
+                            $where: function () {
+                                let containsName = this.name != null && this.name.toUpperCase().indexOf(text) > -1;
+                                let containsFilename = this.filename != null && this.filename.toUpperCase().indexOf(text) > -1;
+                                let containsMetaTag = () => {
+                                    let doesContain = false;
+                                    if (this.metaTags != null) {
+                                        _.forEach(this.metaTags, tag => {
+                                            if (!doesContain) {
+                                                doesContain = tag.toUpperCase().indexOf(text) > -1;
+                                            }
+                                        });
                                     }
-                                });
-                            }
-                            return doesContain;
-                        };
-                        let containsAuthor = () => {
-                            let doesContain = false;
-                            if (this.authors != null) {
-                                _.forEach(this.authors, author => {
-                                    if (!doesContain) {
-                                        doesContain = author.toUpperCase().indexOf(text) > -1;
+                                    return doesContain;
+                                };
+                                let containsAuthor = () => {
+                                    let doesContain = false;
+                                    if (this.authors != null) {
+                                        _.forEach(this.authors, author => {
+                                            if (!doesContain) {
+                                                doesContain = author.toUpperCase().indexOf(text) > -1;
+                                            }
+                                        });
                                     }
-                                });
+                                    return doesContain;
+                                };
+                                let containsSource = this.source != null && this.source.toUpperCase().indexOf(text) > -1;
+                                let containsQuickDescription =
+                                    this.quickDescription != null && this.quickDescription.toUpperCase().indexOf(text) > -1;
+                                let containsLongDescription =
+                                    this.longDescription != null && this.longDescription.toUpperCase().indexOf(text) > -1;
+                                return (
+                                    containsName ||
+                                    containsFilename ||
+                                    containsMetaTag() ||
+                                    containsAuthor() ||
+                                    containsSource ||
+                                    containsQuickDescription ||
+                                    containsLongDescription
+                                );
                             }
-                            return doesContain;
-                        };
-                        let containsSource = this.source != null && this.source.toUpperCase().indexOf(text) > -1;
-                        let containsQuickDescription =
-                            this.quickDescription != null && this.quickDescription.toUpperCase().indexOf(text) > -1;
-                        let containsLongDescription =
-                            this.longDescription != null && this.longDescription.toUpperCase().indexOf(text) > -1;
-                        return (
-                            containsName ||
-                            containsFilename ||
-                            containsMetaTag() ||
-                            containsAuthor() ||
-                            containsSource ||
-                            containsQuickDescription ||
-                            containsLongDescription
-                        );
-                    }
-                })
-                .sort({ name: 1, filename: 1 })
-                .exec((err, pwads) => {
-                    if (err) {
-                        console.error('find Pwad error: ', err);
-                    } else {
-                        handle(pwads);
-                    }
-                });
+                        })
+                        .sort({ name: 1, filename: 1 });
+                    await handle(pwads);
+                } catch (err) {
+                    console.error('find Pwad error: ', err);
+                }
+            })();
         } else {
-            pwadCollection
-                .find({})
-                .sort({ name: 1, filename: 1 })
-                .exec((err, pwads) => {
-                    if (err) {
-                        console.error('find Pwad error: ', err);
-                    } else {
-                        handle(pwads);
-                    }
-                });
+            (async () => {
+                try {
+                    let pwads = await pwadCollection.find({}).sort({ name: 1, filename: 1 });
+                    await handle(pwads);
+                } catch (err) {
+                    console.error('find Pwad error: ', err);
+                }
+            })();
         }
     };
     self.findSourceport = () => {
-        let handle = sourceports => {
+        let handle = async sourceports => {
             let newSourceports = [];
             if (sourceports && sourceports.length > 0) {
                 _.forEach(sourceports, sourceport => {
@@ -2011,69 +2019,65 @@ function AppViewModel() {
             }
         };
         if (self.sourceportSearch() && self.sourceportSearch().trim() != '') {
-            let text = self.sourceportSearch().toUpperCase();
-            sourceportCollection
-                .find({
-                    $where: function () {
-                        let containsName = this.name != null && this.name.toUpperCase().indexOf(text) > -1;
-                        let containsFilename = this.filename != null && this.filename.toUpperCase().indexOf(text) > -1;
-                        let containsMetaTag = () => {
-                            let doesContain = false;
-                            if (this.metaTags != null) {
-                                _.forEach(this.metaTags, tag => {
-                                    if (!doesContain) {
-                                        doesContain = tag.toUpperCase().indexOf(text) > -1;
-                                    }
-                                });
-                            }
-                            return doesContain;
-                        };
-                        let containsAuthor = () => {
-                            let doesContain = false;
-                            if (this.authors != null) {
-                                _.forEach(this.authors, author => {
-                                    if (!doesContain) {
-                                        doesContain = author.toUpperCase().indexOf(text) > -1;
-                                    }
-                                });
-                            }
-                            return doesContain;
-                        };
-                        let containsSource = this.source != null && this.source.toUpperCase().indexOf(text) > -1;
-                        let containsQuickDescription =
-                            this.quickDescription != null && this.quickDescription.toUpperCase().indexOf(text) > -1;
-                        let containsLongDescription =
-                            this.longDescription != null && this.longDescription.toUpperCase().indexOf(text) > -1;
-                        return (
-                            containsName ||
-                            containsFilename ||
-                            containsMetaTag() ||
-                            containsAuthor() ||
-                            containsSource ||
-                            containsQuickDescription ||
-                            containsLongDescription
-                        );
-                    }
-                })
-                .sort({ filename: 1 })
-                .exec((err, sourceports) => {
-                    if (err) {
-                        console.error('find sourceport error: ', err);
-                    } else {
-                        handle(sourceports);
-                    }
-                });
+            (async () => {
+                try {
+                    let text = self.sourceportSearch().toUpperCase();
+                    let sourceports = await sourceportCollection.find({
+                        $where: function () {
+                            let containsName = this.name != null && this.name.toUpperCase().indexOf(text) > -1;
+                            let containsFilename = this.filename != null && this.filename.toUpperCase().indexOf(text) > -1;
+                            let containsMetaTag = () => {
+                                let doesContain = false;
+                                if (this.metaTags != null) {
+                                    _.forEach(this.metaTags, tag => {
+                                        if (!doesContain) {
+                                            doesContain = tag.toUpperCase().indexOf(text) > -1;
+                                        }
+                                    });
+                                }
+                                return doesContain;
+                            };
+                            let containsAuthor = () => {
+                                let doesContain = false;
+                                if (this.authors != null) {
+                                    _.forEach(this.authors, author => {
+                                        if (!doesContain) {
+                                            doesContain = author.toUpperCase().indexOf(text) > -1;
+                                        }
+                                    });
+                                }
+                                return doesContain;
+                            };
+                            let containsSource = this.source != null && this.source.toUpperCase().indexOf(text) > -1;
+                            let containsQuickDescription =
+                                this.quickDescription != null && this.quickDescription.toUpperCase().indexOf(text) > -1;
+                            let containsLongDescription =
+                                this.longDescription != null && this.longDescription.toUpperCase().indexOf(text) > -1;
+                            return (
+                                containsName ||
+                                containsFilename ||
+                                containsMetaTag() ||
+                                containsAuthor() ||
+                                containsSource ||
+                                containsQuickDescription ||
+                                containsLongDescription
+                            );
+                        }
+                    }).sort({ filename: 1 });
+                    await handle(sourceports);
+                } catch (err) {
+                    console.error('find sourceport error: ', err);
+                }
+            })();
         } else {
-            sourceportCollection
-                .find({})
-                .sort({ filename: 1 })
-                .exec((err, sourceports) => {
-                    if (err) {
-                        console.error('find sourceport error: ', err);
-                    } else {
-                        handle(sourceports);
-                    }
-                });
+            (async () => {
+                try {
+                    let sourceports = await sourceportCollection.find({}).sort({ filename: 1 });
+                    await handle(sourceports);
+                } catch (err) {
+                    console.error('find sourceport error: ', err);
+                }
+            })();
         }
     };
     //-------------------------------------------------------------------------
@@ -2102,7 +2106,7 @@ function AppViewModel() {
     // this is for the search function in finding a previously saved config.
     // it doesn't look in "previous configs"
     self.findConfig = () => {
-        let handle = configs => {
+        let handle = async configs => {
             let newConfigChains = [];
             if (configs && configs.length > 0) {
                 _.forEach(configs, configChain => {
@@ -2129,63 +2133,59 @@ function AppViewModel() {
         };
         if (self.configSearch() && self.configSearch().trim() != '') {
             let text = self.configSearch().toUpperCase();
-            configCollection
-                .find({
-                    $where: function () {
-                        let containsName = this.configName != null && this.configName.toUpperCase().indexOf(text) > -1;
-                        let containsDescription =
-                            this.configDescription != null && this.configDescription.toUpperCase().indexOf(text) > -1;
-                        let containsIniFile = this.iniFile != null && this.iniFile.toUpperCase().indexOf(text) > -1;
-                        let containsIwad = this.iwad != null && this.iwad.toUpperCase().indexOf(text) > -1;
-                        let containsSkill =
-                            this.skill != null &&
-                            this.skill
-                                .toString()
-                                .toUpperCase()
-                                .indexOf(text) > -1;
-                        let containsLevel = this.level != null && this.level.toUpperCase().indexOf(text) > -1;
-                        let containsPwad = () => {
-                            let doesContain = false;
-                            if (this.pwads != null) {
-                                _.forEach(this.pwads, pwad => {
-                                    if (!doesContain && pwad.filepath) {
-                                        doesContain = pwad.filepath.toUpperCase().indexOf(text) > -1;
-                                    }
-                                });
-                            }
-                            return doesContain;
-                        };
+            (async () => {
+                try {
+                    let configs = await configCollection.find({
+                        $where: function () {
+                            let containsName = this.configName != null && this.configName.toUpperCase().indexOf(text) > -1;
+                            let containsDescription =
+                                this.configDescription != null && this.configDescription.toUpperCase().indexOf(text) > -1;
+                            let containsIniFile = this.iniFile != null && this.iniFile.toUpperCase().indexOf(text) > -1;
+                            let containsIwad = this.iwad != null && this.iwad.toUpperCase().indexOf(text) > -1;
+                            let containsSkill =
+                                this.skill != null &&
+                                this.skill
+                                    .toString()
+                                    .toUpperCase()
+                                    .indexOf(text) > -1;
+                            let containsLevel = this.level != null && this.level.toUpperCase().indexOf(text) > -1;
+                            let containsPwad = () => {
+                                let doesContain = false;
+                                if (this.pwads != null) {
+                                    _.forEach(this.pwads, pwad => {
+                                        if (!doesContain && pwad.filepath) {
+                                            doesContain = pwad.filepath.toUpperCase().indexOf(text) > -1;
+                                        }
+                                    });
+                                }
+                                return doesContain;
+                            };
 
-                        return (
-                            containsName ||
-                            containsDescription ||
-                            containsPwad() ||
-                            containsIwad ||
-                            containsIniFile ||
-                            containsSkill ||
-                            containsLevel
-                        );
-                    }
-                })
-                .sort({ configName: 1 })
-                .exec((err, configs) => {
-                    if (err) {
-                        console.error('findConfig error', err);
-                    } else {
-                        handle(configs);
-                    }
-                });
+                            return (
+                                containsName ||
+                                containsDescription ||
+                                containsPwad() ||
+                                containsIwad ||
+                                containsIniFile ||
+                                containsSkill ||
+                                containsLevel
+                            );
+                        }
+                    }).sort({ configName: 1 });
+                    await handle(configs);
+                } catch (err) {
+                    console.error('findConfig error', err);
+                }
+            })();
         } else {
-            configCollection
-                .find({})
-                .sort({ configName: 1 })
-                .exec((err, configs) => {
-                    if (err) {
-                        console.error('findConfig error', err);
-                    } else {
-                        handle(configs);
-                    }
-                });
+            (async () => {
+                try {
+                    let configs = await configCollection.find({}).sort({ configName: 1 });
+                    await handle(configs);
+                } catch (err) {
+                    console.error('findConfig error', err);
+                }
+            })();
         }
     };
     // this is the function that big blue play button calls
@@ -2353,7 +2353,7 @@ function AppViewModel() {
                         let numReplaced = await configCollection.update({ _id: someNewConfig._id }, someNewConfig, {});
                         configCollection.persistence.compactDatafile();
                         self.loadConfigChains();
-                        self.loadConfig(someNewconfig._id);
+                        self.loadConfig(someNewConfig._id);
                     } catch (updateErr) {
                         console.error('clone config update error: ', updateErr);
                     }
