@@ -2289,7 +2289,7 @@ function AppViewModel() {
             } catch (err) {
                 console.error('saveCurrentConfig error: ', err);
             }
-        });
+        })();
     };
     self.insertDefaultConfig = () => {
         (async () => {
