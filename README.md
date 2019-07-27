@@ -22,11 +22,11 @@ Now you're ready to run the application.  Double-click EgoManager.exe and off yo
 
 ### Cataloguing Files
 
-You should definitely catalogue your files.  The premade catalogue files haveall the .json files of metadata for the known official Iwads and the 3 sourceports this launcher was designed for (and you can also find it under the latest beta release).  You can extract that to your iwads/sourceports directories and that should help speed up all the cataloguing.  
+You should definitely catalogue your files.  The premade catalogue files have all the .json files of metadata for the known official Iwads and the 3 sourceports this launcher was designed for.  You can extract that to your iwads/sourceports directories and that should help speed up all the cataloguing.  
 
 ### Building a Command Chain
 
-Select a sourceport, then an iwad, then go crazy with all the options you can set for running a game.  Save/load configurations for easy access later, or, if you still prefer using bat files, then you can copy and paste the generated command at the top to your own .bat file.  My launcher is flexible enough to give you what you need to run the game your own way.
+Select a sourceport, then an iwad, then go crazy with all the options you can set for running a game.  Save/load configurations for easy access later, or, if you still prefer using bat files, then you can copy and paste the generated command at the bottom to your own .bat file.  My launcher is flexible enough to give you what you need to run the game your own way.
 
 ## Build Instructions
 
@@ -43,7 +43,7 @@ After cloning or downloading the repository, simply run:
 
 ## For Modders
 
-Hey, do you want your mod to load into EgoManager easily?  Simply include a .json file of the same name as your .wad (or .pk3) file, and include these details.
+Hey, do you want your mod to load into EgoManager easily?  Simply include a .json file with the below details.
 
 Property | Description
 ---|---
