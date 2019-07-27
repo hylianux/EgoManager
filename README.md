@@ -1,6 +1,10 @@
 # Ego Manager
 
-Yet another Doom launcher
+Yes, this is Yet another Doom front-end/launcher.
+
+So named because Doom was made by ***id*** software, and the superego wants things to work well and in a sane way, so this app is the *ego* that manages everything in the middle to let you play doom however you like without the headache of making it work.
+
+> Jeez, you take ***one*** psychology 101 course, and now you think you're SOOOOOOO clever!
 
 ## What is it/Why should I use it?
 
