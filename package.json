@@ -28,7 +28,7 @@
         "knockout": "^3.5.0",
         "knockout-dragdrop": "^2.6.1",
         "lodash": "^4.17.14",
-        "minimist": "^1.2.0",
+        "minimist": "^1.2.3",
         "nedb": "^1.8.0",
         "nedb-promises": "^3.0.7",
         "normalize.css": "^8.0.1",
