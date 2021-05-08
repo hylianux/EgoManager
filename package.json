@@ -27,7 +27,7 @@
         "jquery.ns-autogrow": "^1.1.6",
         "knockout": "^3.5.0",
         "knockout-dragdrop": "^2.6.1",
-        "lodash": "^4.17.14",
+        "lodash": "^4.17.21",
         "minimist": "^1.2.0",
         "nedb": "^1.8.0",
         "nedb-promises": "^3.0.7",
